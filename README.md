@@ -115,6 +115,28 @@ reading them. Now outage and lunch change what the next messages are instead of 
 unanswered traps come back, and every kind of morning keeps a first-time player near 1% lost with good
 judgment still earning gold. `test/events.test.js` holds all of this.
 
+## Achievements and your desk
+
+Ten achievements, each unlocking one object that appears in your office:
+
+| | Achievement | How | Unlocks |
+|---|---|---|---|
+| 🗒️ | First morning | finish your first morning | sticky notes on the monitor |
+| 🪴 | Human firewall | dodge 6 traps in one morning | a desk plant |
+| 🏆 | Nothing slipped | finish the work without missing anything urgent | a small trophy |
+| 🎧 | Deep diver | 40 seconds of deep work in one morning | a headphone stand |
+| 🖼️ | The rescue | pass an emergency to a colleague while stuck on a call | a photo of the team |
+| 🖥️ | Tried everything | finish the work in all five roles | a second monitor |
+| 📅 | Three in a row | play the daily morning three days running | a wall calendar |
+| 🐈 | Regular | play ten mornings | a photo of a cat |
+| 🥇 | Gold star | earn 🥇 on a daily morning | a medal on the wall |
+| 🧯 | Survivor | live through a fire drill and an outage in one morning | a fire extinguisher |
+
+Unlocks are **cosmetic by design**: they change what your office looks like and never touch the rules,
+so a long-time player and a first-timer face exactly the same morning. The start screen has a "Your desk"
+section showing what's unlocked and the hint for what isn't, and the result screen says what a round just
+earned. `awards.js` holds the conditions, `test/awards.test.js` checks each one.
+
 ## Graphics: the illustrated office
 
 The work panel opens on a little office scene (`scene.js`) that reacts to how you play:
@@ -291,6 +313,7 @@ playtesting for real.
 | `content.js` | The five roles: their messages, work screens and wording, with the tell rules they must follow |
 | `daily.js` | The daily morning: numbering, seeds, streaks and the share grid |
 | `persona.js` | Work personalities: which one a round earns, and why |
+| `awards.js` | Achievements and the desk objects they unlock |
 | `scene.js` | The illustrated office scene and the portraits of the people who message you |
 | `game.js` | Browser layer: role choice, daily morning, input, rendering, sound, run history |
 | `stats.js` | `npm run stats`: do people come back? Reads `data/events.jsonl` |

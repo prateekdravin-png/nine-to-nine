@@ -23,6 +23,7 @@ const PUBLIC = {
   '/core.js': 'text/javascript; charset=utf-8',
   '/daily.js': 'text/javascript; charset=utf-8',
   '/persona.js': 'text/javascript; charset=utf-8',
+  '/awards.js': 'text/javascript; charset=utf-8',
   '/scene.js': 'text/javascript; charset=utf-8',
   '/game.js': 'text/javascript; charset=utf-8'
 };

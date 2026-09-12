@@ -94,6 +94,9 @@
       <button class="secondary wide" id="practiceBtn">🎲 Practice on a random morning <kbd id="practiceKbd" hidden>Enter</kbd></button>
       <label class="variant"><input type="checkbox" id="variantToggle"> <span><b>Variant B</b> (practice only): messages arrive collapsed, and peeking at one costs focus</span></label>
     </div>
+    <h2 class="section-title">4 · Your desk</h2>
+    <div class="awards" id="awards"></div>
+
     <p class="keys"><kbd>1</kbd>–<kbd>5</kbd> role · <kbd>Space</kbd> hold to <span data-role-verb>code</span> · <kbd>R</kbd> respond · <kbd>X</kbd> ignore · <kbd>P</kbd> peek · <kbd>D</kbd> pass to a colleague · <kbd>H</kbd> headphones · <kbd>M</kbd> sound<br><span>Keys act on the notification closest to expiring. It's outlined in blue.</span></p>
     <p class="stats-note" id="statsNote">To test whether people come back, this prototype records anonymous play stats: a random ID, the morning, your role and score. No names.</p>
     <div class="history" id="startHistory"></div>
@@ -112,6 +115,7 @@
       <div><span>Reputation</span><b id="endRep">0</b></div>
     </div>
     <p class="promotion" id="endPromotion" hidden></p>
+    <p class="award" id="endAward" hidden></p>
     <div class="persona" id="endPersona"></div>
     <section class="daily" id="endDaily" hidden></section>
     <div class="end-stats" id="endStats"></div>
@@ -131,6 +135,7 @@
 <script src="core.js"></script>
 <script src="daily.js"></script>
 <script src="persona.js"></script>
+<script src="awards.js"></script>
 <script src="scene.js"></script>
 <script src="game.js"></script>
 </body>

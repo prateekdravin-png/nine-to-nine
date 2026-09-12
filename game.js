@@ -8,6 +8,7 @@
   const Core = window.NineCore;
   const Daily = window.NineDaily;
   const Persona = window.NinePersona;
+  const Awards = window.NineAwards;
   const Scene = window.NineScene;
   const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, BOSSES, EVENTS } = window.NineContent;
   const T = Core.TUNING;
@@ -28,10 +29,10 @@
     startScreen: $('startScreen'), startLede: $('startLede'), rolePicker: $('rolePicker'), roleDesc: $('roleDesc'),
     levelPicker: $('levelPicker'), levelDesc: $('levelDesc'), trapTell: $('trapTell'),
     dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
-    startGoal: $('startGoal'), statsNote: $('statsNote'), startHistory: $('startHistory'),
+    startGoal: $('startGoal'), awards: $('awards'), statsNote: $('statsNote'), startHistory: $('startHistory'),
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
-    endPromotion: $('endPromotion'), endPersona: $('endPersona'), endDaily: $('endDaily'), endStats: $('endStats'), endQuote: $('endQuote'),
+    endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endStats: $('endStats'), endQuote: $('endQuote'),
     againBtn: $('againBtn'), changeRoleBtn: $('changeRoleBtn'),
     endNote: $('endNote'), endHistory: $('endHistory'), live: $('live')
   };
@@ -43,7 +44,9 @@
     daily: 'nineToNine.daily', player: 'nineToNine.player', visit: 'nineToNine.lastVisit', personas: 'nineToNine.personas',
     level: 'nineToNine.level',   // the career level picked on the start screen
     career: 'nineToNine.career', // the highest level unlocked so far
-    recent: 'nineToNine.recent'  // message texts seen in the last few rounds
+    recent: 'nineToNine.recent',   // message texts seen in the last few rounds
+    awards: 'nineToNine.awards',   // achievements unlocked so far
+    progress: 'nineToNine.progress' // rounds played and roles finished, for the long-run achievements
   };
 
   let game = null;
@@ -835,6 +838,33 @@
     } catch (e) { return []; }
   }
 
+  // ---------- achievements and the desk ----------
+  // Unlocks are cosmetic: they add an object to your office (scene.js) and never touch the rules, so
+  // nobody who has played longer gets an easier morning.
+  function loadAwards() {
+    try {
+      const ids = JSON.parse(read(STORE.awards) || '[]');
+      return Array.isArray(ids) ? ids.filter((id) => Awards.byId[id]) : [];
+    } catch (e) { return []; }
+  }
+
+  function loadProgress() {
+    try {
+      const p = JSON.parse(read(STORE.progress) || '{}') || {};
+      return { rounds: Number(p.rounds) || 0, roles: Array.isArray(p.roles) ? p.roles.filter((r) => ROLES[r]) : [] };
+    } catch (e) { return { rounds: 0, roles: [] }; }
+  }
+
+  function renderAwards() {
+    const have = loadAwards();
+    const items = Awards.AWARDS.map((a) => {
+      const got = have.indexOf(a.id) !== -1;
+      return `<div class="award-item${got ? ' got' : ''}"><span class="award-emoji" aria-hidden="true">${got ? a.emoji : '🔒'}</span>` +
+        `<div><b>${escapeHtml(a.name)}</b><span>${escapeHtml(got ? a.unlocks : a.hint)}</span></div></div>`;
+    }).join('');
+    ui.awards.innerHTML = `<p class="award-count">${have.length} of ${Awards.AWARDS.length} unlocked · each one adds something to your office</p>` + items;
+  }
+
   function quoteFor(stats) {
     if (stats.aftermaths.length) return stats.aftermaths[Math.floor(Math.random() * stats.aftermaths.length)];
     if (stats.trapsDodged > 0) return "You dodged every '2-minute call'. Legend.";
@@ -928,6 +958,32 @@
       ui.endNote.textContent = 'The real test: do you want another round? Note your answer after 10 runs, and again after 30.';
     }
 
+    // Achievements, from this round plus what you have done across rounds. Cosmetic unlocks only.
+    const progress = loadProgress();
+    progress.rounds++;
+    if (result.shipped && result.endReason !== 'pip' && progress.roles.indexOf(result.role) === -1) progress.roles.push(result.role);
+    store(STORE.progress, JSON.stringify(progress));
+    const unlocked = loadAwards();
+    const won = Awards.earnedBy({
+      finished: result.shipped && result.endReason !== 'pip',
+      rating: result.rating.key,
+      mode,
+      role: result.role,
+      events: result.events,
+      stats: st,
+      rounds: progress.rounds,
+      rolesFinished: progress.roles,
+      streak: Daily.streak(playedMornings(), today())
+    }, unlocked);
+    if (won.length) store(STORE.awards, JSON.stringify(unlocked.concat(won)));
+    ui.endAward.hidden = !won.length;
+    if (won.length) {
+      ui.endAward.innerHTML = '🎁 Unlocked: ' + won.map((id) => `<b>${Awards.byId[id].emoji} ${escapeHtml(Awards.byId[id].unlocks)}</b>`).join(' · ') + ' — on your desk from now on.';
+      office.setProps(Awards.propsFor(loadAwards()));
+      announce('Unlocked ' + won.map((id) => Awards.byId[id].unlocks).join(', '));
+    }
+    renderAwards();
+
     saveRun({
       score: result.score, title: result.rating.title, emoji: result.rating.emoji, role: result.role, level: result.level,
       mode, morning: mode === 'daily' ? morning : undefined, variant: game.peekVariant ? 'B' : 'A', at: Date.now()
@@ -964,6 +1020,7 @@
     resetCode();
     office.reset();
     office.setRole(role);
+    office.setProps(Awards.propsFor(loadAwards()));
     const boss = BOSSES[game.boss];
     ui.bossChip.textContent = `${boss.emoji} ${boss.label}`;
     ui.bossChip.title = boss.summary;
@@ -984,6 +1041,7 @@
     ui.startScreen.hidden = false;
     applyRoleText();
     renderDailyCard();
+    renderAwards();
     // Focus leaves the hidden button so Enter starts the morning; Tab still reaches the pickers.
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     ui.startScreen.querySelector('.panel').scrollTop = 0;
@@ -1159,6 +1217,7 @@
   renderLevelPicker();
   applyRoleText();
   renderDailyCard();
+  renderAwards();
   if (read(STORE.visit) !== String(today())) {
     report({ kind: 'visit', day: today() });
     store(STORE.visit, String(today()));

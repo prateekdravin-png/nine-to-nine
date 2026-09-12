@@ -315,7 +315,7 @@
         trivialAnswered: 0, trivialIgnored: 0,
         peeks: 0, cardsSeen: 0, headphonesUsed: 0,
         favoursBanked: 0, favoursUsed: 0, urgentDelegated: 0,
-        followUps: 0, escalations: 0, walkbyPassed: 0, walkbyCaught: 0,
+        followUps: 0, escalations: 0, walkbyPassed: 0, walkbyCaught: 0, rescues: 0,
         busyTime: 0, deepWorkTime: 0, codingTime: 0, peakFlow: 0,
         aftermaths: [],
         decisions: [] // { at: when the message arrived, outcome: 'good' | 'meh' | 'bad' }
@@ -544,6 +544,7 @@
       clampRep(s);
       s.stats.urgentHandled++;
       s.stats.urgentDelegated++;
+      if (isBusy(s)) s.stats.rescues++; // handled for you while you were stuck on a call
     } else if (card.type === 'trap') {
       s.stats.trapsDodged++;
       s.stats.aftermaths.push(`${helper} took your "quick" one. ${helper} will remember this.`);

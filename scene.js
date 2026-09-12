@@ -145,6 +145,17 @@
       // your hands on the keyboard (in front of the desk)
       `<g class="arm arm-left"><rect class="shirt" x="204" y="98" width="13" height="20" rx="6.5" fill="${PLAYER.shirt}"/><circle cx="214" cy="114" r="5" fill="${PLAYER.skin}"/></g>` +
       `<g class="arm arm-right"><rect class="shirt" x="259" y="98" width="13" height="20" rx="6.5" fill="${PLAYER.shirt}"/><circle cx="262" cy="114" r="5" fill="${PLAYER.skin}"/></g>` +
+      // desk objects unlocked by achievements (awards.js), hidden until earned
+      '<g class="prop prop-cat"><rect x="18" y="34" width="34" height="30" rx="3" fill="#FFFFFF" stroke="#C7AB8F" stroke-width="2"/><circle cx="35" cy="50" r="8" fill="#E0A44E"/><path d="M29 44 L31 38 L35 43 M41 44 L39 38 L35 43" fill="#E0A44E"/><circle cx="32" cy="49" r="1.2" fill="#2B1B12"/><circle cx="38" cy="49" r="1.2" fill="#2B1B12"/></g>' +
+      '<g class="prop prop-calendar"><rect x="500" y="84" width="34" height="34" rx="3" fill="#FFFFFF" stroke="#2E3A4F" stroke-width="2"/><rect x="500" y="84" width="34" height="9" fill="#E24B4A"/><g fill="#9DBFD2"><rect x="504" y="97" width="6" height="5"/><rect x="514" y="97" width="6" height="5"/><rect x="524" y="97" width="6" height="5"/><rect x="504" y="106" width="6" height="5"/><rect x="514" y="106" width="6" height="5"/></g></g>' +
+      '<g class="prop prop-medal"><path d="M438 80 L444 94 L450 80" fill="none" stroke="#4D8DFF" stroke-width="3"/><circle cx="444" cy="99" r="7" fill="#F5B83D" stroke="#C98B3A" stroke-width="1.5"/></g>' +
+      '<g class="prop prop-extinguisher"><rect x="8" y="122" width="14" height="24" rx="5" fill="#E24B4A"/><rect x="12" y="116" width="6" height="7" fill="#7A2E2E"/><rect x="8" y="131" width="14" height="5" fill="#F7F1E8"/></g>' +
+      '<g class="prop prop-monitor"><rect x="268" y="58" width="50" height="46" rx="4" fill="#2E3A4F"/><rect x="273" y="63" width="40" height="34" rx="2" fill="#1B2233"/><rect x="278" y="69" width="24" height="3" rx="1.5" fill="#8FE0A5"/><rect x="278" y="76" width="30" height="3" rx="1.5" fill="#C7D3E3"/><rect x="278" y="83" width="18" height="3" rx="1.5" fill="#5F6F86"/><rect x="288" y="104" width="10" height="9" fill="#2E3A4F"/><rect x="276" y="112" width="34" height="5" rx="2" fill="#2E3A4F"/></g>' +
+      '<g class="prop prop-notes"><rect x="318" y="44" width="11" height="11" fill="#F5E06A"/><rect x="318" y="58" width="11" height="11" fill="#7FD1B9"/></g>' +
+      '<g class="prop prop-plant"><path d="M163 104 Q154 94 159 86 Q166 94 165 104 Z" fill="#5B9A3B"/><path d="M166 104 Q168 90 176 86 Q176 98 169 104 Z" fill="#6FA84A"/><rect x="156" y="104" width="18" height="12" rx="2" fill="#C88B5A"/></g>' +
+      '<g class="prop prop-trophy"><path d="M202 102 H214 L212 110 H204 Z" fill="#F5B83D"/><path d="M201 103 Q197 106 202 108 M215 103 Q219 106 214 108" fill="none" stroke="#F5B83D" stroke-width="1.6"/><rect x="205" y="110" width="6" height="3" fill="#C98B3A"/><rect x="202" y="113" width="12" height="3" rx="1" fill="#C98B3A"/></g>' +
+      '<g class="prop prop-stand"><rect x="406" y="100" width="4" height="16" fill="#8C5F3C"/><rect x="398" y="113" width="20" height="3" rx="1.5" fill="#8C5F3C"/><path d="M400 100 Q408 92 416 100" fill="none" stroke="#2E3A4F" stroke-width="3"/><rect x="397" y="99" width="6" height="9" rx="3" fill="#2E3A4F"/><rect x="413" y="99" width="6" height="9" rx="3" fill="#2E3A4F"/></g>' +
+      '<g class="prop prop-photo"><rect x="458" y="100" width="22" height="16" rx="2" fill="#FFFFFF" stroke="#C7AB8F" stroke-width="1.5"/><circle cx="465" cy="108" r="3" fill="#E0AC84"/><circle cx="473" cy="108" r="3" fill="#B97A4E"/></g>' +
       // a colleague who owes you a favour walks over
       '<g class="helper"><g class="helper-body"></g>' +
         '<g><rect x="400" y="14" width="56" height="22" rx="11" fill="#FFFFFF"/><path d="M444 34 L452 42 L436 35 Z" fill="#FFFFFF"/>' +
@@ -266,6 +277,14 @@
       },
       clearEvent() { svg.removeAttribute('data-event'); },
 
+      // Desk objects unlocked by achievements (awards.js). Cosmetic only: they never touch the rules.
+      setProps(props) {
+        const on = new Set(props || []);
+        svg.querySelectorAll('.prop').forEach((el) => {
+          const id = [...el.classList].find((c) => c.indexOf('prop-') === 0);
+          el.classList.toggle('on', on.has(id.slice(5)));
+        });
+      },
       celebrate() { burst(container, 34); },
 
       reset() {
