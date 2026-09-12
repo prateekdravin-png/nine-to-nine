@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f16">
+<title>9 to 9 · Deep Work</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="hud">
+    <div class="brand"><span class="logo">9<i>to</i>9</span><span class="mode">Deep Work</span></div>
+    <div class="clock" id="clock" aria-label="In-game time">10:00 AM</div>
+    <div class="meter" id="progressMeter">
+      <div class="meter-label"><span id="progressLabel">Feature</span><b id="progressPct">0%</b></div>
+      <div class="meter-track"><i id="progressFill"></i></div>
+    </div>
+    <div class="meter" id="repMeter">
+      <div class="meter-label"><span>Reputation</span><b id="repVal">60</b></div>
+      <div class="meter-track"><i id="repFill" data-level="mid"></i></div>
+    </div>
+    <button class="icon-btn" id="muteBtn" title="Sound (M)" aria-label="Toggle sound">🔊</button>
+  </header>
+
+  <main class="stage">
+    <section class="ide" id="ide" data-tier="0">
+      <div class="ide-bar">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span class="boss-chip" id="bossChip" hidden></span>
+        <span class="file" id="workFile">payment-service / checkout.ts</span>
+        <span class="tier" id="tierLabel">Warming up</span>
+      </div>
+      <div class="scene" id="scene"></div>
+      <div class="event-bar" id="eventBar" hidden></div>
+      <pre class="code" id="code"></pre>
+      <div class="busy" id="busy" hidden>
+        <div class="busy-text" id="busyText">On a call…</div>
+        <div class="busy-track"><i id="busyFill"></i></div>
+      </div>
+      <div class="flow">
+        <div class="flow-label"><span>Flow</span><b id="flowMult">×1</b></div>
+        <div class="flow-track"><i id="flowFill"></i><span style="left:25%"></span><span style="left:50%"></span><span style="left:75%"></span></div>
+      </div>
+      <div class="banner" id="banner" hidden></div>
+    </section>
+
+    <aside class="inbox">
+      <div class="inbox-head" id="inboxHead">
+        <span>Notifications</span>
+        <span class="count" id="cardCount">0</span>
+        <span class="favours" id="favours" hidden>🤝 0</span>
+        <span class="distracted" id="distracted" hidden title="3 or more unread notifications halve how fast your focus builds">📛 distracted</span>
+      </div>
+      <div class="cards" id="cards">
+        <p class="inbox-empty" id="inboxEmpty">All quiet. Enjoy it while it lasts.</p>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="controls">
+    <button class="hp-btn" id="hpBtn" title="Blocks non-urgent pings for 10 seconds (H)"><span id="hpLabel">🎧 Headphones ×1</span></button>
+    <button class="code-btn" id="codeBtn"><span id="codeBtnLabel">HOLD TO CODE</span><small>or hold Space</small></button>
+  </footer>
+</div>
+
+<div class="overlay" id="startScreen">
+  <div class="panel">
+    <div class="panel-logo">9<i>to</i>9</div>
+    <h1>Deep Work</h1>
+    <p class="lede" id="startLede">It's 10:00 AM. Ship the feature by lunch. Everyone else has other plans for your morning.</p>
+
+    <h2 class="section-title" id="roleTitle">1 · Choose your role</h2>
+    <div class="roles" id="rolePicker" role="radiogroup" aria-labelledby="roleTitle"></div>
+    <p class="role-desc" id="roleDesc"></p>
+
+    <h3 class="subsection-title" id="levelTitle">Career level</h3>
+    <div class="levels" id="levelPicker" role="radiogroup" aria-labelledby="levelTitle"></div>
+    <p class="role-desc" id="levelDesc"></p>
+
+    <h2 class="section-title">2 · How it plays</h2>
+    <ol class="rules">
+      <li><b>Hold Space</b> (or the big button) to <span data-role-verb>code</span>. The longer you go uninterrupted, the more Flow you build. At <b>DEEP WORK</b> you work 3× faster.</li>
+      <li>Notifications keep arriving. <b>Respond</b> and you're pulled away for a while. <b>Ignore</b> and it's gone, but ignoring something genuinely urgent costs <b>Reputation</b>.</li>
+      <li>Some messages are traps. <span id="trapTell">Anything <i>quick</i>, <i>small</i> or <i>just 2 mins</i> never is.</span></li>
+      <li>🎧 <b>Headphones</b>, once per round: 10 seconds with no non-urgent pings.</li>
+      <li>🤝 <b>Colleague favours</b>: reply to small talk from a colleague (a person, not a bot, group chat or family) and they owe you one, up to 3. Tap <b>🤝</b> on any message to pass it to them, even while you're stuck on a call. They'll handle a real emergency for you; on anything else the favour is wasted.</li>
+    </ol>
+    <p class="goal" id="startGoal">Goal: get the feature shipped (100%) with your reputation intact.</p>
+
+    <h2 class="section-title">3 · Play</h2>
+    <section class="daily" id="dailyCard"></section>
+    <div class="practice">
+      <button class="secondary wide" id="practiceBtn">🎲 Practice on a random morning <kbd id="practiceKbd" hidden>Enter</kbd></button>
+      <label class="variant"><input type="checkbox" id="variantToggle"> <span><b>Variant B</b> (practice only): messages arrive collapsed, and peeking at one costs focus</span></label>
+    </div>
+    <p class="keys"><kbd>1</kbd>–<kbd>5</kbd> role · <kbd>Space</kbd> hold to <span data-role-verb>code</span> · <kbd>R</kbd> respond · <kbd>X</kbd> ignore · <kbd>P</kbd> peek · <kbd>D</kbd> pass to a colleague · <kbd>H</kbd> headphones · <kbd>M</kbd> sound<br><span>Keys act on the notification closest to expiring. It's outlined in blue.</span></p>
+    <p class="stats-note" id="statsNote">To test whether people come back, this prototype records anonymous play stats: a random ID, the morning, your role and score. No names.</p>
+    <div class="history" id="startHistory"></div>
+  </div>
+</div>
+
+<div class="overlay" id="endScreen" hidden>
+  <div class="panel">
+    <div class="end-emoji" id="endEmoji">🥇</div>
+    <p class="end-role" id="endRole"></p>
+    <h1 id="endTitle">Shipped</h1>
+    <p class="lede" id="endBlurb"></p>
+    <div class="end-numbers">
+      <div><span>Score</span><b id="endScore">0</b></div>
+      <div><span id="endProgressLabel">Feature</span><b id="endProgress">0%</b></div>
+      <div><span>Reputation</span><b id="endRep">0</b></div>
+    </div>
+    <p class="promotion" id="endPromotion" hidden></p>
+    <div class="persona" id="endPersona"></div>
+    <section class="daily" id="endDaily" hidden></section>
+    <div class="end-stats" id="endStats"></div>
+    <blockquote class="end-quote" id="endQuote"></blockquote>
+    <div class="end-actions">
+      <button class="primary" id="againBtn">Play again <kbd>Enter</kbd></button>
+      <button class="secondary" id="changeRoleBtn">Change role or level</button>
+    </div>
+    <p class="playtest" id="endNote"></p>
+    <div class="history" id="endHistory"></div>
+  </div>
+</div>
+
+<div class="sr-only" id="live" aria-live="polite"></div>
+
+<script src="content.js"></script>
+<script src="core.js"></script>
+<script src="daily.js"></script>
+<script src="persona.js"></script>
+<script src="scene.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

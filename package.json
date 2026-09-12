@@ -1,0 +1,12 @@
+{
+  "name": "nine-to-nine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "9 to 9 — playable prototype of the Deep Work mechanic",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "sim": "node sim.js",
+    "stats": "node stats.js"
+  }
+}

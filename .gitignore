@@ -1,0 +1,5 @@
+node_modules/
+*.log
+
+# local play stats recorded by the server
+data/
