@@ -10,8 +10,9 @@
   const Persona = window.NinePersona;
   const Awards = window.NineAwards;
   const Challenge = window.NineChallenge;
+  const Week = window.NineWeek;
   const Scene = window.NineScene;
-  const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, DAYS, BOSSES, EVENTS } = window.NineContent;
+  const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, DAYS, WEEKDAYS, METERS, BOSSES, EVENTS } = window.NineContent;
   const T = Core.TUNING;
   // The top tier of the morning being played: an ordinary day tops out at DEEP WORK, a backlog day
   // has only the one gear.
@@ -31,13 +32,16 @@
     hpBtn: $('hpBtn'), hpLabel: $('hpLabel'), codeBtn: $('codeBtn'), codeBtnLabel: $('codeBtnLabel'),
     startScreen: $('startScreen'), startLede: $('startLede'), rolePicker: $('rolePicker'), roleDesc: $('roleDesc'),
     levelPicker: $('levelPicker'), levelDesc: $('levelDesc'), trapTell: $('trapTell'),
-    challengeCard: $('challengeCard'), dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
+    challengeCard: $('challengeCard'), weekCard: $('weekCard'), dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
     startGoal: $('startGoal'), awards: $('awards'), statsNote: $('statsNote'), startHistory: $('startHistory'),
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
     endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endChallenge: $('endChallenge'), endStats: $('endStats'), endQuote: $('endQuote'),
     againBtn: $('againBtn'), changeRoleBtn: $('changeRoleBtn'),
-    endNote: $('endNote'), endHistory: $('endHistory'), live: $('live')
+    endNote: $('endNote'), endHistory: $('endHistory'), live: $('live'),
+    nightScreen: $('nightScreen'), nightDay: $('nightDay'), nightTitle: $('nightTitle'), nightBlurb: $('nightBlurb'),
+    nightMeters: $('nightMeters'), nightLedger: $('nightLedger'), nightNote: $('nightNote'),
+    nextMorningBtn: $('nextMorningBtn'), quitWeekBtn: $('quitWeekBtn')
   };
 
   const office = Scene.create(ui.scene); // the illustrated office at the top of the work panel
@@ -49,16 +53,20 @@
     career: 'nineToNine.career', // the highest level unlocked so far
     recent: 'nineToNine.recent',   // message texts seen in the last few rounds
     awards: 'nineToNine.awards',   // achievements unlocked so far
-    progress: 'nineToNine.progress' // rounds played and roles finished, for the long-run achievements
+    progress: 'nineToNine.progress', // rounds played and roles finished, for the long-run achievements
+    week: 'nineToNine.week'          // the work week in progress, so it survives a reload
   };
 
   let game = null;
   let role = Core.DEFAULT_ROLE;   // the role picked on the start screen; a running game keeps its own
   let level = Core.DEFAULT_LEVEL; // likewise for the career level
   let mode = 'practice';          // 'daily' | 'practice' | 'challenge' for the game in progress
+  let week = null;                // the work week in progress, if there is one
   let invite = null;              // the challenge this page was opened with, decoded from the link
   let invitePlayed = false;       // and whether this visit has answered it yet
   let morning = null;             // the morning number of a daily game, fixed when it starts
+  let endShown = false;            // showEnd must run once per game: in a week it leaves the result screen
+                                  // hidden and shows the evening instead, so "is it visible" cannot be the guard
   let busyKind = null;            // what you're stuck on: 'urgent' | 'trivial' | 'trap' (known once you've answered)
   let holding = false;
   let lastTs = 0;
@@ -247,6 +255,92 @@
     const selection = window.getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
+  }
+
+  // ---------- the work week ----------
+  // Five mornings on one set of meters. Everything about how a week is scored lives in week.js; this
+  // only stores it, draws it, and hands each morning the state the player arrives in.
+  function loadWeek() {
+    try {
+      const saved = JSON.parse(read(STORE.week) || 'null');
+      if (!saved || typeof saved !== 'object' || !Array.isArray(saved.mornings)) return null;
+      if (!Number.isInteger(saved.index) || saved.index < 0 || saved.index > Week.LENGTH) return null;
+      return saved;
+    } catch (e) { return null; }
+  }
+  const saveWeek = (w) => { if (w) store(STORE.week, JSON.stringify(w)); else { try { localStorage.removeItem(STORE.week); } catch (e) { /* no storage */ } } };
+
+  const weekDays = (w) => Week.dayPlan(w.seed, Core.DAY_ORDER);
+  const meterBar = (id, value) => {
+    const m = METERS[id];
+    const level = value >= 60 ? 'high' : value >= 30 ? 'mid' : 'low';
+    return `<div class="meter-box"><div class="meter-label"><span>${m.emoji} ${m.label}</span><b>${Math.round(value)}</b></div>` +
+      `<div class="meter-track"><i style="width:${Math.max(0, Math.min(100, value))}%" data-level="${level}"></i></div></div>`;
+  };
+
+  // The strip of five mornings, ticked off as they are played.
+  function weekStrip(w) {
+    const plan = weekDays(w);
+    return '<div class="week-strip">' + WEEKDAYS.map((name, i) => {
+      const done = w.mornings[i];
+      const state = done ? 'done' : i === w.index ? 'now' : 'todo';
+      const face = done ? done.emoji : DAYS[plan[i]].emoji;
+      return `<span class="week-day ${state}" title="${escapeHtml(DAYS[plan[i]].label)}"><b>${name.slice(0, 3)}</b><i>${face}</i></span>`;
+    }).join('') + '</div>';
+  }
+
+  function renderWeekCard() {
+    const w = loadWeek();
+    if (!w) {
+      ui.weekCard.innerHTML =
+        '<div class="daily-head"><b>🗓️ The work week</b><span class="daily-next">5 mornings, about 5 minutes</span></div>' +
+        '<p class="daily-sub">Monday to Friday on one set of meters. ⚡ Energy is spent by the very thing that wins a morning — deep focus is tiring — and only partly comes back overnight. 🏡 Home is spent by leaving the people outside work unanswered.<br>' +
+        'A morning you win by emptying yourself is a morning Tuesday pays for. Past a point you can\'t reach deep work at all.</p>' +
+        '<button class="primary" type="button" id="weekBtn">Start a week</button>';
+      return;
+    }
+    const v = Week.verdict(w);
+    if (w.over) {
+      ui.weekCard.innerHTML =
+        `<div class="daily-head"><b>${v.emoji} ${escapeHtml(v.title)}</b><span class="daily-next">${v.shipped} of ${v.played} delivered</span></div>` +
+        weekStrip(w) +
+        `<p class="daily-sub">${escapeHtml(v.blurb)}</p>` +
+        '<div class="meters">' + meterBar('energy', w.energy) + meterBar('home', w.home) + '</div>' +
+        '<button class="primary" type="button" id="weekBtn">Start a new week</button>';
+      return;
+    }
+    const plan = weekDays(w);
+    const day = DAYS[plan[w.index]];
+    ui.weekCard.innerHTML =
+      `<div class="daily-head"><b>🗓️ ${Week.currentDayName(w)}</b><span class="daily-next">morning ${w.index + 1} of ${Week.LENGTH}</span></div>` +
+      weekStrip(w) +
+      `<p class="daily-sub">Up next: <b>${day.emoji} ${escapeHtml(day.label)}</b> — ${escapeHtml(day.summary)}</p>` +
+      '<div class="meters">' + meterBar('energy', w.energy) + meterBar('home', w.home) + '</div>' +
+      `<button class="primary" type="button" id="weekBtn">Play ${Week.currentDayName(w)}</button>` +
+      '<button class="link week-quit" type="button" id="abandonWeekBtn">Start the week over</button>';
+  }
+
+  // The evening: what the morning cost, itemised, before the next one starts.
+  function showNight(result) {
+    const before = week.mornings[week.mornings.length - 1];
+    const v = Week.verdict(week);
+    const last = week.over;
+    ui.nightDay.textContent = `${before.weekday} evening`;
+    ui.nightTitle.textContent = last ? `${v.emoji} ${v.title}` : 'Evening';
+    ui.nightBlurb.textContent = last ? v.blurb : `${result.rating.emoji} ${result.rating.title}. Here's what it cost you.`;
+    ui.nightMeters.innerHTML = meterBar('energy', week.energy) + meterBar('home', week.home) + weekStrip(week);
+    const rows = before.items.map((i) =>
+      `<div class="ledger-row"><span>${METERS[i.meter].emoji} ${escapeHtml(i.label)}</span><b class="${i.amount < 0 ? 'down' : 'up'}">${i.amount > 0 ? '+' : ''}${Math.round(i.amount)}</b></div>`).join('');
+    const night = last ? '' :
+      `<div class="ledger-row night"><span>😴 A night's sleep${before.night.energy < Week.TUNING.NIGHT.energy ? ' (not a good one)' : ''}</span><b class="up">+${Math.round(before.night.energy)}</b></div>`;
+    ui.nightLedger.innerHTML = rows + night;
+    const tired = Week.tiredness(week.energy);
+    ui.nightNote.textContent = last
+      ? `${v.shipped} of ${v.played} delivered · ${v.golds} gold · ${v.score} points.`
+      : (tired.note || 'Rested enough. Tomorrow is a fresh start.');
+    ui.nextMorningBtn.innerHTML = last ? 'See the week <kbd>Enter</kbd>' : `Play ${Week.currentDayName(week)} <kbd>Enter</kbd>`;
+    ui.quitWeekBtn.hidden = last;
+    ui.nightScreen.hidden = false;
   }
 
   // ---------- challenge links ----------
@@ -995,14 +1089,15 @@
   }
 
   function showEnd() {
-    if (!game || !game.over || !ui.endScreen.hidden) return;
+    if (!game || !game.over || endShown) return;
+    endShown = true;
     const result = Core.summary(game);
     const r = ROLES[result.role];
     const boss = BOSSES[result.boss];
     const st = result.stats;
     ui.eventBar.hidden = true;
     ui.endEmoji.textContent = result.rating.emoji;
-    ui.endRole.textContent = `${whoPlayed(result.role, result.level)} · ${mode === 'daily' ? `Morning #${morning}` : mode === 'challenge' ? 'Challenge' : 'Practice'}`;
+    ui.endRole.textContent = `${whoPlayed(result.role, result.level)} · ${mode === 'daily' ? `Morning #${morning}` : mode === 'challenge' ? 'Challenge' : mode === 'week' && week ? `${WEEKDAYS[Math.max(0, week.index - 1)]} of your week` : 'Practice'}`;
     ui.endTitle.textContent = result.rating.title;
     ui.endBlurb.textContent = result.rating.blurb;
     ui.endScore.textContent = result.score;
@@ -1084,6 +1179,14 @@
         : 'The real test: do you want another round? Note your answer after 10 runs, and again after 30.';
     }
 
+    // In a week the morning is not the end of anything: the evening screen takes over, shows what it
+    // cost, and leads into tomorrow. The result screen still renders underneath for when the week ends.
+    if (mode === 'week' && week && !week.over) {
+      week = Week.afterMorning(week, result);
+      saveWeek(week);
+      renderWeekCard();
+    }
+
     // Challenges: how this went against the link you arrived on, and the morning to send onward. Never
     // offered on the daily morning \u2014 that link would spoil today for whoever received it.
     if (mode === 'challenge' && invite) {
@@ -1091,7 +1194,7 @@
       invitePlayed = true;
     }
     ui.endChallenge.hidden = true;
-    if (mode !== 'daily') renderChallengeResult(result);
+    if (mode !== 'daily' && mode !== 'week') renderChallengeResult(result);
 
     // Achievements, from this round plus what you have done across rounds. Cosmetic unlocks only.
     const progress = loadProgress();
@@ -1124,16 +1227,23 @@
       mode, morning: mode === 'daily' ? morning : undefined, variant: game.peekVariant ? 'B' : 'A', at: Date.now()
     });
     ui.endHistory.innerHTML = historyHtml(loadRuns(), result.role, result.level);
+    if (mode === 'week' && week) { showNight(result); return; } // the evening, not the end
     ui.endScreen.hidden = false;
     if (promotedTo) Scene.burst(ui.endPromotion, 40); // after the overlay is visible, so the burst is seen
   }
 
   // ---------- lifecycle ----------
-  // kind: 'daily' | 'practice' | 'challenge'
+  // kind: 'daily' | 'practice' | 'challenge' | 'week'
   function startGame(kind) {
     const daily = kind === 'daily';
     if (daily && loadDaily()[today()]) { showStart(); return; } // today's morning is already done
     if (kind === 'challenge' && !invite) kind = 'practice';
+    if (kind === 'week') {
+      week = loadWeek();
+      if (!week || week.over) { week = Week.newWeek((Math.random() * 0xffffffff) >>> 0); saveWeek(week); }
+    } else {
+      week = null; // any other round leaves the week where it is, to be picked up later
+    }
     unlockAudio();
     if (kind === 'practice') store(STORE.variant, ui.variantToggle.checked ? 'B' : 'A');
     mode = kind;
@@ -1143,15 +1253,21 @@
     // for this one round \u2014 the start screen keeps whatever you had picked. Practice rounds deal
     // recently seen messages last, so they keep feeling different.
     const challenged = kind === 'challenge';
+    const inWeek = kind === 'week';
     const playRole = challenged ? invite.role : role;
+    // A week pins the kind of morning itself (week.js deals one of each, Monday first) and carries in
+    // how tired the player is, which is the only thing it is allowed to change about the rules.
     game = Core.createGame({
       role: playRole,
       level: challenged ? invite.level : level,
       peekVariant: challenged ? invite.variant : (kind === 'practice' && ui.variantToggle.checked),
-      seed: daily ? Daily.seedFor(morning) : (challenged ? invite.seed : undefined),
+      seed: daily ? Daily.seedFor(morning) : challenged ? invite.seed : inWeek ? Week.seedForMorning(week.seed, week.index) : undefined,
+      day: inWeek ? weekDays(week)[week.index] : undefined,
+      carry: inWeek ? Week.carryFor(week) : undefined,
       recent: kind === 'practice' ? loadRecent() : undefined
     });
     holding = false;
+    endShown = false;
     busyKind = null;
     lastTs = 0;
     lastBusy = null;
@@ -1182,6 +1298,7 @@
     document.body.classList.remove('deep', 'is-busy', 'coding', 'flash-bad', 'flash-trap');
     ui.startScreen.hidden = true;
     ui.endScreen.hidden = true;
+    ui.nightScreen.hidden = true;
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     render();
   }
@@ -1192,6 +1309,7 @@
     ui.startScreen.hidden = false;
     applyRoleText();
     renderChallengeCard();
+    renderWeekCard();
     renderDailyCard();
     renderAwards();
     // Focus leaves the hidden button so Enter starts the morning; Tab still reaches the pickers.
@@ -1294,6 +1412,8 @@
     const send = e.target.closest('[data-share="challenge"]');
     if (send) { sendChallenge(send); return; }
     if (e.target.closest('#challengeBtn')) { startGame('challenge'); return; }
+    if (e.target.closest('#weekBtn')) { startGame('week'); return; }
+    if (e.target.closest('#abandonWeekBtn')) { saveWeek(null); week = null; renderWeekCard(); return; }
     if (e.target.closest('#dailyBtn, #endDailyBtn')) startGame('daily');
   });
 
@@ -1306,11 +1426,17 @@
   ui.practiceBtn.addEventListener('click', () => startGame('practice'));
   ui.againBtn.addEventListener('click', () => startGame('practice'));
   ui.changeRoleBtn.addEventListener('click', showStart);
+  ui.nextMorningBtn.addEventListener('click', () => {
+    ui.nightScreen.hidden = true;
+    if (week && week.over) { ui.endScreen.hidden = false; return; } // the week is done: the result screen waits
+    startGame('week');
+  });
+  ui.quitWeekBtn.addEventListener('click', () => { ui.nightScreen.hidden = true; showStart(); });
 
   const ARROWS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
 
   window.addEventListener('keydown', (e) => {
-    const overlayOpen = !ui.startScreen.hidden || !ui.endScreen.hidden;
+    const overlayOpen = !ui.startScreen.hidden || !ui.endScreen.hidden || !ui.nightScreen.hidden;
     if (e.code === 'Space') {
       e.preventDefault(); // never scroll the page or click a focused button
       if (!e.repeat && game && !game.over && !overlayOpen) setHolding(true);
@@ -1335,6 +1461,7 @@
       e.preventDefault();
       // From the start screen Enter plays what the screen is offering, topmost first: an unanswered
       // challenge, then today's morning, then a practice round.
+      if (!ui.nightScreen.hidden) { ui.nextMorningBtn.click(); return; }
       const onStart = !ui.startScreen.hidden;
       if (onStart && pendingInvite()) startGame('challenge');
       else startGame(onStart && !loadDaily()[today()] ? 'daily' : 'practice');
@@ -1382,6 +1509,7 @@
   invite = Challenge.decode(Challenge.codeFromUrl(location.href));
   if (invite) report({ kind: 'accept', day: today() });
   renderChallengeCard();
+  renderWeekCard();
   renderDailyCard();
   renderAwards();
   if (read(STORE.visit) !== String(today())) {

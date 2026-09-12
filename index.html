@@ -94,6 +94,7 @@
 
     <h2 class="section-title">3 · Play</h2>
     <section class="daily challenge" id="challengeCard" hidden></section>
+    <section class="daily week" id="weekCard"></section>
     <section class="daily" id="dailyCard"></section>
     <div class="practice">
       <button class="secondary wide" id="practiceBtn">🎲 Practice on a random morning <kbd id="practiceKbd" hidden>Enter</kbd></button>
@@ -135,6 +136,21 @@
   </div>
 </div>
 
+<div class="overlay" id="nightScreen" hidden>
+  <div class="panel night">
+    <p class="night-day" id="nightDay"></p>
+    <h1 id="nightTitle">Evening</h1>
+    <p class="lede" id="nightBlurb"></p>
+    <div class="meters" id="nightMeters"></div>
+    <div class="ledger" id="nightLedger"></div>
+    <p class="night-note" id="nightNote"></p>
+    <div class="end-actions">
+      <button class="primary" id="nextMorningBtn">Next morning <kbd>Enter</kbd></button>
+      <button class="secondary" id="quitWeekBtn">Leave the week</button>
+    </div>
+  </div>
+</div>
+
 <div class="sr-only" id="live" aria-live="polite"></div>
 
 <script src="content.js"></script>
@@ -143,6 +159,7 @@
 <script src="persona.js"></script>
 <script src="awards.js"></script>
 <script src="challenge.js"></script>
+<script src="week.js"></script>
 <script src="scene.js"></script>
 <script src="game.js"></script>
 </body>

@@ -33,6 +33,8 @@ It listens on your network too, so you can playtest on your phone at `http://<th
   the message turns out to be — far less than ignoring a real emergency, far more than reading it
   properly. It's for the messages you can't read in time, not for all of them.
 - 🎧 **Headphones**, once per round: 10 seconds with no non-urgent pings.
+- 🗓️ **The work week**: five mornings on one set of meters (⚡ energy, 🏡 home). A morning you win by
+  emptying yourself is a morning Tuesday pays for.
 - 🤝 **Colleague favours**: reply to small talk from a colleague (a person, not a bot, group chat or
   family) and they owe you one, up to 3. Tap 🤝 on any message to pass it to them, even while you're
   stuck on a call. They'll handle a real emergency for you (no call, no lost focus, +5 rep); on anything
@@ -150,6 +152,45 @@ http://…/#c=1.1ps9wxb.1.1.0.mk.1.mfn
 
 A mangled link — truncated by a chat app, a character eaten — fails a checksum and is ignored, so the
 game never plays a random morning while claiming it was the challenge.
+
+## The work week
+
+A single morning has no tomorrow, so there is never a reason not to spend everything you have: hold the
+button every second, take every call, answer nobody at home. **The week exists to put a price on that.**
+Five mornings — one of each kind, Monday always an ordinary one — on one set of meters, about five
+minutes end to end.
+
+- ⚡ **Energy** is spent by the very thing that wins a morning. Deep focus is tiring, and so is being
+  pulled into calls. The night gives back a fixed amount, never quite enough to cover a hard morning.
+- 🏡 **Home** is spent by leaving the people outside work unanswered, and by the mornings you had to
+  stay late to finish. A week guarantees a couple of messages from outside work each morning, so this
+  is a decision you can plan around rather than a coin flip on the message pools.
+
+**Only energy touches the rules of a morning**, and only in one way: tired people build focus slower,
+lose it faster, and past a point cannot reach deep work *at all* — the top gear is simply gone. Home
+never touches a morning. It decides how much of your energy the night gives back, so neglecting it
+doesn't make any single morning harder, it makes every morning after it harder to recover from. One
+lever on the loop, one lever on the week, instead of two things fighting over the same numbers.
+
+Between mornings you get the evening: what the day cost, itemised, so you can see which of your own
+choices is being charged for rather than watching a bar move.
+
+```
+habit                         Fri energy  Fri home  delivered   points   most common verdict
+Push flat out, ignore home             6        22      4.6/5     8501   burnt 98%
+Push flat out, answer home            36        98      3.8/5     7901   hero 88%
+Pace it, ignore home                  40        23      4.7/5     6986   burnt 99%
+Pace it, answer home                  58        98      3.8/5     6976   hero 89%
+```
+
+The week is judged on two axes and never one number, because the whole point is that what you delivered
+and what it cost can come apart. The most *points* come from the week that ends with nothing left — and
+that week is scored "Delivered. At a cost." Keeping a life costs about three quarters of a delivery a
+week; that trade is the mode. `npm run sim` section 8 is the check, and `test/week.test.js` fails if
+pacing ever stops paying or if answering home ever becomes free.
+
+The one thing it took to get there: slowing the climb to deep work wasn't a real cost. The simulated
+weeks hit the same targets on an empty tank until exhaustion started removing the top gear outright.
 
 ## Day types: what the morning is FOR
 
@@ -419,6 +460,7 @@ playtesting for real.
 | `daily.js` | The daily morning: numbering, seeds, streaks and the share grid |
 | `test/days.test.js` | Day types: that the best way to play really does change with the morning |
 | `challenge.js` | Challenge links: packing a morning and a score into a URL fragment, and reading it back |
+| `week.js` | The work week: what a morning costs you, what the night gives back, and how a week is judged |
 | `persona.js` | Work personalities: which one a round earns, and why |
 | `awards.js` | Achievements and the desk objects they unlock |
 | `scene.js` | The illustrated office scene and the portraits of the people who message you |
@@ -433,7 +475,7 @@ playtesting for real.
 
 - A real content pass: many more messages, so the tells stay learnable without becoming memorisable
 - Colleague favours: answer someone's small talk now, cash in their help during an outage later
-- The work week: Mon–Fri carried on one set of meters, so a morning you won by burning out costs you Tuesday
+- Park a message until tomorrow — the verb that had no room in a single morning now has a week to land in
 - Wire it into one full day loop (Morning → Work → Evening → Night)
 
 If it doesn't prove fun after 30 rounds, that's the most valuable result this prototype can give —

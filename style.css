@@ -301,6 +301,38 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 .flat-flow .flow-track i { background: var(--dim); }
 .day-note { margin: 6px 0 0; font-size: 13px; color: #c3cede; }
 
+/* ---- The work week ---- */
+.daily.week { border-color: #9b6bff55; background: linear-gradient(180deg, #9b6bff16, #9b6bff05); }
+#weekCard { margin-bottom: 12px; }
+.week-strip { display: flex; gap: 6px; margin: 8px 0 10px; }
+.week-day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border: 1px solid var(--line); border-radius: 10px; background: #ffffff06; }
+.week-day b { font: 700 10px var(--mono); letter-spacing: 0.06em; color: var(--dim); }
+.week-day i { font-style: normal; font-size: 17px; line-height: 1; filter: grayscale(1); opacity: 0.45; }
+.week-day.now { border-color: #9b6bff88; background: #9b6bff1f; }
+.week-day.now b { color: #d8c6ff; }
+.week-day.now i, .week-day.done i { filter: none; opacity: 1; }
+.week-day.done { border-color: #35c98a55; background: #35c98a12; }
+.week-quit { display: block; margin: 10px auto 0; font-size: 12px; color: var(--dim); }
+.meters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+.meter-box .meter-label { display: flex; justify-content: space-between; font: 600 11px var(--mono); color: var(--muted); margin-bottom: 4px; }
+.meter-box .meter-track { height: 8px; border-radius: 99px; background: #ffffff10; overflow: hidden; }
+.meter-box .meter-track i { display: block; height: 100%; border-radius: 99px; background: var(--green); transition: width 0.4s ease; }
+.meter-box .meter-track i[data-level=mid] { background: var(--amber); }
+.meter-box .meter-track i[data-level=low] { background: var(--red); }
+
+/* The evening between two mornings: what the day cost, itemised. */
+.panel.night { max-width: 480px; }
+.night-day { margin: 0 0 4px; font: 700 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--violet); }
+.ledger { margin: 4px 0 12px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.ledger-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--line); }
+.ledger-row:last-child { border-bottom: 0; }
+.ledger-row.night { background: #ffffff06; color: var(--muted); }
+.ledger-row b { font: 700 13px var(--mono); }
+.ledger-row b.down { color: var(--red); }
+.ledger-row b.up { color: var(--green); }
+.night-note { margin: 0 0 14px; font-size: 13px; color: #c3cede; text-align: center; }
+@media (max-width: 700px) { .meters { grid-template-columns: 1fr; } }
+
 /* ---- Daily morning ---- */
 .daily { padding: 14px; border: 1px solid #f5b83d55; border-radius: 16px; background: linear-gradient(180deg, #f5b83d14, #f5b83d05); }
 #endDaily { margin-bottom: 14px; }

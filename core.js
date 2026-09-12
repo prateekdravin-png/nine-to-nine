@@ -103,6 +103,9 @@
       // Ship day: most of what lands really is on fire.
       release:   { weight: 1, target: 95, goldRep: 70, weights: { urgent: 0.45, trivial: 0.2, trap: 0.35 }, respond: { urgent: { busy: 1.6, rep: 11 } }, ignore: { urgent: -20, trivial: 0, trap: 0 } }
     },
+    // Answering someone at home is not the same size of interruption as answering a colleague's chat,
+    // and across a week that difference is the whole decision: keeping a life costs working time.
+    PERSONAL_BUSY: 1.8,
     PEEK_FLOW_COST: 18,        // variant B only: reading a collapsed message costs focus
     HEADPHONES: { charges: 1, duration: 10 },
     // Colleague favours. Answering small talk from a colleague (a person, not a bot, a group chat or
@@ -187,8 +190,11 @@
 
   // Everything the loop needs to know about the kind of morning it is, in one flat object, so step()
   // and act() read s.rules and never ask which day type they are on.
-  function rulesFor(dayId) {
+  // carry: what a run of mornings brings with it (week.js) — being tired changes how focus behaves and
+  // nothing else, so a week can never quietly rewrite the rules of a morning.
+  function rulesFor(dayId, carry) {
     const day = TUNING.DAYS[dayId] || TUNING.DAYS[DEFAULT_DAY];
+    const c = carry || {};
     const perType = (base, over) => {
       const out = {};
       for (const type of Object.keys(base)) out[type] = Object.assign({}, base[type], (over || {})[type]);
@@ -198,10 +204,13 @@
       day: TUNING.DAYS[dayId] ? dayId : DEFAULT_DAY,
       target: day.target,
       goldRep: day.goldRep,
-      tiers: day.tiers || TUNING.TIERS,
+      // Being tired doesn't only slow the climb, it puts the top of the ladder out of reach: past a
+      // point you cannot get into deep work at all, however long you hold the button. Slower gain
+      // alone was not a real cost — the simulated weeks reached the same targets on an empty tank.
+      tiers: capTiers(day.tiers || TUNING.TIERS, c.tierCap),
       progressPerS: day.progressPerS != null ? day.progressPerS : TUNING.BASE_PROGRESS_PER_S,
-      flowGain: TUNING.FLOW_GAIN_PER_S * (day.flowGain || 1),
-      flowDecayIdle: TUNING.FLOW_DECAY_IDLE_PER_S * (day.flowDecayIdle || 1),
+      flowGain: TUNING.FLOW_GAIN_PER_S * (day.flowGain || 1) * (c.flowGain || 1),
+      flowDecayIdle: TUNING.FLOW_DECAY_IDLE_PER_S * (day.flowDecayIdle || 1) * (c.flowDecayIdle || 1),
       flowDecayBusy: TUNING.FLOW_DECAY_BUSY_PER_S * (day.flowDecayBusy || 1),
       spawnScale: day.spawnScale || 1,
       weights: day.weights || null,
@@ -209,6 +218,9 @@
       ignore: Object.assign({}, { urgent: TUNING.IGNORE.urgent.rep, trivial: TUNING.IGNORE.trivial.rep, trap: TUNING.IGNORE.trap.rep }, day.ignore)
     };
   }
+
+  // Never below one gear, so there is always something to hold the button for.
+  const capTiers = (tiers, cap) => (cap ? tiers.slice(0, Math.max(1, cap)) : tiers);
 
   function tierFor(flow, tiers) {
     const list = tiers || TUNING.TIERS;
@@ -310,15 +322,21 @@
       last[type] = decks[type].shift();
       return last[type];
     };
-    // The next colleague's small talk in the deck (for lunch), falling back to any colleague.
-    deal.colleague = () => {
-      const isColleague = (i) => !!pools.trivial[i].favour;
+    // The next small talk in the deck carrying a given tag, so a lunch break finds a colleague and a
+    // week finds someone at home — still dealt from the deck, so variety works the same way.
+    const pickTagged = (tag) => {
+      const tagged = (i) => !!pools.trivial[i][tag];
       if (!decks.trivial.length) refill('trivial');
-      const k = decks.trivial.findIndex(isColleague);
+      const k = decks.trivial.findIndex(tagged);
       if (k !== -1) return (last.trivial = decks.trivial.splice(k, 1)[0]);
-      const all = pools.trivial.map((_, i) => i).filter(isColleague);
+      const all = pools.trivial.map((_, i) => i).filter(tagged);
       return (last.trivial = all[Math.floor(rng() * all.length)]);
     };
+    // The next message from outside work in the deck (for the work week), falling back to any of them.
+    deal.personal = () => pickTagged('personal');
+
+    // The next colleague's small talk in the deck (for lunch), falling back to any colleague.
+    deal.colleague = () => pickTagged('favour');
     return deal;
   }
 
@@ -330,7 +348,7 @@
   // The rhythm (when, which type, how long) has a stream of its own that never looks at the message
   // pools, so on the same seed every role and level gets the same rhythm and only the words differ.
   // (Follow-ups are the one exception by design: they exist because of what a player did.)
-  function buildSchedule(seed, role, level, recent, plan) {
+  function buildSchedule(seed, role, level, recent, plan, carry) {
     const morning = plan || planMorning(seed);
     const boss = TUNING.BOSSES[morning.boss];
     const rules = rulesFor(morning.day);
@@ -368,7 +386,16 @@
     }
     arrivals.sort((a, b) => a.at - b.at);
     const deal = dealer(seed, Content.ROLES[role].byLevel[level || DEFAULT_LEVEL], new Set(recent || []));
-    for (const a of arrivals) a.msgIndex = a.colleague ? deal.colleague() : deal(a.type);
+    // A week asks you to keep a life as well as a job, so it makes sure life actually gets in touch:
+    // left to the message pools alone, someone from outside work would turn up about every other
+    // morning, which is too rare to plan around. The arrivals themselves are untouched — the same
+    // small talk at the same moment, from home instead of from the office.
+    const wantPersonal = (carry && carry.personal) || 0;
+    if (wantPersonal) {
+      const spare = arrivals.filter((a) => a.type === 'trivial' && !a.colleague);
+      for (let i = 0; i < Math.min(wantPersonal, spare.length); i++) spare[i].personal = true;
+    }
+    for (const a of arrivals) a.msgIndex = a.personal ? deal.personal() : a.colleague ? deal.colleague() : deal(a.type);
     return arrivals;
   }
 
@@ -382,7 +409,7 @@
     const plan = planMorning(seed);
     // o.day pins the kind of morning instead of taking the seed's. Play never passes it: a daily morning
     // has to be the same for everyone. The tests and the balance report use it to hold one thing still.
-    const rules = rulesFor(o.day || plan.day);
+    const rules = rulesFor(o.day || plan.day, o.carry);
     return {
       seed,
       role,
@@ -407,7 +434,7 @@
       cards: [],
       nextCardId: 1,
       // The schedule follows the day actually being played, pinned or not, so its pacing and mix match.
-      schedule: buildSchedule(seed, role, level, o.recent, Object.assign({}, plan, { day: rules.day })), // o.recent: texts seen recently
+      schedule: buildSchedule(seed, role, level, o.recent, Object.assign({}, plan, { day: rules.day }), o.carry), // o.recent: texts seen recently
       nextArrival: 0,
       pending: [],    // follow-ups and escalations on their way: { at, type, msg }
       followUpsSent: { trap: 0, urgent: 0 },
@@ -422,7 +449,7 @@
         peeks: 0, cardsSeen: 0, headphonesUsed: 0,
         favoursBanked: 0, favoursUsed: 0, urgentDelegated: 0,
         followUps: 0, escalations: 0, walkbyPassed: 0, walkbyCaught: 0, rescues: 0,
-        declined: 0,
+        declined: 0, personalAnswered: 0, personalIgnored: 0,
         busyTime: 0, deepWorkTime: 0, codingTime: 0, peakFlow: 0,
         aftermaths: [],
         decisions: [] // { at: when the message arrived, outcome: 'good' | 'meh' | 'bad' }
@@ -456,6 +483,7 @@
       avatar: msg.avatar,
       text: msg.text,
       favour: msg.favour || null, // the colleague who'd owe you for a reply; visible, like the sender
+      personal: !!msg.personal,   // from outside work; matters across a week, never within one morning
       spawnedAt: s.t,
       expiresAt: s.t + lifetime,
       peeked: !s.peekVariant
@@ -511,7 +539,10 @@
     clampRep(s);
     if (card.type === 'urgent') s.stats.urgentMissed++;
     else if (card.type === 'trap') s.stats.trapsDodged++;
-    else s.stats.trivialIgnored++;
+    else {
+      s.stats.trivialIgnored++;
+      if (card.personal) s.stats.personalIgnored++; // nobody notices once; a week notices
+    }
     decide(s, card, 'ignore');
     queueFollowUp(s, card, expired);
     events.push({ type: expired ? 'expire' : 'ignore', card, rep: eff.rep });
@@ -723,7 +754,10 @@
     s.rep += eff.rep;
     clampRep(s);
     // A quick reply to a colleague's chat takes less time than dealing with anything else.
-    const busy = card.type === 'trivial' && msg.favour ? TUNING.FAVOURS.replyBusy : eff.busy;
+    const busy = card.type !== 'trivial' ? eff.busy
+      : card.personal ? TUNING.PERSONAL_BUSY
+      : msg.favour ? TUNING.FAVOURS.replyBusy
+      : eff.busy;
     s.busyUntil = s.t + busy;
     s.busyDuration = busy;
     s.busyText = msg.busyText || Content.BUSY_TEXT[card.type];
@@ -737,6 +771,7 @@
       if (msg.aftermath) s.stats.aftermaths.push(msg.aftermath);
     } else {
       s.stats.trivialAnswered++;
+      if (card.personal) s.stats.personalAnswered++;
       if (msg.favour) {
         if (s.favours.length < TUNING.FAVOURS.max) {
           s.favours.push(msg.favour);

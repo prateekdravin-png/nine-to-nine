@@ -74,9 +74,12 @@ const STRATEGIES = {
   // focus; on a morning where silence is what costs you, it is the right way to play. Having both here
   // is how the day types are checked: if the same strategy wins every kind of day, the day types are
   // decoration.
-  'Sociable reader: answers all but traps': (s, card) => (card.type === 'trap' ? 'ignore' : 'respond')
+  'Sociable reader: answers all but traps': (s, card) => (card.type === 'trap' ? 'ignore' : 'respond'),
+  // Keeps a life as well as a job: answers the people outside work, ignores everything else that isn't
+  // on fire. Costs a little focus every morning and only pays back across a week (week.js).
+  'Perfect reader + answers home': (s, card) => (card.type === 'urgent' || card.personal ? 'respond' : 'ignore')
 };
-const DECIDE_STRATEGIES = new Set(['Coin flip on urgent-vs-trap, guesses', 'Coin flip on urgent-vs-trap, says no', 'Say no to everything', 'Sociable reader: answers all but traps']);
+const DECIDE_STRATEGIES = new Set(['Coin flip on urgent-vs-trap, guesses', 'Coin flip on urgent-vs-trap, says no', 'Say no to everything', 'Sociable reader: answers all but traps', 'Perfect reader + answers home']);
 const FAVOUR_STRATEGIES = new Set(Object.keys(STRATEGIES).filter((name) => name.includes('favours')));
 const KEYWORD_STRATEGIES = new Set(Object.keys(STRATEGIES).filter((name) => name.startsWith('Keyword')));
 
@@ -86,7 +89,7 @@ function playBot(seed, strategyName, opts) {
   if (!strategy) throw new Error(`Unknown strategy: ${strategyName}`);
   const reaction = o.reaction != null ? o.reaction : 0.8;
   const dt = 0.05;
-  const s = Core.createGame({ seed, role: o.role, level: o.level, day: o.day });
+  const s = Core.createGame({ seed, role: o.role, level: o.level, day: o.day, carry: o.carry });
   const rng = lcg(seed + 7919);
   const rolls = new Map(); // card id -> the bot's private random roll for that message
   const usesFavours = FAVOUR_STRATEGIES.has(strategyName);
@@ -105,7 +108,7 @@ function playBot(seed, strategyName, opts) {
         if (!busy && Core.isBusy(s)) break;
       }
     }
-    Core.step(s, dt, { holding: true });
+    Core.step(s, dt, { holding: o.stopAtTarget ? s.progress < s.rules.target : true });
   }
   return Core.summary(s);
 }

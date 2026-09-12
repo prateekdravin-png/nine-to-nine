@@ -30,14 +30,17 @@
   // Only individual colleagues give favours. Bots, broadcasts, group chats and family don't, so reading
   // the sender matters for small talk too. Favours only ever appear on small talk, never on urgent
   // messages or traps.
+  // `favour` marks a colleague who will owe you one for a reply. `personal` marks a message from
+  // outside work: free to ignore for one morning, and the other half of the game across a week
+  // (week.js). Neither is a hint about urgency — both sit on small talk only.
   const SHARED_TRIVIAL = [
     { from: 'Kiran', avatar: '🧑', text: 'chai? ☕', favour: 'Kiran' },
     { from: 'Team Bangalore 🎉', avatar: '👥', text: 'Happy bday Suresh!! (reply-all)' },
     { from: 'Admin', avatar: '🏢', text: 'Fun Friday: ethnic wear' },
-    { from: 'Society WhatsApp', avatar: '🏘️', text: 'Water off tomorrow 10–12' },
-    { from: 'Mom', avatar: '👩', text: 'Beta, did you eat?' },
+    { from: 'Society WhatsApp', avatar: '🏘️', text: 'Water off tomorrow 10–12', personal: true },
+    { from: 'Mom', avatar: '👩', text: 'Beta, did you eat?', personal: true },
     { from: 'HR', avatar: '🗂️', text: 'Optional wellness survey 🌱' },
-    { from: 'Family Group', avatar: '👨‍👩‍👧', text: 'Good morning 🌞🙏' },
+    { from: 'Family Group', avatar: '👨‍👩‍👧', text: 'Good morning 🌞🙏', personal: true },
     { from: 'Swathi', avatar: '👩', text: 'biryani order? 🍛', favour: 'Swathi' },
     { from: 'Townhall Bot', avatar: '📣', text: 'All-hands Thursday. Snacks confirmed.' },
     { from: 'Anil', avatar: '🧔', text: 'who took my charger', favour: 'Anil' },
@@ -787,6 +790,25 @@
   // saying no must not tell you what you just said no to.
   const BUSY_TEXT = { urgent: 'Handling it…', trivial: 'Replying…', trap: 'Stuck…', decline: 'Writing a polite no…' };
 
+  // ---- The work week (rules in week.js) ----
+  const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  // The two things a week costs you, and what they are called on screen.
+  const METERS = {
+    energy: { id: 'energy', label: 'Energy', emoji: '⚡', low: 'Running on fumes. Focus comes slower and goes faster.' },
+    home:   { id: 'home',   label: 'Home',   emoji: '🏡', low: "You're not really switching off. The nights stop helping." }
+  };
+
+  // How a week is judged: what you delivered against what it cost you. Four corners, no single score,
+  // because the whole point of a week is that those two can come apart.
+  const VERDICTS = {
+    hero:      { emoji: '🏆', title: 'The week you were hired for', blurb: 'Five mornings delivered, and you still have a life. This is the one nobody believes is possible.' },
+    burnt:     { emoji: '🔥', title: 'Delivered. At a cost.', blurb: 'Everything shipped. You are running on nothing and nobody at home has seen you. This is how good people leave.' },
+    balanced:  { emoji: '🌿', title: 'A sustainable week', blurb: 'Not everything landed, but you are still standing and still a person. Most weeks should look like this.' },
+    coasted:   { emoji: '😴', title: 'A quiet week', blurb: 'Well rested. Your manager has noticed the other thing.' },
+    lost:      { emoji: '📉', title: 'A week to forget', blurb: 'The work slipped and it still took everything you had. Some weeks are just like this.' }
+  };
+
   // ---- What kind of morning it is (rules in core.js TUNING.DAYS) ----
   // Named and described before you play, like the boss: the point is to change how you play the
   // morning, which only works if you know what kind of morning it is.
@@ -849,5 +871,5 @@
     }
   };
 
-  return { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS, SHARED_TRIVIAL, BUSY_TEXT, DAYS, BOSSES, EVENTS, FOLLOW_UPS };
+  return { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS, SHARED_TRIVIAL, BUSY_TEXT, DAYS, WEEKDAYS, METERS, VERDICTS, BOSSES, EVENTS, FOLLOW_UPS };
 });

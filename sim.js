@@ -132,6 +132,51 @@ console.log('   Gold rate. READING answers what is urgent and ignores the rest; 
   console.log('  ' + CoreDays.map((day) => `${DAYS[day].label}: ${TUNING.DAYS[day].target}% / ${TUNING.DAYS[day].goldRep} rep`).join(' · '));
 }
 
+console.log('\n8) THE WORK WEEK — does spending everything you have actually cost you by Friday?');
+console.log('   Five mornings on one set of meters (week.js). Habits differ only in how hard they push and whether\n   they answer the people outside work.\n');
+{
+  const Week = require('./week');
+  const { playBot } = require('./bots');
+  const CoreDays = require('./core').DAY_ORDER;
+  const weekSeeds = seeds.slice(0, Math.min(120, seeds.length));
+  const playWeek = (seed, habit) => {
+    let week = Week.newWeek(seed);
+    const plan = Week.dayPlan(seed, CoreDays);
+    while (!week.over) {
+      const i = week.index;
+      week = Week.afterMorning(week, playBot(Week.seedForMorning(seed, i), habit.strategy, {
+        day: plan[i], carry: Week.carryFor(week), stopAtTarget: !!habit.pace
+      }));
+    }
+    return week;
+  };
+  const HABITS = [
+    { name: 'Push flat out, ignore home', strategy: 'Perfect reader' },
+    { name: 'Push flat out, answer home', strategy: 'Perfect reader + answers home' },
+    { name: 'Pace it, ignore home', strategy: 'Perfect reader', pace: true },
+    { name: 'Pace it, answer home', strategy: 'Perfect reader + answers home', pace: true }
+  ];
+  console.log('habit'.padEnd(30) + 'Fri energy  Fri home  delivered   points   most common verdict');
+  console.log('\u2500'.repeat(96));
+  for (const habit of HABITS) {
+    let energy = 0, home = 0, shipped = 0, score = 0;
+    const verdicts = {};
+    for (const seed of weekSeeds) {
+      const week = playWeek(seed, habit);
+      const v = Week.verdict(week);
+      energy += week.energy; home += week.home; shipped += v.shipped; score += v.score;
+      verdicts[v.key] = (verdicts[v.key] || 0) + 1;
+    }
+    const n = weekSeeds.length;
+    const top = Object.entries(verdicts).sort((a, b) => b[1] - a[1])[0];
+    console.log(
+      habit.name.padEnd(30) + (energy / n).toFixed(0).padStart(10) + (home / n).toFixed(0).padStart(10) +
+        `${(shipped / n).toFixed(1)}/5`.padStart(11) + (score / n).toFixed(0).padStart(9) + '   ' +
+        `${top[0]} ${Math.round((top[1] / n) * 100)}%`
+    );
+  }
+}
+
 console.log('\nWhat healthy looks like:');
 console.log('  1) both naive strategies fail, perfect play ships reliably, and every drop in accuracy costs something.');
 console.log('  2) in EVERY role, a first-time player loses almost nothing before they can read it (the frustrating kind');
@@ -140,6 +185,9 @@ console.log('  3) using favours scores higher than ignoring all small talk, but 
 console.log('     a worse reader with them: favours reward being a decent colleague, not replace reading messages well.');
 console.log('  4) understanding the messages works at every level, "quick means trap" works only at junior, and trusting');
 console.log('     alarm words fails at lead. How much harder levels feel to real people is for playtesting to show.');
+console.log('  8) a week spent flat out ends with the most points and the worst Friday; pacing and answering the people');
+console.log('     outside work delivers a little less and ends the week still standing. If one habit won both, the two');
+console.log('     meters would be decoration — what you delivered and what it cost have to be able to come apart.');
 console.log('  7) no single row wins every column. Reading wins an ordinary morning and a backlog day; answering everyone');
 console.log('     wins an appraisal morning and loses badly elsewhere. If one row won everywhere, the day types would be');
 console.log('     scenery, and a person who adapts to the day should beat one who plays every morning the same way.');
