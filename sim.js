@@ -7,17 +7,21 @@ const { TUNING } = require('./core');
 const runs = Number(process.argv[2]) || 300;
 const seeds = Array.from({ length: runs }, (_, i) => i + 1);
 const pct = (v) => `${(v * 100).toFixed(0)}%`.padStart(5);
+// Sections 1-3 hold the kind of morning still, so each measures the thing it is about rather than which
+// day type the seeds happened to draw. Day types have section 7 and the work week section 8.
+const PLAIN = 'normal';
 
 console.log(`\n9 to 9 — Deep Work balance check (${runs} runs each)`);
 
 console.log('\n1) JUDGMENT — instant bots, time taken out of the picture (reaction 0.8s)');
-console.log('   These never read message text, so the result is the same for every role and level.\n');
+console.log('   Held to an ordinary morning, so this measures judgment and not which kind of day a seed picked');
+console.log('   (day types have their own section). These never read message text, so every role reads the same.\n');
 console.log('strategy                            ship  gold   PIP   avg progress  avg rep  avg score');
 console.log('─'.repeat(89));
 const rows = Object.keys(STRATEGIES)
   .filter((name) => !FAVOUR_STRATEGIES.has(name) && !KEYWORD_STRATEGIES.has(name) && !DECIDE_STRATEGIES.has(name))
-  .map((name) => evaluate(name, seeds));
-rows.push(Object.assign(evaluate('90% accurate reader', seeds, { headphonesAt: 30 }), { strategy: '90% accurate + headphones at 30s' }));
+  .map((name) => evaluate(name, seeds, { day: PLAIN }));
+rows.push(Object.assign(evaluate('90% accurate reader', seeds, { headphonesAt: 30, day: PLAIN }), { strategy: '90% accurate + headphones at 30s' }));
 for (const r of rows) {
   console.log(
     r.strategy.padEnd(34) +
@@ -34,7 +38,7 @@ console.log(`role               judgment  ship  gold  msgs |  LOST before read: 
 console.log('─'.repeat(121));
 for (const role of ROLE_ORDER) {
   for (const accuracy of [1, 0.85]) {
-    const r = evaluateHuman('First-time player', seeds, { accuracy, role });
+    const r = evaluateHuman('First-time player', seeds, { accuracy, role, day: PLAIN });
     console.log(
       `${ROLES[role].emoji} ${ROLES[role].label}`.padEnd(18) + pct(accuracy).padStart(9) + ' ' + pct(r.shipRate) + ' ' + pct(r.goldRate) +
         r.messagesPerRound.toFixed(0).padStart(6) + ' |' +
@@ -52,11 +56,11 @@ const favourRow = (label, r) => console.log(
     r.favoursBanked.toFixed(1).padStart(9) + r.favoursUsed.toFixed(1).padStart(6) + r.urgentDelegated.toFixed(1).padStart(11)
 );
 for (const name of ['Perfect reader', 'Perfect reader + favours', 'Perfect reader + favours when stuck', '90% accurate reader', '90% accurate + favours']) {
-  favourRow(`instant: ${name}`, evaluate(name, seeds));
+  favourRow(`instant: ${name}`, evaluate(name, seeds, { day: PLAIN }));
 }
 for (const accuracy of [1, 0.85]) {
   for (const favours of [false, true]) {
-    favourRow(`first-timer, ${pct(accuracy).trim()} judgment${favours ? ' + favours' : ''}`, evaluateHuman('First-time player', seeds, { accuracy, favours }));
+    favourRow(`first-timer, ${pct(accuracy).trim()} judgment${favours ? ' + favours' : ''}`, evaluateHuman('First-time player', seeds, { accuracy, favours, day: PLAIN }));
   }
 }
 

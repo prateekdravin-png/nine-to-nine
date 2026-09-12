@@ -115,7 +115,12 @@
           { from: 'Ops Bot', avatar: '🚨', text: 'P1: checkout returns 500 errors', busyText: 'Debugging checkout errors…' },
           { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Hotfix needed before the 11 AM release', busyText: 'Writing the hotfix…' },
           { from: 'Database Bot', avatar: '🗄️', text: 'DB CPU at 100%. Queries timing out', busyText: 'Killing slow queries…' },
-          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Customer data leak reported. Call NOW', busyText: 'On the security call…' }
+          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Customer data leak reported. Call NOW', busyText: 'On the security call…' },
+          { from: 'Ops Bot', avatar: '🚨', text: 'P1: refunds stuck in the queue', busyText: 'Clearing the refund queue…' },
+          { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Main branch is broken. Everyone blocked', busyText: 'Unblocking main…' },
+          { from: 'Security Team', avatar: '🛡️', text: 'Live vulnerability in the payment library', busyText: 'Patching the payment library…' },
+          { from: 'Onsite Client', avatar: '🌎', text: 'Orders duplicated. Customers charged twice!', busyText: 'Stopping duplicate orders…' },
+          { from: 'Release Manager', avatar: '📦', text: 'Rollback started. Need you on call', busyText: 'On the rollback call…' }
         ],
         trivial: [
           { from: 'Dev Chat', avatar: '💬', text: 'Tabs vs spaces, round 47' },
@@ -123,7 +128,9 @@
           { from: 'Dependabot', avatar: '🔧', text: '14 PRs to bump lodash' },
           { from: 'Kiran', avatar: '🧑', text: 'bro new canteen menu 😭', favour: 'Kiran' },
           { from: 'Git Bot', avatar: '🤖', text: 'Your branch is 42 commits behind' },
-          { from: 'Leo · Frontend', avatar: '🧑‍🎨', text: 'lunch? trying the new place 🌮', favour: 'Leo' }
+          { from: 'Leo · Frontend', avatar: '🧑‍🎨', text: 'lunch? trying the new place 🌮', favour: 'Leo' },
+          { from: 'Sonar Bot', avatar: '📊', text: 'Code smell count went up by 3' },
+          { from: 'Divya · Backend', avatar: '👩‍💻', text: 'anyone else getting VPN drops?', favour: 'Divya' }
         ],
         trap: [
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Quick call? 2 mins', busyText: "On a '2 minute' call…", aftermath: "The '2-minute call' ended 35 minutes later." },
@@ -139,7 +146,9 @@
           { from: 'Vikram · PM', avatar: '📋', text: 'Just one more tiny feature?', busyText: "Adding 'one tiny feature'…", aftermath: 'The tiny feature needed a new database.' },
           { from: 'Arjun · Architect', avatar: '🏛️', text: 'Quick brainstorm on microservices?', busyText: 'Brainstorming microservices…', aftermath: 'The brainstorm produced 14 new services and no code.' },
           { from: 'Onsite Client', avatar: '🌎', text: 'Only a small copy change 🙂', busyText: "Making a 'small copy change'…", aftermath: 'The copy change needed legal approval.' },
-          { from: 'Neha · QA', avatar: '🧪', text: 'Got a sec to debug my setup?', busyText: "Debugging someone else's laptop…", aftermath: 'It was a proxy setting. It took an hour.' }
+          { from: 'Neha · QA', avatar: '🧪', text: 'Got a sec to debug my setup?', busyText: "Debugging someone else's laptop…", aftermath: 'It was a proxy setting. It took an hour.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Just a quick number for the deck?', busyText: 'Making up a number…', aftermath: 'The number became a planning spreadsheet.' },
+          { from: 'Arjun · Architect', avatar: '🏛️', text: 'Small refactor while you are there?', busyText: 'Doing a small refactor…', aftermath: 'The small refactor touched three services.' }
         ]
       }
     },
@@ -199,7 +208,12 @@
           { from: 'Onsite Client', avatar: '🌎', text: 'UAT blocked: nobody can log in', busyText: 'Unblocking UAT…' },
           { from: 'Jenkins', avatar: '🤖', text: 'Smoke tests FAILED in production', busyText: 'Checking production smoke tests…' },
           { from: 'Security Team', avatar: '🛡️', text: 'Pen test found SQL injection. Verify fix', busyText: 'Verifying the injection fix…' },
-          { from: 'Release Manager', avatar: '📦', text: 'Release in 30 mins. Blockers?', busyText: 'Listing blockers…' }
+          { from: 'Release Manager', avatar: '📦', text: 'Release in 30 mins. Blockers?', busyText: 'Listing blockers…' },
+          { from: 'Ops Bot', avatar: '🚨', text: 'P1: payments failing for APAC users', busyText: 'Reproducing the APAC failure…' },
+          { from: 'Release Manager', avatar: '📦', text: 'Sign-off deadline moved to 11 AM', busyText: 'Rushing the sign-off…' },
+          { from: 'Security Team', avatar: '🛡️', text: 'Auth bypass found. Verify the patch', busyText: 'Verifying the auth patch…' },
+          { from: 'Onsite Client', avatar: '🌎', text: 'Production orders failing. Reproduce and confirm', busyText: 'Reproducing the order failure…' },
+          { from: 'Jenkins', avatar: '🤖', text: 'Release pipeline FAILED: 40 tests red', busyText: 'Triaging 40 red tests…' }
         ],
         trivial: [
           { from: 'Meera · QA', avatar: '👩‍🔬', text: 'who broke staging again? 😂', favour: 'Meera' },
@@ -207,7 +221,9 @@
           { from: 'Bug Bot', avatar: '🐞', text: "BUG-1204 marked won't fix" },
           { from: 'Automation Bot', avatar: '🤖', text: 'Nightly suite passed ✅' },
           { from: 'Test Env Bot', avatar: '🤖', text: 'Staging will restart at 6 PM' },
-          { from: 'Sam · Automation', avatar: '🧑‍🔧', text: 'coffee? the good machine works again ☕', favour: 'Sam' }
+          { from: 'Sam · Automation', avatar: '🧑‍🔧', text: 'coffee? the good machine works again ☕', favour: 'Sam' },
+          { from: 'Bug Bot', avatar: '🐞', text: 'BUG-0042 reopened for the fourth time' },
+          { from: 'Ravi · QA', avatar: '🧑', text: 'anyone got the staging password?', favour: 'Ravi' }
         ],
         trap: [
           { from: 'Vikram · PM', avatar: '📋', text: 'Just retest everything, small release 🙂', busyText: 'Retesting everything…', aftermath: "The 'small release' needed 312 test cases." },
@@ -223,7 +239,9 @@
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Small favour: write test cases for sales?', busyText: 'Writing test cases for a sales demo…', aftermath: 'Sales used your test cases as the product brochure.' },
           { from: 'Onsite Client', avatar: '🌎', text: 'Only a tiny regression pass, please', busyText: "Running a 'tiny' regression…", aftermath: 'The tiny regression had 400 test cases.' },
           { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Minor: can you update the test data?', busyText: 'Updating test data…', aftermath: 'The test data referenced a customer from 2009.' },
-          { from: 'Release Manager', avatar: '📦', text: 'Quickly re-run the full suite?', busyText: 'Re-running the suite…', aftermath: 'The full suite takes six hours.' }
+          { from: 'Release Manager', avatar: '📦', text: 'Quickly re-run the full suite?', busyText: 'Re-running the suite…', aftermath: 'The full suite takes six hours.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Quick demo walkthrough before the call?', busyText: 'Walking through the demo…', aftermath: 'The walkthrough found nothing and took an hour.' },
+          { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Just confirm my local setup works?', busyText: 'Debugging their laptop…', aftermath: 'Their laptop works. Your release does not.' }
         ]
       }
     },
@@ -281,7 +299,12 @@
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'CEO presenting in 10 mins. Chart broken', busyText: "Fixing the CEO's chart…" },
           { from: 'Compliance Team', avatar: '⚖️', text: 'Audit today: customer PII found in reports', busyText: 'Removing personal data…' },
           { from: 'Sales Head', avatar: '📈', text: 'Commissions calculated wrong. Payroll runs today', busyText: 'Recalculating commissions…' },
-          { from: 'Ops Bot', avatar: '🚨', text: 'P1: warehouse query burning all credits', busyText: 'Stopping the runaway query…' }
+          { from: 'Ops Bot', avatar: '🚨', text: 'P1: warehouse query burning all credits', busyText: 'Stopping the runaway query…' },
+          { from: 'CFO Office', avatar: '🏦', text: 'Investor call moved up. Numbers needed', busyText: 'Pulling the numbers…' },
+          { from: 'Data Pipeline', avatar: '🔄', text: 'FAILED: yesterday loaded twice into revenue', busyText: 'Undoing the double load…' },
+          { from: 'Compliance Team', avatar: '⚖️', text: 'Regulator asking why totals changed overnight', busyText: 'Explaining the totals…' },
+          { from: 'Sales Head', avatar: '📈', text: 'Region totals wrong in the board pack', busyText: 'Fixing the board pack…' },
+          { from: 'Ops Bot', avatar: '🚨', text: 'P1: the reporting warehouse is offline', busyText: 'Bringing reporting back…' }
         ],
         trivial: [
           { from: 'Data Chat', avatar: '💬', text: 'Excel vs Python, round 12' },
@@ -289,7 +312,9 @@
           { from: 'Rohit · Sales', avatar: '🧑‍💼', text: "thanks for last week's numbers 🙏", favour: 'Rohit' },
           { from: 'Report Bot', avatar: '🤖', text: 'Weekly dashboard refreshed ✅' },
           { from: 'BI Tool', avatar: '📉', text: 'Your dashboard was viewed 12 times' },
-          { from: 'Maya · Data', avatar: '👩‍🔬', text: 'cake in the kitchen 🍰', favour: 'Maya' }
+          { from: 'Maya · Data', avatar: '👩‍🔬', text: 'cake in the kitchen 🍰', favour: 'Maya' },
+          { from: 'Dashboard Bot', avatar: '📊', text: 'Weekly summary refreshed successfully' },
+          { from: 'Karthik · Data', avatar: '🧑', text: 'the warehouse is slow again 🐌', favour: 'Karthik' }
         ],
         trap: [
           { from: 'Vikram · PM', avatar: '📋', text: 'Quick pivot table? 2 mins', busyText: "Building a 'quick' pivot…", aftermath: 'The pivot table became a 12-tab workbook.' },
@@ -305,7 +330,9 @@
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Small tweak: switch the report to weekly?', busyText: 'Rebuilding the report weekly…', aftermath: 'Weekly became daily by Friday.' },
           { from: 'CFO Office', avatar: '💼', text: 'Only a minor restatement of last year', busyText: 'Restating last year…', aftermath: 'Last year is now different.' },
           { from: 'Neha · Marketing', avatar: '📣', text: 'Got a sec for my spreadsheet formula?', busyText: 'Untangling a formula…', aftermath: 'The formula was 11 nested IFs.' },
-          { from: 'Arjun · Architect', avatar: '🏛️', text: 'Quickly document every table we have?', busyText: 'Documenting tables…', aftermath: 'There are 3,400 tables. 3,000 are called temp.' }
+          { from: 'Arjun · Architect', avatar: '🏛️', text: 'Quickly document every table we have?', busyText: 'Documenting tables…', aftermath: 'There are 3,400 tables. 3,000 are called temp.' },
+          { from: 'Neha · Marketing', avatar: '📣', text: 'Just one small slide for tomorrow?', busyText: 'Making one small slide…', aftermath: 'One slide became a campaign deck.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Quick sense check on my maths?', busyText: 'Checking their maths…', aftermath: 'Their maths was wrong in four places.' }
         ]
       }
     },
@@ -365,7 +392,12 @@
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Enterprise client threatening to churn today', busyText: 'Calling the client…' },
           { from: 'Security Team', avatar: '🛡️', text: 'Phishing email sent to customers. Warn them', busyText: 'Warning customers…' },
           { from: 'SLA Bot', avatar: '⏱️', text: 'Five P1 tickets unassigned for an hour', busyText: 'Assigning P1 tickets…' },
-          { from: 'Onsite Client', avatar: '🌎', text: 'Invoices went to the wrong customers', busyText: 'Recalling invoices…' }
+          { from: 'Onsite Client', avatar: '🌎', text: 'Invoices went to the wrong customers', busyText: 'Recalling invoices…' },
+          { from: 'SLA Bot', avatar: '⏱️', text: 'Twelve tickets breach SLA within the hour', busyText: 'Racing the SLA clock…' },
+          { from: 'Ops Bot', avatar: '🚨', text: 'P1: refunds failing for every customer', busyText: 'Escalating the refund failure…' },
+          { from: 'Onsite Client', avatar: '🌎', text: 'Their CEO is on hold for you', busyText: 'Taking the CEO call…' },
+          { from: 'Security Team', avatar: '🛡️', text: 'Customer passwords posted on a forum', busyText: 'Warning affected customers…' },
+          { from: 'Phone Queue', avatar: '☎️', text: 'Queue at 80 callers. Nobody answering', busyText: 'Clearing the phone queue…' }
         ],
         trivial: [
           { from: 'Support Chat', avatar: '💬', text: 'Shift roster updated for next week' },
@@ -374,7 +406,9 @@
           { from: 'Ticket Bot', avatar: '🤖', text: 'Ticket #47001 auto-closed ✅' },
           { from: 'Divya · Support', avatar: '👩‍💻', text: 'lunch at 1? 🍱', favour: 'Divya' },
           { from: 'Chat Widget Bot', avatar: '🤖', text: 'A customer rated your chat 👍' },
-          { from: 'Tom · Support', avatar: '🧑', text: 'pizza for the night shift? 🍕', favour: 'Tom' }
+          { from: 'Tom · Support', avatar: '🧑', text: 'pizza for the night shift? 🍕', favour: 'Tom' },
+          { from: 'Rota Bot', avatar: '🗓️', text: 'Night shift swap approved ✅' },
+          { from: 'Farah · Support', avatar: '👩', text: 'who has the good headset?', favour: 'Farah' }
         ],
         trap: [
           { from: 'Vikram · PM', avatar: '📋', text: 'Quick call? Just explain the product', busyText: 'Giving an unplanned product demo…', aftermath: "The 'quick call' was a 90-minute sales demo." },
@@ -390,7 +424,9 @@
           { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Tiny ask: test my fix on production?', busyText: 'Testing on production…', aftermath: 'You broke production. Arjun was at lunch.' },
           { from: 'HR', avatar: '🗂️', text: 'Only 20 mins: customer empathy training', busyText: 'In empathy training…', aftermath: 'It was 20 minutes per module. There were nine.' },
           { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Quickly translate this error message?', busyText: 'Translating an error…', aftermath: 'The error message was in Latin. Nobody knows why.' },
-          { from: 'Onsite Client', avatar: '🌎', text: 'Minor thing: recreate our lost report?', busyText: 'Recreating a lost report…', aftermath: 'The report was in their trash folder.' }
+          { from: 'Onsite Client', avatar: '🌎', text: 'Minor thing: recreate our lost report?', busyText: 'Recreating a lost report…', aftermath: 'The report was in their trash folder.' },
+          { from: 'Neha · QA', avatar: '🧪', text: 'Quick one: screen-share your setup?', busyText: 'Screen sharing…', aftermath: 'The quick one was a training session.' },
+          { from: 'Sales Head', avatar: '📈', text: 'Small thing: draft a reply for me?', busyText: 'Drafting their reply…', aftermath: 'You wrote their email. They changed one word.' }
         ]
       }
     },
@@ -449,7 +485,12 @@
           { from: 'Onsite Client', avatar: '🌎', text: 'Deadline moved up a week. Call me', busyText: 'Renegotiating the deadline…' },
           { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Prod down and on-call engineer unreachable', busyText: 'Finding a backup on-call…' },
           { from: 'Finance', avatar: '🧾', text: 'Vendor invoice overdue. Service cut tomorrow', busyText: 'Approving the invoice…' },
-          { from: 'Release Manager', avatar: '📦', text: 'Release failed. Roll back or fix forward?', busyText: 'Deciding on the rollback…' }
+          { from: 'Release Manager', avatar: '📦', text: 'Release failed. Roll back or fix forward?', busyText: 'Deciding on the rollback…' },
+          { from: 'Director · Anita', avatar: '👩‍💼', text: 'Board wants the release date confirmed today', busyText: 'Confirming the date…' },
+          { from: 'HR', avatar: '🗂️', text: 'Two offers expire at end of day', busyText: 'Chasing the offers…' },
+          { from: 'Finance', avatar: '💰', text: 'Purchase order rejected. Team tools stop tomorrow', busyText: 'Rescuing the purchase order…' },
+          { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Half the team lost laptop access', busyText: 'Restoring team access…' },
+          { from: 'Onsite Client', avatar: '🌎', text: 'Renewal call brought forward. Join us', busyText: 'Joining the renewal call…' }
         ],
         trivial: [
           { from: 'LinkedIn', avatar: '🔗', text: 'Someone viewed your profile' },
@@ -458,7 +499,9 @@
           { from: 'Calendar', avatar: '📅', text: 'Reminder: 1:1s start next week' },
           { from: 'Kavya · Designer', avatar: '👩‍🎨', text: 'coffee run? want one? ☕', favour: 'Kavya' },
           { from: 'Calendar', avatar: '📅', text: 'Your 3 PM was moved to 3:30' },
-          { from: 'Nina · Scrum Master', avatar: '🧑‍🏫', text: 'retro snacks: cookies or fruit? 🍪', favour: 'Nina' }
+          { from: 'Nina · Scrum Master', avatar: '🧑‍🏫', text: 'retro snacks: cookies or fruit? 🍪', favour: 'Nina' },
+          { from: 'Calendar', avatar: '📅', text: 'Three meetings now overlap at 2' },
+          { from: 'Rahul · Peer Manager', avatar: '🧔', text: 'lunch? escaping my own standup 😅', favour: 'Rahul' }
         ],
         trap: [
           { from: 'Vikram · PM', avatar: '📋', text: 'Quick sync to plan the planning?', busyText: 'Planning the planning…', aftermath: 'You planned the planning. It now needs a planning session.' },
@@ -474,7 +517,9 @@
           { from: 'HR', avatar: '🗂️', text: 'Only 10 questions: engagement survey for managers', busyText: 'Filling in a manager survey…', aftermath: 'Question 10 had 40 sub-questions.' },
           { from: 'Finance', avatar: '🧾', text: 'Minor thing: re-sign all expense reports?', busyText: 'Re-signing expense reports…', aftermath: 'There were 212 expense reports.' },
           { from: 'Arjun · Architect', avatar: '🏛️', text: 'Quickly approve my conference trip?', busyText: 'Reviewing a conference trip…', aftermath: 'The conference is on a beach. For two weeks.' },
-          { from: 'Onsite Client', avatar: '🌎', text: 'Small ask: weekly status as a video?', busyText: 'Recording a status video…', aftermath: 'Nobody watched the video. They asked for a doc.' }
+          { from: 'Onsite Client', avatar: '🌎', text: 'Small ask: weekly status as a video?', busyText: 'Recording a status video…', aftermath: 'Nobody watched the video. They asked for a doc.' },
+          { from: 'Ramesh · Peer Manager', avatar: '👨‍💼', text: 'Quick chat about headcount, two minutes?', busyText: 'Chatting about headcount…', aftermath: 'Two minutes became a reorganisation discussion.' },
+          { from: 'HR', avatar: '🗂️', text: 'Just a small update to job descriptions', busyText: 'Rewriting job descriptions…', aftermath: 'Eleven job descriptions. All slightly different.' }
         ]
       }
     }
@@ -543,7 +588,11 @@
           { from: 'Arjun · Architect', avatar: '🏛️', text: 'Thoughts on switching frameworks next year?', busyText: 'Comparing frameworks…', aftermath: 'You compared six frameworks. Nobody is switching.' },
           { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Can you investigate why builds feel slower?', busyText: 'Profiling the build…', aftermath: 'Builds are 3 seconds faster. Your feature is not done.' },
           { from: 'Neha · QA', avatar: '🧪', text: 'Would love your view on test coverage', busyText: 'Discussing test coverage…', aftermath: 'Coverage went up 1%. The meeting took 2 hours.' },
-          { from: 'Onsite Client', avatar: '🌎', text: 'Can we talk through the architecture again?', busyText: 'Redrawing the architecture…', aftermath: 'Same architecture. New diagram.' }
+          { from: 'Onsite Client', avatar: '🌎', text: 'Can we talk through the architecture again?', busyText: 'Redrawing the architecture…', aftermath: 'Same architecture. New diagram.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Do you have a view on naming?', busyText: 'Debating names…', aftermath: 'Three hours on naming. The name did not change.' },
+          { from: 'Arjun · Architect', avatar: '🏛️', text: 'Worth a chat about the data model?', busyText: 'Chatting about the data model…', aftermath: 'The data model is unchanged. Your morning is gone.' },
+          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Any interest in presenting at the guild?', busyText: 'Preparing a guild talk…', aftermath: 'You are presenting on Thursday. About what, nobody said.' },
+          { from: 'Neha · QA', avatar: '🧪', text: 'Could you sanity check my understanding?', busyText: 'Sanity checking…', aftermath: 'Their understanding was correct. Yours is now gone.' }
         ]
       },
       lead: {
@@ -559,7 +608,14 @@
           { from: 'Security Team', avatar: '🛡️', text: 'Unpatched library found on the payment servers', busyText: 'Patching the library…' },
           { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Team is blocked on your API change', busyText: 'Unblocking the team…' },
           { from: 'Onsite Client', avatar: '🌎', text: 'Our users see blank pages since 9', busyText: 'Fixing the blank pages…' },
-          { from: 'Database Bot', avatar: '🗄️', text: 'Backups have failed for three nights', busyText: 'Fixing the backups…' }
+          { from: 'Database Bot', avatar: '🗄️', text: 'Backups have failed for three nights', busyText: 'Fixing the backups…' },
+          { from: 'Ops Bot', avatar: '📈', text: 'Refund job has been failing since six', busyText: 'Restarting the refund job…' },
+          { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Two teams are blocked on your review', busyText: 'Clearing the review queue…' },
+          { from: 'Database Bot', avatar: '🗄️', text: 'Replication lag is up to eleven minutes', busyText: 'Fixing replication lag…' },
+          { from: 'Onsite Client', avatar: '🌎', text: 'Payments have been declining for an hour', busyText: 'Investigating the declines…' },
+          { from: 'Security Team', avatar: '🛡️', text: 'Admin panel is reachable from the internet', busyText: 'Closing the admin panel…' },
+          { from: 'Release Manager', avatar: '📦', text: 'The build has been red since yesterday', busyText: 'Going through the red build…' },
+          { from: 'Ops Bot', avatar: '📈', text: 'Error rate has doubled every ten minutes', busyText: 'Chasing the error rate…' }
         ],
         trap: [
           { from: 'Vikram · PM', avatar: '📋', text: 'URGENT: need estimates for next quarter', busyText: 'Estimating next quarter…', aftermath: 'Next quarter was replanned the following week.' },
@@ -573,7 +629,11 @@
           { from: 'Director · Anita', avatar: '👩‍💼', text: 'Critical!! Rewrite the README, new tone', busyText: 'Rewriting the README…', aftermath: 'The README now has a brand voice.' },
           { from: 'Arjun · Architect', avatar: '🏛️', text: 'Important: debate REST versus GraphQL today', busyText: 'Debating REST and GraphQL…', aftermath: 'The debate continues in a new channel.' },
           { from: 'HR', avatar: '🗂️', text: 'Priority: update your profile photo', busyText: 'Taking a profile photo…', aftermath: 'You took 30 photos. You used the old one.' },
-          { from: 'Onsite Client', avatar: '🌎', text: 'Emergency: can the logo be bigger?', busyText: 'Making the logo bigger…', aftermath: 'Now they want it smaller.' }
+          { from: 'Onsite Client', avatar: '🌎', text: 'Emergency: can the logo be bigger?', busyText: 'Making the logo bigger…', aftermath: 'Now they want it smaller.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'URGENT: need your input on the deck', busyText: 'Giving input on the deck…', aftermath: 'The deck was for a meeting next month.' },
+          { from: 'Sales Head', avatar: '📈', text: 'CRITICAL: client wants a call today', busyText: 'On the client call…', aftermath: 'The client wanted to say hello.' },
+          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Top priority: fill the skills matrix', busyText: 'Filling the skills matrix…', aftermath: 'HR has your skills matrix. Nobody will read it.' },
+          { from: 'Arjun · Architect', avatar: '🏛️', text: 'Important!! Review my proposal before lunch', busyText: 'Reviewing the proposal…', aftermath: 'The proposal was three slides and a question mark.' }
         ]
       }
     },
@@ -592,7 +652,11 @@
           { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Can you pair with me on this?', busyText: 'Pairing with Arjun…', aftermath: 'You wrote the fix. Arjun got the credit.' },
           { from: 'Onsite Client', avatar: '🌎', text: 'Walk us through the test results sometime?', busyText: 'Presenting test results…', aftermath: 'They asked for the same walkthrough next week.' },
           { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Worth exploring a new testing tool?', busyText: 'Evaluating testing tools…', aftermath: 'You evaluated five tools and kept the old one.' },
-          { from: 'Neha · Marketing', avatar: '📣', text: 'Can you review our launch video?', busyText: 'Reviewing a launch video…', aftermath: 'You found 9 typos in the subtitles.' }
+          { from: 'Neha · Marketing', avatar: '📣', text: 'Can you review our launch video?', busyText: 'Reviewing a launch video…', aftermath: 'You found 9 typos in the subtitles.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Do you have thoughts on our coverage?', busyText: 'Discussing coverage…', aftermath: 'Coverage is the same. The meeting was not.' },
+          { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Worth pairing on this failing case?', busyText: 'Pairing on a failing case…', aftermath: 'It failed because of their typo.' },
+          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Would you review our testing strategy?', busyText: 'Reviewing the strategy…', aftermath: 'You now own the testing strategy.' },
+          { from: 'Neha · QA', avatar: '🧪', text: 'Can we talk through the risk matrix?', busyText: 'Talking through risk…', aftermath: 'The risk matrix has one more row.' }
         ]
       },
       lead: {
@@ -608,7 +672,14 @@
           { from: 'Automation Bot', avatar: '🤖', text: 'Payment tests fail on every device', busyText: 'Investigating payment tests…' },
           { from: 'Support Lead', avatar: '🛟', text: 'Refunds are charging customers instead', busyText: 'Reproducing the refund bug…' },
           { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Hotfix is waiting on your sign-off', busyText: 'Signing off the hotfix…' },
-          { from: 'Onsite Client', avatar: '🌎', text: 'Our auditors found data in wrong accounts', busyText: 'Checking the data mix-up…' }
+          { from: 'Onsite Client', avatar: '🌎', text: 'Our auditors found data in wrong accounts', busyText: 'Checking the data mix-up…' },
+          { from: 'Ops Bot', avatar: '📈', text: 'Checkout failures tripled since the deploy', busyText: 'Checking the deploy…' },
+          { from: 'Release Manager', avatar: '📦', text: 'The release is waiting on your verdict', busyText: 'Giving the verdict…' },
+          { from: 'Onsite Client', avatar: '🌎', text: 'UAT has been down since this morning', busyText: 'Restoring UAT…' },
+          { from: 'Security Team', avatar: '🛡️', text: 'The login fix did not hold', busyText: 'Retesting the login fix…' },
+          { from: 'Jenkins', avatar: '🤖', text: 'Regression suite has failed six times running', busyText: 'Digging into the regressions…' },
+          { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Two customers reported the same crash', busyText: 'Reproducing the crash…' },
+          { from: 'Ops Bot', avatar: '📈', text: 'Orders table has stopped accepting writes', busyText: 'Checking the orders table…' }
         ],
         trap: [
           { from: 'Vikram · PM', avatar: '📋', text: "URGENT: retest last year's release notes", busyText: 'Retesting old release notes…', aftermath: "Last year's release was fine. It was last year." },
@@ -622,7 +693,11 @@
           { from: 'Onsite Client', avatar: '🌎', text: 'Important!! Test our holiday party invite', busyText: 'Testing a party invite…', aftermath: 'The invite had the wrong date. You found it.' },
           { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'ASAP: why does my laptop fan spin?', busyText: "Listening to Arjun's laptop fan…", aftermath: 'It was 47 browser tabs.' },
           { from: 'Director · Anita', avatar: '👩‍💼', text: 'Priority: summarise quality in one emoji', busyText: 'Choosing an emoji…', aftermath: 'You chose 😐. Leadership was concerned.' },
-          { from: 'HR', avatar: '🗂️', text: 'Emergency!! Badge photo retakes today', busyText: 'Retaking a badge photo…', aftermath: 'The new photo is worse.' }
+          { from: 'HR', avatar: '🗂️', text: 'Emergency!! Badge photo retakes today', busyText: 'Retaking a badge photo…', aftermath: 'The new photo is worse.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'URGENT: sign off so we can ship', busyText: 'Signing off under pressure…', aftermath: 'You signed off. The bug shipped with it.' },
+          { from: 'Sales Head', avatar: '📈', text: 'CRITICAL: demo tomorrow needs a pass', busyText: 'Testing for the demo…', aftermath: 'The demo was moved to next quarter.' },
+          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Immediate: update the audit spreadsheet', busyText: 'Updating the audit sheet…', aftermath: 'The audit is in November.' },
+          { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'ASAP: can you retest my branch', busyText: 'Retesting their branch…', aftermath: 'Their branch was never merged.' }
         ]
       }
     },
@@ -641,7 +716,11 @@
           { from: 'CFO Office', avatar: '💼', text: 'Can we explore a few more scenarios?', busyText: 'Running scenarios…', aftermath: 'Scenario 14 was the same as scenario 2.' },
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Thoughts on a data literacy workshop?', busyText: 'Planning a workshop…', aftermath: 'You now run the workshop. Every month.' },
           { from: 'Arjun · Architect', avatar: '🏛️', text: 'When you can, review the new schema', busyText: 'Reviewing the schema…', aftermath: 'The new schema is the old schema, renamed.' },
-          { from: 'Neha · Marketing', avatar: '📣', text: 'Curious what our survey data says', busyText: 'Reading survey data…', aftermath: 'The survey says people like surveys less.' }
+          { from: 'Neha · Marketing', avatar: '📣', text: 'Curious what our survey data says', busyText: 'Reading survey data…', aftermath: 'The survey says people like surveys less.' },
+          { from: 'Sales Head', avatar: '📈', text: 'Do you have a feel for churn?', busyText: 'Feeling out churn…', aftermath: 'You built a churn model. Nobody asked for one.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Worth exploring a different cut here?', busyText: 'Cutting the data again…', aftermath: 'Four cuts later, the first one was used.' },
+          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Would you own the metrics glossary?', busyText: 'Writing the glossary…', aftermath: 'You own the metrics glossary. Congratulations.' },
+          { from: 'CFO Office', avatar: '🏦', text: 'Can we walk the assumptions again?', busyText: 'Walking through assumptions…', aftermath: 'Same assumptions. Longer meeting.' }
         ]
       },
       lead: {
@@ -657,7 +736,14 @@
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Pricing dashboard shows prices ten times higher', busyText: 'Fixing the pricing data…' },
           { from: 'Compliance Team', avatar: '⚖️', text: 'Customer deletion requests missed their deadline', busyText: 'Processing deletion requests…' },
           { from: 'Sales Head', avatar: '📈', text: "Board members see last quarter's numbers", busyText: 'Refreshing the board deck…' },
-          { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Your export is filling the shared disk', busyText: 'Stopping the export…' }
+          { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Your export is filling the shared disk', busyText: 'Stopping the export…' },
+          { from: 'Data Pipeline', avatar: '🔄', text: 'Revenue table has been empty since three', busyText: 'Refilling the revenue table…' },
+          { from: 'CFO Office', avatar: '🏦', text: 'The board pack has last quarter figures', busyText: 'Correcting the board pack…' },
+          { from: 'Compliance Team', avatar: '⚖️', text: 'Customer names appear in a shared export', busyText: 'Pulling the export…' },
+          { from: 'Ops Bot', avatar: '📈', text: 'Dashboard queries have been timing out', busyText: 'Speeding up the dashboards…' },
+          { from: 'Sales Head', avatar: '📈', text: 'Commissions differ from the payroll file', busyText: 'Reconciling commissions…' },
+          { from: 'Data Pipeline', avatar: '🔄', text: 'Yesterday finished loading twenty minutes ago', busyText: 'Checking the late load…' },
+          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'The CEO is quoting a retired number', busyText: 'Tracing the old number…' }
         ],
         trap: [
           { from: 'Sales Head', avatar: '📈', text: 'URGENT: make the chart more exciting', busyText: 'Making the chart exciting…', aftermath: 'The chart is now 3D. It is worse.' },
@@ -671,7 +757,11 @@
           { from: 'CFO Office', avatar: '💼', text: 'ASAP: round every number to millions', busyText: 'Rounding numbers…', aftermath: 'Now everything is zero million.' },
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Important: add emojis to the KPI report', busyText: 'Adding emojis…', aftermath: 'Every KPI is now a sad face.' },
           { from: 'Director · Anita', avatar: '👩‍💼', text: 'Priority: a dashboard of our dashboards', busyText: 'Building a dashboard of dashboards…', aftermath: 'The dashboard of dashboards has no users.' },
-          { from: 'HR', avatar: '🗂️', text: 'Immediate: count the office plants', busyText: 'Counting plants…', aftermath: 'There are 41 plants. Three are plastic.' }
+          { from: 'HR', avatar: '🗂️', text: 'Immediate: count the office plants', busyText: 'Counting plants…', aftermath: 'There are 41 plants. Three are plastic.' },
+          { from: 'Neha · Marketing', avatar: '📣', text: 'URGENT: numbers for the newsletter please', busyText: 'Pulling newsletter numbers…', aftermath: 'The newsletter goes out next month.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Critical: need the funnel before standup', busyText: 'Building the funnel…', aftermath: 'Standup ended. Nobody opened the funnel.' },
+          { from: 'Sales Head', avatar: '📈', text: 'ASAP: one more view of the pipeline', busyText: 'Cutting the pipeline view…', aftermath: 'The fifth pipeline view. Same conclusion.' },
+          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Emergency: the town hall needs a chart', busyText: 'Making a town hall chart…', aftermath: 'The chart was on screen for nine seconds.' }
         ]
       }
     },
@@ -690,7 +780,11 @@
           { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Any pattern in these tickets, you think?', busyText: 'Looking for patterns…', aftermath: 'The pattern was Mondays.' },
           { from: 'Sales Head', avatar: '📈', text: 'Thoughts on upselling during support calls?', busyText: 'Writing an upsell script…', aftermath: 'Customers now hang up faster.' },
           { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'When free, review the error codes list', busyText: 'Reviewing error codes…', aftermath: 'Error 4012 means "unknown error". So does 4013.' },
-          { from: 'Onsite Client', avatar: '🌎', text: 'Could your team visit our office sometime?', busyText: 'Planning a site visit…', aftermath: 'The visit is in another timezone. You are going.' }
+          { from: 'Onsite Client', avatar: '🌎', text: 'Could your team visit our office sometime?', busyText: 'Planning a site visit…', aftermath: 'The visit is in another timezone. You are going.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Any sense of the common ticket themes?', busyText: 'Finding themes…', aftermath: 'The themes were obvious. The deck took two hours.' },
+          { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Would you shadow the new hire today?', busyText: 'Shadowing the new hire…', aftermath: 'The new hire learned a lot. Your queue grew.' },
+          { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Could we walk through one customer journey?', busyText: 'Walking the journey…', aftermath: 'One journey became seven. None were finished.' },
+          { from: 'HR', avatar: '🗂️', text: 'Would you help shape our tone guide?', busyText: 'Shaping the tone guide…', aftermath: 'The tone guide is yours to maintain.' }
         ]
       },
       lead: {
@@ -706,7 +800,14 @@
           { from: 'Security Team', avatar: '🛡️', text: "Agents can see other customers' card numbers", busyText: 'Restricting agent access…' },
           { from: 'Ops Bot', avatar: '📈', text: 'Mobile app crashes on launch for everyone', busyText: 'Coordinating the crash response…' },
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'A reporter is asking about the outage', busyText: 'Preparing a statement…' },
-          { from: 'Onsite Client', avatar: '🌎', text: 'Our staff cannot process refunds today', busyText: 'Unblocking refunds…' }
+          { from: 'Onsite Client', avatar: '🌎', text: 'Our staff cannot process refunds today', busyText: 'Unblocking refunds…' },
+          { from: 'SLA Bot', avatar: '⏱️', text: 'Three enterprise tickets went unanswered overnight', busyText: 'Answering the enterprise tickets…' },
+          { from: 'Ops Bot', avatar: '📈', text: 'Chat widget has been offline since eight', busyText: 'Restoring the chat widget…' },
+          { from: 'Onsite Client', avatar: '🌎', text: 'Their finance team cannot download invoices', busyText: 'Fixing invoice downloads…' },
+          { from: 'Security Team', avatar: '🛡️', text: 'A support export went to strangers', busyText: 'Recalling the export…' },
+          { from: 'Phone Queue', avatar: '☎️', text: 'Average wait has passed forty minutes', busyText: 'Cutting the wait time…' },
+          { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'The hotfix missed half our customers', busyText: 'Chasing the missed customers…' },
+          { from: 'Social Monitor', avatar: '📡', text: 'A complaint thread is spreading fast', busyText: 'Replying in public…' }
         ],
         trap: [
           { from: 'Sales Head', avatar: '📈', text: 'URGENT: prospect wants a feature tour', busyText: 'Giving a feature tour…', aftermath: 'The prospect was a student writing an essay.' },
@@ -720,7 +821,11 @@
           { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'ASAP!! New signature for every email', busyText: 'Updating email signatures…', aftermath: 'The new signature is longer than most replies.' },
           { from: 'Director · Anita', avatar: '👩‍💼', text: 'Important: rank customers by vibe', busyText: 'Ranking customers by vibe…', aftermath: 'Nobody could define vibe.' },
           { from: 'HR', avatar: '🗂️', text: 'Priority!! Choose your team hoodie size', busyText: 'Choosing a hoodie size…', aftermath: 'The hoodies arrived in one size.' },
-          { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Emergency: is our favicon too blue?', busyText: 'Studying the favicon…', aftermath: 'The favicon is fine. It was always fine.' }
+          { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Emergency: is our favicon too blue?', busyText: 'Studying the favicon…', aftermath: 'The favicon is fine. It was always fine.' },
+          { from: 'Sales Head', avatar: '📈', text: 'URGENT: my lead wants a walkthrough', busyText: 'Walking them through…', aftermath: 'The lead was a friend of a friend.' },
+          { from: 'HR', avatar: '🗂️', text: 'Critical: complete the compliance module today', busyText: 'Doing the compliance module…', aftermath: 'Twenty slides and a quiz about fire exits.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'ASAP: tag last quarter for reporting', busyText: 'Tagging old tickets…', aftermath: 'Nobody opened the report.' },
+          { from: 'Onsite Client', avatar: '🌎', text: 'Important!! Resend the summary from March', busyText: 'Digging up March…', aftermath: 'They found it in their own inbox.' }
         ]
       }
     },
@@ -739,7 +844,11 @@
           { from: 'HR', avatar: '🗂️', text: 'Can you lead the culture committee?', busyText: 'Leading the culture committee…', aftermath: 'The culture committee has a culture problem.' },
           { from: 'Finance', avatar: '🧾', text: 'Thoughts on tracking time per task?', busyText: 'Designing time tracking…', aftermath: 'Everyone now spends 10% of their time tracking time.' },
           { from: 'Arjun · Architect', avatar: '🏛️', text: 'When convenient, align the teams on tooling', busyText: 'Aligning teams on tooling…', aftermath: 'Every team agreed to use a different tool.' },
-          { from: 'Onsite Client', avatar: '🌎', text: 'Can we explore a joint innovation lab?', busyText: 'Exploring an innovation lab…', aftermath: 'The lab has a logo. It has no projects.' }
+          { from: 'Onsite Client', avatar: '🌎', text: 'Can we explore a joint innovation lab?', busyText: 'Exploring an innovation lab…', aftermath: 'The lab has a logo. It has no projects.' },
+          { from: 'Director · Anita', avatar: '👩‍💼', text: 'Any thoughts on our team structure?', busyText: 'Thinking about structure…', aftermath: 'Your thoughts are now a proposal.' },
+          { from: 'HR', avatar: '🗂️', text: 'Would you sit on the hiring panel?', busyText: 'Sitting on the panel…', aftermath: 'Four interviews are in your calendar.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Could we align on how we align?', busyText: 'Aligning on alignment…', aftermath: 'Alignment achieved. Nothing changed.' },
+          { from: 'Finance', avatar: '💰', text: 'Thoughts on the budget for next year?', busyText: 'Forecasting next year…', aftermath: 'Your thoughts are now a budget commitment.' }
         ]
       },
       lead: {
@@ -755,7 +864,14 @@
           { from: 'Onsite Client', avatar: '🌎', text: 'Our CTO wants a call before signing', busyText: 'Calling their CTO…' },
           { from: 'Release Manager', avatar: '📦', text: 'Two teams deployed conflicting changes this morning', busyText: 'Sorting out the conflict…' },
           { from: 'HR', avatar: '🗂️', text: 'New joiner starts today with no laptop', busyText: 'Finding a laptop…' },
-          { from: 'Director · Anita', avatar: '👩‍💼', text: 'Headcount decision closes at 4 today', busyText: 'Making the headcount case…' }
+          { from: 'Director · Anita', avatar: '👩‍💼', text: 'Headcount decision closes at 4 today', busyText: 'Making the headcount case…' },
+          { from: 'Director · Anita', avatar: '👩‍💼', text: 'The client has stopped replying to us', busyText: 'Reaching the client…' },
+          { from: 'HR', avatar: '🗂️', text: 'Two people on your team have resigned', busyText: 'Talking to the team…' },
+          { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'The release has slipped a second week', busyText: 'Replanning the release…' },
+          { from: 'Finance', avatar: '💰', text: 'Your project is over budget by half', busyText: 'Rebuilding the budget…' },
+          { from: 'Release Manager', avatar: '📦', text: 'The rollback made your plan obsolete', busyText: 'Rewriting the plan…' },
+          { from: 'Onsite Client', avatar: '🌎', text: 'They want a different team lead', busyText: 'Handling the request…' },
+          { from: 'Director · Anita', avatar: '👩‍💼', text: 'Your two best engineers are both leaving', busyText: 'Trying to keep them…' }
         ],
         trap: [
           { from: 'Vikram · PM', avatar: '📋', text: 'URGENT: rename the sprint to "Phoenix"', busyText: 'Renaming the sprint…', aftermath: 'Sprint Phoenix delivered what Sprint 14 would have.' },
@@ -769,7 +885,11 @@
           { from: 'HR', avatar: '🗂️', text: 'Critical!! Order the office holiday decorations', busyText: 'Ordering decorations…', aftermath: 'The decorations arrived in February.' },
           { from: 'Finance', avatar: '🧾', text: 'Important: why did pens cost more?', busyText: 'Investigating pen costs…', aftermath: 'They were nicer pens.' },
           { from: 'Ramesh · Peer Manager', avatar: '👨‍💼', text: 'Priority: swap desks with my team?', busyText: 'Negotiating desks…', aftermath: 'You moved desks. Their team moved back.' },
-          { from: 'Arjun · Architect', avatar: '🏛️', text: 'Emergency!! Name the new meeting rooms', busyText: 'Naming meeting rooms…', aftermath: 'The rooms are named after planets. Pluto is a cupboard.' }
+          { from: 'Arjun · Architect', avatar: '🏛️', text: 'Emergency!! Name the new meeting rooms', busyText: 'Naming meeting rooms…', aftermath: 'The rooms are named after planets. Pluto is a cupboard.' },
+          { from: 'HR', avatar: '🗂️', text: 'URGENT: approve last quarter timesheets', busyText: 'Approving timesheets…', aftermath: 'Forty timesheets. All identical.' },
+          { from: 'Vikram · PM', avatar: '📋', text: 'Critical: pick a name for the initiative', busyText: 'Naming the initiative…', aftermath: 'The initiative was cancelled before it was named.' },
+          { from: 'Ramesh · Peer Manager', avatar: '👨‍💼', text: 'ASAP: my team needs your sign-off', busyText: 'Signing off for them…', aftermath: 'It was their decision to make.' },
+          { from: 'Finance', avatar: '💰', text: 'Emergency: re-code every expense line', busyText: 'Re-coding expenses…', aftermath: 'The codes changed back the following week.' }
         ]
       }
     }

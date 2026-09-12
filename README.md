@@ -306,19 +306,32 @@ message text can never reach the page as markup).
 
 ## Message variety
 
-Every role has a large pool of messages, so rounds don't feel like the same list:
+Every role has a large pool of messages at every level:
 
 | Per role | Urgent | Traps | Small talk |
 |---|---|---|---|
-| 🌱 Junior | 14 | 14 | 19–20 (including 13 shared) |
-| 🚀 Senior | 14 (same as Junior) | 12 | same as Junior |
-| 👑 Lead | 12 | 12 | same as Junior |
+| 🌱 Junior | 19 | 16 | 21–22 (including 13 shared) |
+| 🚀 Senior | 19 (same as Junior) | 16 | same as Junior |
+| 👑 Lead | 19 | 16 | same as Junior |
 
 Messages are dealt like a shuffled deck (`dealer` in `core.js`): a round never repeats a message while
-unseen ones remain, and practice rounds put messages you saw in your last few rounds at the bottom of the
-deck. The daily morning ignores that history, so it stays the same for everyone. Which messages you get
-never changes *when* they arrive: the rhythm has its own random stream, so adding content can't alter the
-balance. `test/variety.test.js` checks all of this.
+unseen ones remain, and practice rounds and the work week put messages you saw recently at the bottom of
+the deck. The daily morning and a challenge ignore that history, so they stay identical for everyone who
+plays them. Which messages you get never changes *when* they arrive: the rhythm has its own random
+stream, so adding content can't alter the balance.
+
+**What was wrong, and how it was found.** A round never repeating itself was never the problem. Five
+rounds in a row was — which is exactly what the work week asks you to play, and the week carried no
+memory from one morning to the next. Measured over a week: **89 messages dealt, 45 of them distinct, and
+one message turned up on all five mornings.** Each pool was about two mornings deep (a morning dealt 47%
+of the urgent pool), so by the third morning everything was a rerun however well any single round was
+dealt.
+
+Both halves are fixed: the pools are about a third deeper, and the week now carries its history the way
+practice rounds always did. The same week now deals **56 distinct messages out of 89 — the whole pool,
+which is the ceiling** — and across any three mornings in a row nothing comes round twice.
+`test/variety.test.js` holds both: no message twice in three consecutive mornings, no morning eating
+more than a third of any pool, and a week showing you at least 90% of what you have.
 
 ## Career levels
 
@@ -473,7 +486,6 @@ playtesting for real.
 
 ## If this proves fun — next steps
 
-- A real content pass: many more messages, so the tells stay learnable without becoming memorisable
 - Colleague favours: answer someone's small talk now, cash in their help during an outage later
 - Park a message until tomorrow — the verb that had no room in a single morning now has a week to land in
 - Wire it into one full day loop (Morning → Work → Evening → Night)

@@ -1031,9 +1031,10 @@
     return `<div>Runs played: <b>${runs.length}</b> · Best score: <b>${best}</b>${roleBest}</div>${compare}${personas}<div class="chips">${chips}</div>`;
   }
 
-  // Messages seen in recent rounds, oldest first. Practice rounds deal these last (core.js), so
-  // back-to-back rounds feel different. About three rounds' worth is remembered.
-  const RECENT_LIMIT = 60;
+  // Messages seen in recent rounds, oldest first. Practice rounds and the work week deal these last
+  // (core.js), so back-to-back rounds feel different. A whole week's worth is remembered — five
+  // mornings in a row is the case that made repeats obvious.
+  const RECENT_LIMIT = 110;
   function loadRecent() {
     try {
       const texts = JSON.parse(read(STORE.recent) || '[]');
@@ -1264,7 +1265,10 @@
       seed: daily ? Daily.seedFor(morning) : challenged ? invite.seed : inWeek ? Week.seedForMorning(week.seed, week.index) : undefined,
       day: inWeek ? weekDays(week)[week.index] : undefined,
       carry: inWeek ? Week.carryFor(week) : undefined,
-      recent: kind === 'practice' ? loadRecent() : undefined
+      // A week and a practice round both deal recently seen messages last, which matters most in a
+      // week: five mornings back to back was the worst case for repeats. The daily morning and a
+      // challenge pass none, so they stay identical for everyone who plays them.
+      recent: (kind === 'practice' || kind === 'week') ? loadRecent() : undefined
     });
     holding = false;
     endShown = false;
