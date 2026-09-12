@@ -40,6 +40,14 @@ function withFavours(s, card, looksUrgent, onlyWhenStuck) {
 // A keyword reader spots small talk fine, but decides urgent-vs-trap from words alone.
 const byKeyword = (card, looksUrgent) => (card.type === 'trivial' ? 'ignore' : looksUrgent ? 'respond' : 'ignore');
 
+// An unsure reader can tell small talk from work but cannot separate urgent from trap — the coin flip
+// at the centre of the game. The pair below differ only in what they do about it, which is the cleanest
+// measure of whether saying no is a third option worth having: it should beat guessing, and still lose
+// clearly to actually reading the message.
+const unsure = (card, whenUnsure, roll) =>
+  (card.type === 'trivial' ? 'ignore' : whenUnsure === 'guess' ? (roll < 0.5 ? 'respond' : 'ignore') : whenUnsure);
+
+
 // ---- instant bots ----
 
 // Each strategy returns 'respond' | 'ignore' | 'delegate' | null (not yet). It is asked again every
@@ -58,8 +66,12 @@ const STRATEGIES = {
   'Perfect reader + favours when stuck': (s, card) => withFavours(s, card, card.type === 'urgent', true),
   '90% accurate + favours': (s, card, roll) => withFavours(s, card, roll < 0.9 ? card.type === 'urgent' : card.type !== 'urgent', false),
   'Keyword reader: "quick" means trap': (s, card) => byKeyword(card, !TELLS.minimising.test(card.text)),
-  'Keyword reader: alarm words mean urgent': (s, card) => byKeyword(card, TELLS.alarm.test(card.text))
+  'Keyword reader: alarm words mean urgent': (s, card) => byKeyword(card, TELLS.alarm.test(card.text)),
+  'Coin flip on urgent-vs-trap, guesses': (s, card, roll) => unsure(card, 'guess', roll),
+  'Coin flip on urgent-vs-trap, says no': (s, card) => unsure(card, 'decline'),
+  'Say no to everything': () => 'decline'
 };
+const DECIDE_STRATEGIES = new Set(['Coin flip on urgent-vs-trap, guesses', 'Coin flip on urgent-vs-trap, says no', 'Say no to everything']);
 const FAVOUR_STRATEGIES = new Set(Object.keys(STRATEGIES).filter((name) => name.includes('favours')));
 const KEYWORD_STRATEGIES = new Set(Object.keys(STRATEGIES).filter((name) => name.startsWith('Keyword')));
 
@@ -95,6 +107,7 @@ function playBot(seed, strategyName, opts) {
 
 function evaluate(strategyName, seeds, opts) {
   let ship = 0, gold = 0, pip = 0, progress = 0, rep = 0, score = 0, banked = 0, used = 0, delegated = 0;
+  let declined = 0;
   for (const seed of seeds) {
     const r = playBot(seed, strategyName, opts);
     if (r.shipped && r.endReason !== 'pip') ship++;
@@ -106,13 +119,15 @@ function evaluate(strategyName, seeds, opts) {
     banked += r.stats.favoursBanked;
     used += r.stats.favoursUsed;
     delegated += r.stats.urgentDelegated;
+    declined += r.stats.declined;
   }
   const n = seeds.length;
   return {
     strategy: strategyName, level: (opts && opts.level) || Core.DEFAULT_LEVEL, runs: n,
     shipRate: ship / n, goldRate: gold / n, pipRate: pip / n,
     avgProgress: progress / n, avgRep: rep / n, avgScore: score / n,
-    favoursBanked: banked / n, favoursUsed: used / n, urgentDelegated: delegated / n
+    favoursBanked: banked / n, favoursUsed: used / n, urgentDelegated: delegated / n,
+    declined: declined / n
   };
 }
 
@@ -135,12 +150,15 @@ const phaseOf = (t) => PHASES.findIndex((p) => t < p.until);
 // before they could be read is the frustrating kind — a player can't do anything about it — so it
 // should stay near zero. BACKLOG (two or more messages waiting at once) is the good kind: it forces a
 // choice about what to handle first, and it's where the finish should get its intensity from.
-// opts.favours plays as a decent colleague (see withFavours).
+// opts.favours plays as a decent colleague (see withFavours). opts.verbs = 'hedge' says no when the
+// reader knows it cannot tell urgent from trap, instead of guessing — which is the only honest way to
+// measure that verb, since an instant bot is never unsure about anything.
 function playHuman(seed, profileName, opts) {
   const o = opts || {};
   const prof = HUMAN_PROFILES[profileName];
   if (!prof) throw new Error(`Unknown human profile: ${profileName}`);
   const accuracy = o.accuracy != null ? o.accuracy : 1;
+  const hedging = o.verbs === 'hedge';
   const s = Core.createGame({ seed, role: o.role, level: o.level });
   const rng = lcg(seed + 104729);
   const seen = PHASES.map(() => 0);
@@ -156,7 +174,12 @@ function playHuman(seed, profileName, opts) {
       const card = s.cards.find((c) => c.id === reading.id);
       if (!card) reading = null; // it expired while being read
       else if (s.t >= reading.doneAt) {
-        const decision = o.favours ? withFavours(s, card, reading.looksUrgent, false) : (reading.looksUrgent ? 'respond' : 'ignore');
+        // Knowing that you cannot tell is different from getting it wrong, and it is the whole case for
+        // having a third option: this reader spends a small, known cost instead of taking the coin flip.
+        const hedge = hedging && !reading.sure && card.type !== 'trivial';
+        const decision = hedge ? 'decline'
+          : o.favours ? withFavours(s, card, reading.looksUrgent, false)
+          : (reading.looksUrgent ? 'respond' : 'ignore');
         // Reading carries on while stuck on a call or outside for a fire drill; only the click has to
         // wait (a pass to a colleague works mid-call).
         if (Core.canAct(s, decision)) {
@@ -168,9 +191,11 @@ function playHuman(seed, profileName, opts) {
     if (!reading && s.cards.length) {
       const card = s.cards.reduce((a, b) => (b.expiresAt < a.expiresAt ? b : a));
       const words = card.text.split(/\s+/).filter(Boolean).length;
+      const sure = rng() < accuracy;
       reading = {
         id: card.id,
-        looksUrgent: rng() < accuracy ? card.type === 'urgent' : card.type !== 'urgent',
+        sure,
+        looksUrgent: sure ? card.type === 'urgent' : card.type !== 'urgent',
         doneAt: s.t + prof.notice + words * prof.perWord + prof.decide
       };
     }
@@ -191,6 +216,7 @@ function playHuman(seed, profileName, opts) {
 
 function evaluateHuman(profileName, seeds, opts) {
   let ship = 0, gold = 0, pip = 0, lostUrgent = 0, messages = 0, score = 0, banked = 0, used = 0, delegated = 0;
+  let rep = 0, declined = 0;
   const totals = { seen: PHASES.map(() => 0), lost: PHASES.map(() => 0), ticks: PHASES.map(() => 0), backlog: PHASES.map(() => 0), distracted: PHASES.map(() => 0) };
   for (const seed of seeds) {
     const r = playHuman(seed, profileName, opts);
@@ -203,6 +229,8 @@ function evaluateHuman(profileName, seeds, opts) {
     banked += r.summary.stats.favoursBanked;
     used += r.summary.stats.favoursUsed;
     delegated += r.summary.stats.urgentDelegated;
+    rep += r.summary.rep;
+    declined += r.summary.stats.declined;
     for (const key of Object.keys(totals)) r[key].forEach((v, i) => { totals[key][i] += v; });
   }
   const n = seeds.length;
@@ -227,8 +255,10 @@ function evaluateHuman(profileName, seeds, opts) {
     urgentLostPerRound: lostUrgent / n,
     favoursBanked: banked / n,
     favoursUsed: used / n,
-    urgentDelegated: delegated / n
+    urgentDelegated: delegated / n,
+    avgRep: rep / n,
+    declined: declined / n
   };
 }
 
-module.exports = { STRATEGIES, FAVOUR_STRATEGIES, KEYWORD_STRATEGIES, HUMAN_PROFILES, PHASES, playBot, evaluate, playHuman, evaluateHuman };
+module.exports = { STRATEGIES, FAVOUR_STRATEGIES, KEYWORD_STRATEGIES, DECIDE_STRATEGIES, HUMAN_PROFILES, PHASES, playBot, evaluate, playHuman, evaluateHuman };

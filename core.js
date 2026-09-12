@@ -68,6 +68,18 @@
       trivial: { rep: 0 },
       trap: { rep: 0 }
     },
+    // Saying no. A reply rather than a dismissal: it closes the message for good, with no follow-up,
+    // at one fixed cost whatever the message turned out to be. It is never the best play — a good
+    // reader responds to what is urgent and ignores the rest — but it is much the cheapest way to be
+    // WRONG, and that is the point. Before it, a message you could not read was a coin flip between
+    // -15 and 0; now it is a decision, and knowing that you do not know is worth something.
+    //
+    // Two small costs rather than one large one. Reputation alone had to be steep enough that saying no
+    // to a whole morning ended in a PIP, and at that size it was also too steep to use as the hedge it
+    // is meant to be. A short pause as well — you still have to write the no — means a morning of them
+    // wrecks your focus too, so the blanket strategy fails on its own without making one polite no
+    // expensive. Both costs are identical for every type of message, so neither says what it was.
+    DECLINE: { rep: -4, busy: 0.5 },
     PEEK_FLOW_COST: 18,        // variant B only: reading a collapsed message costs focus
     HEADPHONES: { charges: 1, duration: 10 },
     // Colleague favours. Answering small talk from a colleague (a person, not a bot, a group chat or
@@ -131,7 +143,9 @@
   const OUTCOME = {
     respond: { urgent: 'good', trivial: 'meh', trap: 'bad' },
     ignore: { urgent: 'bad', trivial: 'good', trap: 'good' },
-    delegate: { urgent: 'good', trivial: 'meh', trap: 'meh' }
+    delegate: { urgent: 'good', trivial: 'meh', trap: 'meh' },
+    // Saying no is never right and never a disaster, whatever the message was.
+    decline: { urgent: 'meh', trivial: 'meh', trap: 'meh' }
   };
 
   // Small, fast, seedable PRNG (mulberry32).
@@ -316,6 +330,7 @@
         peeks: 0, cardsSeen: 0, headphonesUsed: 0,
         favoursBanked: 0, favoursUsed: 0, urgentDelegated: 0,
         followUps: 0, escalations: 0, walkbyPassed: 0, walkbyCaught: 0, rescues: 0,
+        declined: 0,
         busyTime: 0, deepWorkTime: 0, codingTime: 0, peakFlow: 0,
         aftermaths: [],
         decisions: [] // { at: when the message arrived, outcome: 'good' | 'meh' | 'bad' }
@@ -554,9 +569,31 @@
     return events;
   }
 
-  // action: 'respond' | 'ignore' | 'peek' | 'delegate'. While you're busy (on a call) you can't do
-  // anything yourself — but you can still pass a message to a colleague who owes you a favour. During
-  // a fire drill you can't do anything at all.
+  // Say no. It costs the same whatever the message was, takes no time at all, and the person accepts
+  // it, so nothing comes back. Against an unreadable message that is a third option between a call you
+  // may not be able to afford and a silence that may cost you fifteen points of reputation.
+  function decline(s, card, events) {
+    removeCard(s, card.id);
+    const rep = TUNING.DECLINE.rep;
+    s.rep += rep;
+    clampRep(s);
+    // The same wording whatever it was: a busy line per type would hand back the answer to the very
+    // question the player just decided without knowing.
+    s.busyUntil = s.t + TUNING.DECLINE.busy;
+    s.busyDuration = TUNING.DECLINE.busy;
+    s.busyText = Content.BUSY_TEXT.decline;
+    s.busyType = 'decline'; // and a polite no is not what the boss counts as looking busy
+    s.stats.declined++;
+    if (card.type === 'trap') s.stats.trapsDodged++; // you didn't take the call, which is the whole trap
+    decide(s, card, 'decline');
+    events.push({ type: 'decline', card, rep, busy: TUNING.DECLINE.busy });
+    checkPip(s, events);
+    return events;
+  }
+
+  // action: 'respond' | 'ignore' | 'decline' | 'peek' | 'delegate'. While you're busy (on a
+  // call) you can't do anything yourself — but you can still pass a message to a colleague who owes you
+  // a favour. During a fire drill you can't do anything at all.
   function act(s, cardId, action) {
     const events = [];
     if (s.over) return events;
@@ -581,6 +618,7 @@
     }
 
     if (action === 'delegate') return delegate(s, card, events);
+    if (action === 'decline') return decline(s, card, events);
 
     removeCard(s, card.id);
     if (action === 'ignore') {

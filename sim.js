@@ -1,6 +1,6 @@
 // sim.js — run every simulated player over many seeds and print how the rules treat each one.
 // Usage: npm run sim   (optional: node sim.js 500 for a different number of runs)
-const { STRATEGIES, FAVOUR_STRATEGIES, KEYWORD_STRATEGIES, PHASES, evaluate, evaluateHuman } = require('./bots');
+const { STRATEGIES, FAVOUR_STRATEGIES, KEYWORD_STRATEGIES, DECIDE_STRATEGIES, PHASES, evaluate, evaluateHuman } = require('./bots');
 const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER } = require('./content');
 const { TUNING } = require('./core');
 
@@ -15,7 +15,7 @@ console.log('   These never read message text, so the result is the same for eve
 console.log('strategy                            ship  gold   PIP   avg progress  avg rep  avg score');
 console.log('─'.repeat(89));
 const rows = Object.keys(STRATEGIES)
-  .filter((name) => !FAVOUR_STRATEGIES.has(name) && !KEYWORD_STRATEGIES.has(name))
+  .filter((name) => !FAVOUR_STRATEGIES.has(name) && !KEYWORD_STRATEGIES.has(name) && !DECIDE_STRATEGIES.has(name))
   .map((name) => evaluate(name, seeds));
 rows.push(Object.assign(evaluate('90% accurate reader', seeds, { headphonesAt: 30 }), { strategy: '90% accurate + headphones at 30s' }));
 for (const r of rows) {
@@ -90,6 +90,28 @@ console.log('─'.repeat(104));
   }
 }
 
+console.log('\n6) SAYING NO — is there a real decision left when you cannot read the message?\n');
+console.log('   Instant bots are never unsure, so the verb is also measured on the people who are.\n');
+console.log('player                                                ship  gold  avg rep  avg score   said no');
+console.log('─'.repeat(100));
+const verbRow = (name, label) => {
+  const r = evaluate(name, seeds);
+  console.log(
+    (label || name).padEnd(52) + pct(r.shipRate) + ' ' + pct(r.goldRate) + r.avgRep.toFixed(0).padStart(9) +
+      r.avgScore.toFixed(0).padStart(11) + r.declined.toFixed(1).padStart(10)
+  );
+};
+for (const name of ['Perfect reader', 'Coin flip on urgent-vs-trap, guesses', 'Coin flip on urgent-vs-trap, says no', 'Say no to everything']) verbRow(name);
+for (const accuracy of [1, 0.95, 0.8]) {
+  for (const verbs of [null, 'hedge']) {
+    const r = evaluateHuman('First-time player', seeds, { accuracy, verbs });
+    console.log(
+      `first-timer, ${pct(accuracy).trim()} judgment${verbs ? ', says no when unsure' : ''}`.padEnd(52) +
+        pct(r.shipRate) + ' ' + pct(r.goldRate) + r.avgRep.toFixed(0).padStart(9) + r.avgScore.toFixed(0).padStart(11) + r.declined.toFixed(1).padStart(10)
+    );
+  }
+}
+
 console.log('\nWhat healthy looks like:');
 console.log('  1) both naive strategies fail, perfect play ships reliably, and every drop in accuracy costs something.');
 console.log('  2) in EVERY role, a first-time player loses almost nothing before they can read it (the frustrating kind');
@@ -98,4 +120,6 @@ console.log('  3) using favours scores higher than ignoring all small talk, but 
 console.log('     a worse reader with them: favours reward being a decent colleague, not replace reading messages well.');
 console.log('  4) understanding the messages works at every level, "quick means trap" works only at junior, and trusting');
 console.log('     alarm words fails at lead. How much harder levels feel to real people is for playtesting to show.');
+console.log('  6) a reader who says no when unsure beats the same reader guessing, by a lot, and still loses to one who can');
+console.log('     actually read the message. A confident reader barely touches it. Saying no to everything ends in a PIP.');
 console.log(`Knobs live in TUNING in core.js (arrivals every ${TUNING.SPAWN_START_S}s easing to ${TUNING.SPAWN_END_S}s, messages last ${TUNING.EXPIRY_RANGE_S.join('-')}s, favours up to ${TUNING.FAVOURS.max}).\n`);

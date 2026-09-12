@@ -29,6 +29,9 @@ It listens on your network too, so you can playtest on your phone at `http://<th
 - Notifications keep arriving. **Respond** and you're pulled away for a while. **Ignore** and it's
   gone — but ignoring something genuinely urgent costs **Reputation**.
 - Some messages are traps. Anything *quick*, *small* or *just 2 mins* never is.
+- 🙅 **Say no** when you genuinely can't tell. It costs a few points of Reputation every time, whatever
+  the message turns out to be — far less than ignoring a real emergency, far more than reading it
+  properly. It's for the messages you can't read in time, not for all of them.
 - 🎧 **Headphones**, once per round: 10 seconds with no non-urgent pings.
 - 🤝 **Colleague favours**: reply to small talk from a colleague (a person, not a bot, group chat or
   family) and they owe you one, up to 3. Tap 🤝 on any message to pass it to them, even while you're
@@ -36,8 +39,42 @@ It listens on your network too, so you can playtest on your phone at `http://<th
   else the favour is wasted, and a trap sends *them* into the "2-minute call".
 - Finish your deliverable (100%) by the end of the morning with your reputation intact.
 
-Keys: `1`–`5` pick a role (start screen) · `Space` hold to work · `R` respond · `X` ignore · `P` peek ·
+Keys: `1`–`5` pick a role (start screen) · `Space` hold to work · `R` respond · `N` say no · `X` ignore · `P` peek ·
 `D` pass to a colleague · `H` headphones · `M` sound. Keys act on the notification closest to expiring, which is outlined.
+
+## Saying no: a third option
+
+For a long time there were two answers to a notification, and once you knew the tells there was only
+ever one *right* one — respond to what's urgent, ignore the rest. That makes a fine execution test and
+a poor decision: the answer is always knowable, so after a dozen rounds the game stops asking you
+anything. **Say no** exists to make the messages you *can't* read into a decision instead of a coin flip.
+
+| | Reputation | Time | Comes back? |
+|---|---|---|---|
+| Respond to something urgent | **+8** | a call, and the focus it costs | no |
+| Ignore something urgent | **−15** | free | yes, as an escalation from your boss |
+| Say no | **−4**, always | a moment to write it | no |
+
+Saying no is never the best answer and never a disaster. That's the whole design: it's much the
+cheapest way to be *wrong*, so knowing that you don't know is worth something. Two rules keep it
+honest — the cost is identical for every type of message, and so is the line shown while you write it,
+or saying no would be a way to *ask the game* what a message was instead of deciding without knowing.
+
+The simulated players in `bots.js` are what set the price (`npm run sim`, section 6). A reader who can
+always tell never touches it. A reader who is unsure a fifth of the time goes from **57% to 85% gold**
+using it about twice a morning. Saying no to everything ends in a PIP — the reputation cost compounds,
+and the small pause each time wrecks your focus as surely as any call.
+
+<details>
+<summary>What didn't work: parking a message for later</summary>
+
+The other verb tried here was **park it** — put a message down now and let it come back later, bigger.
+The simulator killed it. A message is only worth parking when the inbox is deep enough to be costing
+you focus, and that only happens in the last twenty seconds of the morning — by which point there is no
+"later" left to park into. Every version was used about half a time per morning and moved the gold rate
+by a point, which is a button rather than a decision. It's a good verb for a longer horizon, so it may
+come back with the work week: *park it till tomorrow* is a decision worth having.
+</details>
 
 ## Roles
 
@@ -359,6 +396,8 @@ playtesting for real.
 
 - A real content pass: many more messages, so the tells stay learnable without becoming memorisable
 - Colleague favours: answer someone's small talk now, cash in their help during an outage later
+- Day types: mornings where shipping isn't the point (appraisal week, a backlog day, working from home)
+- The work week: Mon–Fri carried on one set of meters, so a morning you won by burning out costs you Tuesday
 - Wire it into one full day loop (Morning → Work → Evening → Night)
 
 If it doesn't prove fun after 30 rounds, that's the most valuable result this prototype can give —

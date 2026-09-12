@@ -783,7 +783,9 @@
     };
   }
 
-  const BUSY_TEXT = { urgent: 'Handling it…', trivial: 'Replying…', trap: 'Stuck…' };
+  // One line per kind of interruption. 'decline' is deliberately the same for every message type:
+  // saying no must not tell you what you just said no to.
+  const BUSY_TEXT = { urgent: 'Handling it…', trivial: 'Replying…', trap: 'Stuck…', decline: 'Writing a polite no…' };
 
   // ---- Boss of the day, office events and follow-ups (rules in core.js) ----
   const BOSSES = {

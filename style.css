@@ -141,6 +141,8 @@ body.deep .cursor { background: var(--gold); }
 .card-actions { display: flex; gap: 6px; }
 .card-actions button { flex: 1; border: 1px solid var(--line); background: #ffffff08; border-radius: 9px; padding: 8px; font-weight: 700; font-size: 13px; }
 .card-actions .btn-respond { background: #4d8dff22; border-color: #4d8dff66; color: #cfe0ff; }
+/* The middle road: warmer than Ignore, cooler than Respond, and never the loudest button on the card. */
+.card-actions .btn-decline { color: #ffd8a8; border-color: #ffb45455; background: #ffb45414; }
 .card-actions .btn-ignore { color: var(--muted); }
 .card-actions .btn-peek { flex: 0 0 auto; color: #e8d6ff; border-color: #9b6bff66; background: #9b6bff1f; }
 .card-actions .btn-delegate { flex: 0 0 auto; color: #d9f7e8; border-color: #35c98a66; background: #35c98a1f; white-space: nowrap; }

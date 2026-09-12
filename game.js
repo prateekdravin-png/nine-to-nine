@@ -539,6 +539,7 @@
       '<div class="card-actions">' +
         (card.peeked ? '' : '<button class="btn-peek" data-act="peek" title="Read it, at a cost to focus (P)">👁 Peek</button>') +
         '<button class="btn-respond" data-act="respond">Respond</button>' +
+        '<button class="btn-decline" data-act="decline" title="Say no politely: one small reputation cost, whatever it turns out to be (N)">Say no</button>' +
         '<button class="btn-ignore" data-act="ignore">Ignore</button>' +
         '<button class="btn-delegate" data-act="delegate" hidden></button>' +
       '</div>' +
@@ -743,6 +744,18 @@
           if (ev.card.type === 'urgent') { popup(`🤝 ${ev.helper} handled it +${ev.rep} rep`, 'good', anchor); sfx.click(); }
           else if (ev.card.type === 'trap') { popup(`🤝 ${ev.helper} fell for it. Favour wasted`, 'bad', anchor); sfx.buzz(); }
           else { popup(`🤝 ${ev.helper} replied for you. Favour wasted`, 'info', anchor); sfx.click(); }
+          removeCard(ev.card.id, 'answered');
+          break;
+        }
+        case 'decline': {
+          // Saying no is never the best play and never a disaster, and the popup says so: the cost is
+          // the same every time, and only what it turned out to be changes.
+          const anchor = anchorFor(ev.card.id);
+          busyKind = 'decline';
+          if (ev.card.type === 'urgent') popup(`That one was real ${ev.rep} rep`, 'bad', anchor);
+          else if (ev.card.type === 'trap') popup(`Good call ${ev.rep} rep`, 'good', anchor);
+          else popup(`Politely declined ${ev.rep} rep`, 'info', anchor);
+          sfx.click();
           removeCard(ev.card.id, 'answered');
           break;
         }
@@ -986,6 +999,7 @@
       ['📞 Time stuck on calls', `${st.busyTime.toFixed(1)}s`],
       ['🚨 Urgent handled / missed', `${st.urgentHandled} / ${st.urgentMissed}`],
       ['🪤 Traps taken / dodged', `${st.trapsTaken} / ${st.trapsDodged}`],
+      ['🙅 Said no politely', `${st.declined}`],
       ['↩️ Follow-ups / escalations', `${st.followUps} / ${st.escalations}`],
       ['💬 Small talk answered / ignored', `${st.trivialAnswered} / ${st.trivialIgnored}`],
       ['🤝 Favours banked / used on urgent', `${st.favoursBanked} / ${st.urgentDelegated}`],
@@ -1305,6 +1319,7 @@
     }
     const key = e.key.toLowerCase();
     if (key === 'r') actOn(targetCard(false), 'respond');
+    else if (key === 'n') actOn(targetCard(false), 'decline');
     else if (key === 'x') actOn(targetCard(false), 'ignore');
     else if (key === 'p') actOn(targetCard(true), 'peek');
     else if (key === 'd') actOn(targetCard(false), 'delegate'); // works mid-call too
