@@ -69,9 +69,14 @@ const STRATEGIES = {
   'Keyword reader: alarm words mean urgent': (s, card) => byKeyword(card, TELLS.alarm.test(card.text)),
   'Coin flip on urgent-vs-trap, guesses': (s, card, roll) => unsure(card, 'guess', roll),
   'Coin flip on urgent-vs-trap, says no': (s, card) => unsure(card, 'decline'),
-  'Say no to everything': () => 'decline'
+  'Say no to everything': () => 'decline',
+  // Answers everything that isn't a trap. On an ordinary morning that is a waste of a perfectly good
+  // focus; on a morning where silence is what costs you, it is the right way to play. Having both here
+  // is how the day types are checked: if the same strategy wins every kind of day, the day types are
+  // decoration.
+  'Sociable reader: answers all but traps': (s, card) => (card.type === 'trap' ? 'ignore' : 'respond')
 };
-const DECIDE_STRATEGIES = new Set(['Coin flip on urgent-vs-trap, guesses', 'Coin flip on urgent-vs-trap, says no', 'Say no to everything']);
+const DECIDE_STRATEGIES = new Set(['Coin flip on urgent-vs-trap, guesses', 'Coin flip on urgent-vs-trap, says no', 'Say no to everything', 'Sociable reader: answers all but traps']);
 const FAVOUR_STRATEGIES = new Set(Object.keys(STRATEGIES).filter((name) => name.includes('favours')));
 const KEYWORD_STRATEGIES = new Set(Object.keys(STRATEGIES).filter((name) => name.startsWith('Keyword')));
 
@@ -81,7 +86,7 @@ function playBot(seed, strategyName, opts) {
   if (!strategy) throw new Error(`Unknown strategy: ${strategyName}`);
   const reaction = o.reaction != null ? o.reaction : 0.8;
   const dt = 0.05;
-  const s = Core.createGame({ seed, role: o.role, level: o.level });
+  const s = Core.createGame({ seed, role: o.role, level: o.level, day: o.day });
   const rng = lcg(seed + 7919);
   const rolls = new Map(); // card id -> the bot's private random roll for that message
   const usesFavours = FAVOUR_STRATEGIES.has(strategyName);
@@ -123,7 +128,7 @@ function evaluate(strategyName, seeds, opts) {
   }
   const n = seeds.length;
   return {
-    strategy: strategyName, level: (opts && opts.level) || Core.DEFAULT_LEVEL, runs: n,
+    strategy: strategyName, level: (opts && opts.level) || Core.DEFAULT_LEVEL, day: (opts && opts.day) || null, runs: n,
     shipRate: ship / n, goldRate: gold / n, pipRate: pip / n,
     avgProgress: progress / n, avgRep: rep / n, avgScore: score / n,
     favoursBanked: banked / n, favoursUsed: used / n, urgentDelegated: delegated / n,
@@ -159,7 +164,10 @@ function playHuman(seed, profileName, opts) {
   if (!prof) throw new Error(`Unknown human profile: ${profileName}`);
   const accuracy = o.accuracy != null ? o.accuracy : 1;
   const hedging = o.verbs === 'hedge';
-  const s = Core.createGame({ seed, role: o.role, level: o.level });
+  // A person who has read the day's card and changed how they play: on a morning where silence is what
+  // costs you, they answer everything they don't take for a trap.
+  const sociable = o.style === 'sociable';
+  const s = Core.createGame({ seed, role: o.role, level: o.level, day: o.day });
   const rng = lcg(seed + 104729);
   const seen = PHASES.map(() => 0);
   const lost = PHASES.map(() => 0);
@@ -179,6 +187,7 @@ function playHuman(seed, profileName, opts) {
         const hedge = hedging && !reading.sure && card.type !== 'trivial';
         const decision = hedge ? 'decline'
           : o.favours ? withFavours(s, card, reading.looksUrgent, false)
+          : sociable ? (reading.looksTrap ? 'ignore' : 'respond')
           : (reading.looksUrgent ? 'respond' : 'ignore');
         // Reading carries on while stuck on a call or outside for a fire drill; only the click has to
         // wait (a pass to a colleague works mid-call).
@@ -196,6 +205,7 @@ function playHuman(seed, profileName, opts) {
         id: card.id,
         sure,
         looksUrgent: sure ? card.type === 'urgent' : card.type !== 'urgent',
+        looksTrap: sure ? card.type === 'trap' : card.type !== 'trap',
         doneAt: s.t + prof.notice + words * prof.perWord + prof.decide
       };
     }
@@ -240,6 +250,7 @@ function evaluateHuman(profileName, seeds, opts) {
     profile: profileName,
     role: (opts && opts.role) || Core.DEFAULT_ROLE,
     level: (opts && opts.level) || Core.DEFAULT_LEVEL,
+    day: (opts && opts.day) || null,
     accuracy: (opts && opts.accuracy != null) ? opts.accuracy : 1,
     favours: !!(opts && opts.favours),
     runs: n,

@@ -1,7 +1,7 @@
 // sim.js — run every simulated player over many seeds and print how the rules treat each one.
 // Usage: npm run sim   (optional: node sim.js 500 for a different number of runs)
 const { STRATEGIES, FAVOUR_STRATEGIES, KEYWORD_STRATEGIES, DECIDE_STRATEGIES, PHASES, evaluate, evaluateHuman } = require('./bots');
-const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER } = require('./content');
+const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, DAYS } = require('./content');
 const { TUNING } = require('./core');
 
 const runs = Number(process.argv[2]) || 300;
@@ -112,6 +112,26 @@ for (const accuracy of [1, 0.95, 0.8]) {
   }
 }
 
+console.log('\n7) DAY TYPES — does the best way to play actually change with the kind of morning?');
+console.log('   Gold rate. READING answers what is urgent and ignores the rest; ANSWERING replies to everyone but traps.\n');
+{
+  const CoreDays = require('./core').DAY_ORDER;
+  const head = CoreDays.map((id) => `${DAYS[id].emoji} ${DAYS[id].label}`.padEnd(22)).join('');
+  console.log('player'.padEnd(40) + head);
+  console.log('─'.repeat(40 + 22 * CoreDays.length));
+  const dayRow = (label, fn) => console.log(label.padEnd(40) + CoreDays.map((day) => pct(fn(day)).padEnd(22)).join(''));
+  dayRow('instant: READING the messages', (day) => evaluate('Perfect reader', seeds, { day }).goldRate);
+  dayRow('instant: ANSWERING everyone but traps', (day) => evaluate('Sociable reader: answers all but traps', seeds, { day }).goldRate);
+  dayRow('instant: respond to everything', (day) => evaluate('Respond to everything', seeds, { day }).goldRate);
+  dayRow('instant: ignore everything', (day) => evaluate('Ignore everything', seeds, { day }).goldRate);
+  dayRow('first-timer 85%, plays every day alike', (day) => evaluateHuman('First-time player', seeds, { accuracy: 0.85, day }).goldRate);
+  dayRow('first-timer 85%, answers everyone', (day) => evaluateHuman('First-time player', seeds, { accuracy: 0.85, day, style: 'sociable' }).goldRate);
+  dayRow('first-timer: finished the morning', (day) => evaluateHuman('First-time player', seeds, { accuracy: 0.85, day }).shipRate);
+  dayRow('first-timer: LOST before read', (day) => evaluateHuman('First-time player', seeds, { accuracy: 0.85, day }).lostPct);
+  console.log('\ntarget and the reputation a gold needs, per day:');
+  console.log('  ' + CoreDays.map((day) => `${DAYS[day].label}: ${TUNING.DAYS[day].target}% / ${TUNING.DAYS[day].goldRep} rep`).join(' · '));
+}
+
 console.log('\nWhat healthy looks like:');
 console.log('  1) both naive strategies fail, perfect play ships reliably, and every drop in accuracy costs something.');
 console.log('  2) in EVERY role, a first-time player loses almost nothing before they can read it (the frustrating kind');
@@ -120,6 +140,9 @@ console.log('  3) using favours scores higher than ignoring all small talk, but 
 console.log('     a worse reader with them: favours reward being a decent colleague, not replace reading messages well.');
 console.log('  4) understanding the messages works at every level, "quick means trap" works only at junior, and trusting');
 console.log('     alarm words fails at lead. How much harder levels feel to real people is for playtesting to show.');
+console.log('  7) no single row wins every column. Reading wins an ordinary morning and a backlog day; answering everyone');
+console.log('     wins an appraisal morning and loses badly elsewhere. If one row won everywhere, the day types would be');
+console.log('     scenery, and a person who adapts to the day should beat one who plays every morning the same way.');
 console.log('  6) a reader who says no when unsure beats the same reader guessing, by a lot, and still loses to one who can');
 console.log('     actually read the message. A confident reader barely touches it. Saying no to everything ends in a PIP.');
 console.log(`Knobs live in TUNING in core.js (arrivals every ${TUNING.SPAWN_START_S}s easing to ${TUNING.SPAWN_END_S}s, messages last ${TUNING.EXPIRY_RANGE_S.join('-')}s, favours up to ${TUNING.FAVOURS.max}).\n`);

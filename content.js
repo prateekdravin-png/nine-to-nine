@@ -787,6 +787,17 @@
   // saying no must not tell you what you just said no to.
   const BUSY_TEXT = { urgent: 'Handling it…', trivial: 'Replying…', trap: 'Stuck…', decline: 'Writing a polite no…' };
 
+  // ---- What kind of morning it is (rules in core.js TUNING.DAYS) ----
+  // Named and described before you play, like the boss: the point is to change how you play the
+  // morning, which only works if you know what kind of morning it is.
+  const DAYS = {
+    normal:    { id: 'normal',    label: 'A normal morning', emoji: '🗓️', summary: 'The usual mix. Ship it and keep everyone happy.', goal: 'Ship it without losing the room.' },
+    appraisal: { id: 'appraisal', label: 'Appraisal week',   emoji: '📋', summary: 'Everyone is watching. Silence costs more than anything you build.', goal: 'Reputation is the whole scorecard today.' },
+    backlog:   { id: 'backlog',   label: 'Backlog day',      emoji: '🗃️', summary: 'A pile of small tickets. No deep end to get into — just keep moving.', goal: 'Focus buys you nothing. Time not working is all that hurts.', progressLabel: 'Backlog', deliverable: { noun: 'backlog', done: 'cleared' } },
+    wfh:       { id: 'wfh',       label: 'Working from home', emoji: '🏠', summary: 'Half as many interruptions, and focus is twice as hard to hold.', goal: 'All the quiet you wanted. Now use it.' },
+    release:   { id: 'release',   label: 'Release day',      emoji: '🚀', summary: 'Most of what lands really is on fire, and it counts double.', goal: 'Miss nothing real. There is no slack today.' }
+  };
+
   // ---- Boss of the day, office events and follow-ups (rules in core.js) ----
   const BOSSES = {
     reasonable: { id: 'reasonable', label: 'The Reasonable One', short: 'Reasonable One', emoji: '😌', summary: 'A normal morning. Enjoy it while it lasts.' },
@@ -838,5 +849,5 @@
     }
   };
 
-  return { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS, SHARED_TRIVIAL, BUSY_TEXT, BOSSES, EVENTS, FOLLOW_UPS };
+  return { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS, SHARED_TRIVIAL, BUSY_TEXT, DAYS, BOSSES, EVENTS, FOLLOW_UPS };
 });

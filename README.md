@@ -151,6 +151,42 @@ http://…/#c=1.1ps9wxb.1.1.0.mk.1.mfn
 A mangled link — truncated by a chat app, a character eaten — fails a checksum and is ignored, so the
 game never plays a random morning while claiming it was the challenge.
 
+## Day types: what the morning is FOR
+
+The rules never change. What changes is what the morning is for, and that turns out to be enough to
+change how you play it. Which kind you get comes from the seed, like the boss, so everyone shares it
+on a daily morning — and it's named on the card before you play, because a day type you only discover
+afterwards is just bad luck.
+
+| | | What it asks | What it changes |
+|---|---|---|---|
+| 🗓️ | **A normal morning** | 100%, 70 rep | The mix you already know |
+| 📋 | **Appraisal week** | 80%, **88 rep** | Everyone is watching: unanswered small talk now costs you too |
+| 🗃️ | **Backlog day** | **105%**, 70 rep | No deep end at all — flow multipliers gone, the work pays flat and fast |
+| 🏠 | **Working from home** | 95%, 70 rep | Half the interruptions, and focus builds slower and drains faster |
+| 🚀 | **Release day** | 95%, 70 rep | Mostly real emergencies, and they count double both ways |
+
+**The test that matters is whether the best way to play changes.** If one strategy won every kind of
+morning, day types would be scenery. `npm run sim` section 7 puts two of them side by side — *reading*
+(answer what's urgent, ignore the rest) against *answering* (reply to everyone but traps):
+
+```
+player                          🗓️ normal  📋 appraisal  🗃️ backlog  🏠 wfh  🚀 release
+instant: READING the messages        95%           32%         92%     93%        85%
+instant: ANSWERING all but traps     45%           90%         28%     81%        52%
+first-timer, every day alike         62%           12%         56%     76%        57%
+first-timer, answers everyone        46%           36%         32%     70%        44%
+```
+
+Appraisal week inverts it completely: the play that wins an ordinary morning is the worst one there,
+and the reverse. The bottom two rows say the same is true for a person and not only for a bot — someone
+who adapts to the day triples their gold rate on an appraisal morning. A test (`test/days.test.js`)
+fails if that inversion ever disappears.
+
+Every day type is only a short list of overrides on the existing knobs, resolved once into `s.rules`
+when a game starts. Nothing in the loop asks what kind of day it is, so a day type can't grow into a
+special case, and one balance pass covers all of them.
+
 ## Every morning is different: bosses, office events and follow-ups
 
 **Boss of the day.** Each morning has one, and it changes the mix:
@@ -381,6 +417,7 @@ playtesting for real.
 | `core.js` | The rules. Pure and deterministic — no DOM, timers or sound |
 | `content.js` | The five roles: their messages, work screens and wording, with the tell rules they must follow |
 | `daily.js` | The daily morning: numbering, seeds, streaks and the share grid |
+| `test/days.test.js` | Day types: that the best way to play really does change with the morning |
 | `challenge.js` | Challenge links: packing a morning and a score into a URL fragment, and reading it back |
 | `persona.js` | Work personalities: which one a round earns, and why |
 | `awards.js` | Achievements and the desk objects they unlock |
@@ -396,7 +433,6 @@ playtesting for real.
 
 - A real content pass: many more messages, so the tells stay learnable without becoming memorisable
 - Colleague favours: answer someone's small talk now, cash in their help during an outage later
-- Day types: mornings where shipping isn't the point (appraisal week, a backlog day, working from home)
 - The work week: Mon–Fri carried on one set of meters, so a morning you won by burning out costs you Tuesday
 - Wire it into one full day loop (Morning → Work → Evening → Night)
 

@@ -80,6 +80,29 @@
     // wrecks your focus too, so the blanket strategy fails on its own without making one polite no
     // expensive. Both costs are identical for every type of message, so neither says what it was.
     DECLINE: { rep: -4, busy: 0.5 },
+    // Day types. The rules never change; what changes is what the morning is FOR, and that turns out
+    // to be enough to change how you play it. A normal morning rewards protecting your focus. On an
+    // appraisal day nothing you build matters next to who saw you ignore them. On a backlog day there
+    // is no deep end to get into, so interruptions are cheap and traps are the only real danger.
+    // Working from home hands you the quiet you always said you wanted and makes it harder to use.
+    // A release day makes every urgent message matter twice, both ways.
+    //
+    // Each is a short list of overrides on the knobs above, resolved once into s.rules when a game
+    // starts (see rulesFor). Nothing in the loop asks which kind of day it is, so a day type can never
+    // grow into a special case, and one balance check covers all of them (npm run sim, section 7).
+    DAYS: {
+      normal:    { weight: 3, target: 100, goldRep: 70 },
+      // The free move is gone: small talk you can't be bothered with is now worth saying no to rather
+      // than leaving unanswered, and there is barely a deliverable to hide behind.
+      appraisal: { weight: 2, target: 80, goldRep: 88, ignore: { urgent: -20, trivial: -5, trap: 0 } },
+      // A pile of small unrelated tickets. Flow multipliers are gone and the work pays a flat, faster
+      // rate, so the only thing that hurts is time spent not working.
+      backlog:   { weight: 2, target: 105, goldRep: 70, tiers: [{ min: 0, mult: 1, name: 'Chipping away' }], progressPerS: 2.4 },
+      // Half the office can't reach you, and it turns out the interruptions were never the hard part.
+      wfh:       { weight: 2, target: 95, goldRep: 70, spawnScale: 1.45, flowGain: 0.7, flowDecayIdle: 1.35 },
+      // Ship day: most of what lands really is on fire.
+      release:   { weight: 1, target: 95, goldRep: 70, weights: { urgent: 0.45, trivial: 0.2, trap: 0.35 }, respond: { urgent: { busy: 1.6, rep: 11 } }, ignore: { urgent: -20, trivial: 0, trap: 0 } }
+    },
     PEEK_FLOW_COST: 18,        // variant B only: reading a collapsed message costs focus
     HEADPHONES: { charges: 1, duration: 10 },
     // Colleague favours. Answering small talk from a colleague (a person, not a bot, a group chat or
@@ -136,6 +159,8 @@
   const DEFAULT_ROLE = 'developer';
   const DEFAULT_LEVEL = 'junior';
   const BOSS_ORDER = Object.keys(TUNING.BOSSES);
+  const DAY_ORDER = Object.keys(TUNING.DAYS);
+  const DEFAULT_DAY = 'normal';
   const EVENT_ORDER = ['drill', 'wifi', 'walkby', 'outage', 'lunch'];
 
   // How each decision reads on the daily share grid. Only the verdict is recorded, never the message
@@ -160,11 +185,40 @@
     };
   }
 
-  function tierFor(flow) {
-    let tier = TUNING.TIERS[0];
-    for (const t of TUNING.TIERS) if (flow >= t.min) tier = t;
+  // Everything the loop needs to know about the kind of morning it is, in one flat object, so step()
+  // and act() read s.rules and never ask which day type they are on.
+  function rulesFor(dayId) {
+    const day = TUNING.DAYS[dayId] || TUNING.DAYS[DEFAULT_DAY];
+    const perType = (base, over) => {
+      const out = {};
+      for (const type of Object.keys(base)) out[type] = Object.assign({}, base[type], (over || {})[type]);
+      return out;
+    };
+    return {
+      day: TUNING.DAYS[dayId] ? dayId : DEFAULT_DAY,
+      target: day.target,
+      goldRep: day.goldRep,
+      tiers: day.tiers || TUNING.TIERS,
+      progressPerS: day.progressPerS != null ? day.progressPerS : TUNING.BASE_PROGRESS_PER_S,
+      flowGain: TUNING.FLOW_GAIN_PER_S * (day.flowGain || 1),
+      flowDecayIdle: TUNING.FLOW_DECAY_IDLE_PER_S * (day.flowDecayIdle || 1),
+      flowDecayBusy: TUNING.FLOW_DECAY_BUSY_PER_S * (day.flowDecayBusy || 1),
+      spawnScale: day.spawnScale || 1,
+      weights: day.weights || null,
+      respond: perType(TUNING.RESPOND, day.respond),
+      ignore: Object.assign({}, { urgent: TUNING.IGNORE.urgent.rep, trivial: TUNING.IGNORE.trivial.rep, trap: TUNING.IGNORE.trap.rep }, day.ignore)
+    };
+  }
+
+  function tierFor(flow, tiers) {
+    const list = tiers || TUNING.TIERS;
+    let tier = list[0];
+    for (const t of list) if (flow >= t.min) tier = t;
     return tier;
   }
+
+  // The last tier is the one the UI calls deep work; on a day with no deep end there is only one.
+  const topTier = (rules) => (rules ? rules.tiers : TUNING.TIERS).slice(-1)[0];
 
   function pickType(rng, weights) {
     const w = weights || TUNING.TYPE_WEIGHTS;
@@ -172,6 +226,20 @@
     if (r < w.urgent) return 'urgent';
     if (r < w.urgent + w.trivial) return 'trivial';
     return 'trap';
+  }
+
+  // Combine two views of what the morning should be made of. Either may be absent, in which case the
+  // other stands alone; with neither, the default mix applies.
+  function blendWeights(a, b) {
+    if (!a || !b) return a || b || null;
+    const mixed = {};
+    let total = 0;
+    for (const type of Object.keys(TUNING.TYPE_WEIGHTS)) {
+      mixed[type] = a[type] * b[type];
+      total += mixed[type];
+    }
+    for (const type of Object.keys(mixed)) mixed[type] /= total;
+    return mixed;
   }
 
   // Gap before the next message, given how far through the session we are.
@@ -184,6 +252,9 @@
   // daily morning has the same boss and the same events for everyone, whatever their role or level.
   function planMorning(seed) {
     const rng = mulberry32((seed ^ 0x85ebca6b) >>> 0);
+    // What kind of morning it is, drawn first and by weight: most mornings are ordinary, so the odd
+    // ones stay odd. Like the boss, it comes from the seed alone, so everyone shares it on a daily.
+    const day = weightedDay(rng());
     const boss = BOSS_ORDER[Math.floor(rng() * BOSS_ORDER.length)];
     const kinds = EVENT_ORDER.slice();
     const events = [];
@@ -194,7 +265,17 @@
     };
     place(TUNING.EVENTS.windows[0]);
     if (rng() < TUNING.EVENTS.secondChance) place(TUNING.EVENTS.windows[1]);
-    return { boss, events };
+    return { day, boss, events };
+  }
+
+  const DAY_TOTAL = DAY_ORDER.reduce((sum, id) => sum + TUNING.DAYS[id].weight, 0);
+  function weightedDay(roll) {
+    let r = roll * DAY_TOTAL;
+    for (const id of DAY_ORDER) {
+      r -= TUNING.DAYS[id].weight;
+      if (r < 0) return id;
+    }
+    return DEFAULT_DAY;
   }
 
   // Which message each arrival shows. Every type is dealt from its own shuffled deck, without
@@ -252,13 +333,18 @@
   function buildSchedule(seed, role, level, recent, plan) {
     const morning = plan || planMorning(seed);
     const boss = TUNING.BOSSES[morning.boss];
+    const rules = rulesFor(morning.day);
+    // A day type and a boss can both lean on the mix of messages. Multiplying the two and normalising
+    // keeps both: a release day under a micromanager is more urgent than either on its own, instead of
+    // one of them quietly winning.
+    const weights = blendWeights(rules.weights, boss.weights);
     const rng = mulberry32(seed);
     const [lo, hi] = TUNING.EXPIRY_RANGE_S;
     const arrivals = [];
     let at = TUNING.FIRST_SPAWN_S;
     while (at < TUNING.DURATION) {
-      arrivals.push({ at, type: pickType(rng, boss.weights), life: lo + rng() * (hi - lo) });
-      at += spawnGap(at / TUNING.DURATION) * (1 + (rng() * 2 - 1) * TUNING.SPAWN_JITTER);
+      arrivals.push({ at, type: pickType(rng, weights), life: lo + rng() * (hi - lo) });
+      at += spawnGap(at / TUNING.DURATION) * rules.spawnScale * (1 + (rng() * 2 - 1) * TUNING.SPAWN_JITTER);
     }
     // The Last-Minute Boss: the same messages, with their arrival times stretched toward noon.
     if (boss.warp) for (const a of arrivals) a.at = TUNING.DURATION * Math.pow(a.at / TUNING.DURATION, boss.warp);
@@ -294,10 +380,15 @@
     if (!Content.LEVELS[level]) throw new Error(`Unknown level: ${level}`);
     const seed = o.seed != null ? o.seed : (Date.now() >>> 0);
     const plan = planMorning(seed);
+    // o.day pins the kind of morning instead of taking the seed's. Play never passes it: a daily morning
+    // has to be the same for everyone. The tests and the balance report use it to hold one thing still.
+    const rules = rulesFor(o.day || plan.day);
     return {
       seed,
       role,
       level,
+      day: rules.day,
+      rules,
       boss: plan.boss,
       events: plan.events.map((e) => Object.assign({ started: false, done: false, work: 0 }, e)),
       rng: mulberry32(seed + 1), // for follow-ups and messages placed by hand; arrivals follow the schedule
@@ -315,14 +406,15 @@
       busyType: null, // what you're stuck on
       cards: [],
       nextCardId: 1,
-      schedule: buildSchedule(seed, role, level, o.recent, plan), // o.recent: message texts seen in recent rounds
+      // The schedule follows the day actually being played, pinned or not, so its pacing and mix match.
+      schedule: buildSchedule(seed, role, level, o.recent, Object.assign({}, plan, { day: rules.day })), // o.recent: texts seen recently
       nextArrival: 0,
       pending: [],    // follow-ups and escalations on their way: { at, type, msg }
       followUpsSent: { trap: 0, urgent: 0 },
       headphones: { charges: TUNING.HEADPHONES.charges, activeUntil: 0 },
       favours: [], // names of colleagues who owe you one, oldest first
       shipped: false,
-      tierName: TUNING.TIERS[0].name,
+      tierName: rules.tiers[0].name,
       stats: {
         urgentHandled: 0, urgentMissed: 0,
         trapsTaken: 0, trapsDodged: 0,
@@ -414,7 +506,7 @@
   }
 
   function applyIgnore(s, card, events, expired) {
-    const eff = TUNING.IGNORE[card.type];
+    const eff = { rep: s.rules.ignore[card.type] };
     s.rep += eff.rep;
     clampRep(s);
     if (card.type === 'urgent') s.stats.urgentMissed++;
@@ -476,26 +568,26 @@
 
     if (coding) {
       const distracted = s.cards.length >= TUNING.DISTRACTED_AT;
-      s.flow = Math.min(100, s.flow + TUNING.FLOW_GAIN_PER_S * dt * (distracted ? TUNING.DISTRACTED_FACTOR : 1));
+      s.flow = Math.min(100, s.flow + s.rules.flowGain * dt * (distracted ? TUNING.DISTRACTED_FACTOR : 1));
     } else {
-      const decay = (busy ? TUNING.FLOW_DECAY_BUSY_PER_S : TUNING.FLOW_DECAY_IDLE_PER_S) * (drill ? TUNING.EVENTS.drill.focusDrain : 1);
+      const decay = (busy ? s.rules.flowDecayBusy : s.rules.flowDecayIdle) * (drill ? TUNING.EVENTS.drill.focusDrain : 1);
       s.flow = Math.max(0, s.flow - decay * dt);
     }
     s.stats.peakFlow = Math.max(s.stats.peakFlow, s.flow);
     // The boss counts working, or handling a real emergency, as looking busy. A pointless call isn't.
     if (current && current.id === 'walkby' && (coding || (busy && s.busyType === 'urgent'))) current.work += dt;
 
-    const tier = tierFor(s.flow);
+    const tier = tierFor(s.flow, s.rules.tiers);
     if (tier.name !== s.tierName) {
       s.tierName = tier.name;
       events.push({ type: 'tier', tier });
     }
 
     if (coding) {
-      s.progress += TUNING.BASE_PROGRESS_PER_S * tier.mult * dt;
+      s.progress += s.rules.progressPerS * tier.mult * dt;
       s.stats.codingTime += dt;
-      if (tier === TUNING.TIERS[TUNING.TIERS.length - 1]) s.stats.deepWorkTime += dt;
-      if (!s.shipped && s.progress >= 100) {
+      if (tier === topTier(s.rules) && tier.mult > 1) s.stats.deepWorkTime += dt;
+      if (!s.shipped && s.progress >= s.rules.target) {
         s.shipped = true;
         events.push({ type: 'shipped' });
       }
@@ -626,7 +718,7 @@
       return events;
     }
 
-    const eff = TUNING.RESPOND[card.type];
+    const eff = s.rules.respond[card.type];
     const msg = card.msg;
     s.rep += eff.rep;
     clampRep(s);
@@ -680,8 +772,9 @@
 
   // Result wording follows the role's own deliverable: a tester's cycle is "signed off", an analyst's
   // report "delivered", a manager's plan "approved".
-  function ratingFor(key, role) {
-    const { noun, done } = role.deliverable;
+  function ratingFor(key, role, day) {
+    // A backlog day isn't shipping a feature, so the result says what the morning was actually for.
+    const { noun, done } = (day && day.deliverable) || role.deliverable;
     const text = {
       pip: { title: 'Put on a PIP', blurb: 'Too many urgent messages went unanswered. HR would like a quick call.' },
       missed: { title: 'Missed the deadline', blurb: `The ${noun} didn't make it. There will be a meeting about this.` },
@@ -693,20 +786,22 @@
   }
 
   function summary(s) {
-    const shipped = s.progress >= 100;
+    const shipped = s.progress >= s.rules.target;
     let key;
     if (s.endReason === 'pip') key = 'pip';
     else if (!shipped) key = 'missed';
-    else if (s.rep >= 70) key = 'gold';
+    else if (s.rep >= s.rules.goldRep) key = 'gold';
     else if (s.rep >= 40) key = 'silver';
     else key = 'bronze';
     const score = Math.max(0, Math.round(Math.min(s.progress, 200) * 10 + s.rep * 5 - (s.endReason === 'pip' ? 500 : 0)));
     return {
-      rating: ratingFor(key, Content.ROLES[s.role]),
+      rating: ratingFor(key, Content.ROLES[s.role], Content.DAYS[s.day]),
       score,
       shipped,
       role: s.role,
       level: s.level,
+      day: s.day,
+      target: s.rules.target,
       boss: s.boss,
       events: s.events.map((e) => e.id),
       progress: s.progress,
@@ -721,8 +816,8 @@
   }
 
   return {
-    TUNING, RATINGS, OUTCOME, DEFAULT_ROLE, DEFAULT_LEVEL, BOSS_ORDER, EVENT_ORDER,
-    createGame, planMorning, buildSchedule, step, act, canAct, activeEvent, inDrill, useHeadphones, summary,
+    TUNING, RATINGS, OUTCOME, DEFAULT_ROLE, DEFAULT_LEVEL, DEFAULT_DAY, BOSS_ORDER, EVENT_ORDER, DAY_ORDER,
+    createGame, planMorning, buildSchedule, rulesFor, topTier, step, act, canAct, activeEvent, inDrill, useHeadphones, summary,
     tierFor, spawnCard, spawnGap, isBusy
   };
 });

@@ -11,9 +11,11 @@
   const Awards = window.NineAwards;
   const Challenge = window.NineChallenge;
   const Scene = window.NineScene;
-  const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, BOSSES, EVENTS } = window.NineContent;
+  const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, DAYS, BOSSES, EVENTS } = window.NineContent;
   const T = Core.TUNING;
-  const DEEP = T.TIERS[T.TIERS.length - 1];
+  // The top tier of the morning being played: an ordinary day tops out at DEEP WORK, a backlog day
+  // has only the one gear.
+  const topTier = () => Core.topTier(game ? game.rules : null);
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const DEV = params.has('dev');
@@ -21,7 +23,7 @@
   const ui = {
     clock: $('clock'), progressMeter: $('progressMeter'), progressLabel: $('progressLabel'), progressFill: $('progressFill'), progressPct: $('progressPct'),
     repMeter: $('repMeter'), repFill: $('repFill'), repVal: $('repVal'), muteBtn: $('muteBtn'),
-    stage: document.querySelector('.stage'), scene: $('scene'), bossChip: $('bossChip'), eventBar: $('eventBar'),
+    stage: document.querySelector('.stage'), scene: $('scene'), dayChip: $('dayChip'), bossChip: $('bossChip'), eventBar: $('eventBar'),
     ide: $('ide'), workFile: $('workFile'), code: $('code'), tierLabel: $('tierLabel'),
     busy: $('busy'), busyText: $('busyText'), busyFill: $('busyFill'),
     flowFill: $('flowFill'), flowMult: $('flowMult'), banner: $('banner'),
@@ -74,6 +76,9 @@
   function announce(msg) { ui.live.textContent = ''; setTimeout(() => { ui.live.textContent = msg; }, 30); }
   const capitalise = (str) => str.charAt(0).toUpperCase() + str.slice(1);
   const currentRole = () => ROLES[game ? game.role : role];
+  const currentDay = () => DAYS[game ? game.day : 'normal'] || DAYS.normal;
+  // What the deliverable is called: usually the role's, but a backlog morning isn't building a feature.
+  const progressLabel = () => currentDay().progressLabel || currentRole().progressLabel;
   const eventName = (id) => `${EVENTS[id].emoji} ${EVENTS[id].title.replace(/!$/, '')}`;
   // "🧪 Senior Tester". Runs saved before roles or levels existed were junior developers.
   const whoPlayed = (roleId, levelId) => {
@@ -173,7 +178,10 @@
     const n = today();
     const rec = loadDaily()[n];
     const streak = Daily.streak(playedMornings(), n);
-    const boss = BOSSES[Core.planMorning(Daily.seedFor(n)).boss];
+    const plan = Core.planMorning(Daily.seedFor(n));
+    const boss = BOSSES[plan.boss];
+    const day = DAYS[plan.day];
+    const rules = Core.rulesFor(plan.day); // what today actually asks of you, so the card can say it
     renderedMorning = n;
     if (rec) {
       // Sharing lives on the result screen only; the menu just confirms today's morning is done.
@@ -183,8 +191,10 @@
     } else {
       ui.dailyCard.innerHTML =
         `<div class="daily-head"><b>☀️ Morning #${n}</b>${streak ? `<span class="streak">🔥 ${streak}-day streak</span>` : ''}</div>` +
-        `<p class="daily-sub">Today's boss: <b>${boss.emoji} ${escapeHtml(boss.label)}</b> — ${escapeHtml(boss.summary)}<br>` +
+        `<p class="daily-sub"><b>${day.emoji} ${escapeHtml(day.label)}</b> — ${escapeHtml(day.summary)}<br>` +
+        `Today's boss: <b>${boss.emoji} ${escapeHtml(boss.label)}</b> — ${escapeHtml(boss.summary)}<br>` +
         'Everyone gets the same morning today, whatever their role or level. Your first finished run is the one you share.</p>' +
+        `<p class="day-note">🎯 ${escapeHtml(day.goal)} You need <b>${rules.target}%</b> and a reputation of <b>${rules.goldRep}</b> for a 🥇.</p>` +
         `<button class="primary" type="button" id="dailyBtn">Play Morning #${n}${pendingInvite() ? '' : ' <kbd>Enter</kbd>'}</button>`;
     }
     ui.practiceKbd.hidden = !rec || pendingInvite(); // once today's morning is done, Enter goes to practice
@@ -450,7 +460,7 @@
     }
     ui.roleDesc.textContent = `${r.emoji} ${r.label}: ${r.tagline}`;
     ui.startLede.textContent = `It's 10:00 AM. ${r.goal} Everyone else has other plans for your morning.`;
-    ui.startGoal.textContent = `Goal: get the ${r.deliverable.noun} ${r.deliverable.done} (100%) with your reputation intact.`;
+    ui.startGoal.textContent = `Goal: get the ${r.deliverable.noun} ${r.deliverable.done} with your reputation intact. How much of it, and how much reputation, depends on the kind of morning — it's on the card below.`;
     document.querySelectorAll('[data-role-verb]').forEach((el) => { el.textContent = r.verb; });
     ui.progressLabel.textContent = r.progressLabel;
     ui.endProgressLabel.textContent = r.progressLabel;
@@ -764,10 +774,10 @@
           refreshCardText(ev.card);
           break;
         case 'tier':
-          if (ev.tier === DEEP) { sfx.deep(); announce('Deep work'); }
+          if (ev.tier === topTier() && ev.tier.mult > 1) { sfx.deep(); announce('Deep work'); }
           break;
         case 'shipped': {
-          const { noun, done } = currentRole().deliverable;
+          const { noun, done } = currentDay().deliverable || currentRole().deliverable;
           showBanner(`🚀 ${capitalise(noun)} ${done}! Everything past 100% is bonus.`);
           office.celebrate();
           sfx.ding();
@@ -800,14 +810,17 @@
     const r = ROLES[s.role];
 
     ui.clock.textContent = clockText(s.t);
-    ui.progressFill.style.width = `${Math.min(100, s.progress)}%`;
+    if (ui.progressLabel.textContent !== progressLabel()) ui.progressLabel.textContent = progressLabel();
+    // The bar fills toward the day's target, which is not always 100%: a backlog morning asks for more
+    // and an appraisal morning for less, and the meter has to mean the same thing on all of them.
+    ui.progressFill.style.width = `${Math.min(100, (s.progress / s.rules.target) * 100)}%`;
     ui.progressPct.textContent = `${Math.floor(s.progress)}%`;
-    ui.progressMeter.classList.toggle('done', s.progress >= 100);
+    ui.progressMeter.classList.toggle('done', s.progress >= s.rules.target);
     ui.repFill.style.width = `${s.rep}%`;
     ui.repFill.dataset.level = s.rep >= 70 ? 'high' : s.rep >= 40 ? 'mid' : 'low';
     ui.repVal.textContent = Math.round(s.rep);
 
-    const tier = Core.tierFor(s.flow);
+    const tier = Core.tierFor(s.flow, s.rules.tiers);
     ui.flowFill.style.width = `${s.flow}%`;
     ui.flowMult.textContent = `×${tier.mult}`;
     ui.tierLabel.textContent = tier.name;
@@ -830,13 +843,17 @@
     }
     document.body.classList.toggle('is-busy', busy);
     document.body.classList.toggle('coding', working);
-    document.body.classList.toggle('deep', working && tier === DEEP);
+    const top = topTier();
+    // On a morning with no deep end the flow meter still moves but buys nothing, so it is shown as inert
+    // rather than left looking like a meter worth filling.
+    ui.stage.classList.toggle('flat-flow', top.mult === 1);
+    document.body.classList.toggle('deep', working && tier === top && top.mult > 1);
     ui.codeBtn.classList.toggle('held', working);
-    ui.codeBtnLabel.textContent = drill ? 'EVERYONE OUT…' : busy ? 'ON A CALL…' : working ? (tier === DEEP ? 'DEEP WORK' : `${r.doing}…`) : `HOLD TO ${r.verb.toUpperCase()}`;
+    ui.codeBtnLabel.textContent = drill ? 'EVERYONE OUT…' : busy ? 'ON A CALL…' : working ? (tier === top && top.mult > 1 ? 'DEEP WORK' : `${r.doing}…`) : `HOLD TO ${r.verb.toUpperCase()}`;
 
     office.update({
       t: s.t, duration: s.duration, flow: s.flow, working, busy, busyKind,
-      deep: tier === DEEP, headphones: headphonesOn, cards: s.cards.length
+      deep: tier === top && top.mult > 1, headphones: headphonesOn, cards: s.cards.length
     });
 
     for (const c of s.cards) {
@@ -989,10 +1006,11 @@
     ui.endTitle.textContent = result.rating.title;
     ui.endBlurb.textContent = result.rating.blurb;
     ui.endScore.textContent = result.score;
-    ui.endProgressLabel.textContent = r.progressLabel;
-    ui.endProgress.textContent = `${Math.floor(result.progress)}%`;
+    ui.endProgressLabel.textContent = DAYS[result.day].progressLabel || r.progressLabel;
+    ui.endProgress.textContent = `${Math.floor(result.progress)}% / ${result.target}%`;
     ui.endRep.textContent = Math.round(result.rep);
     const rows = [
+      ['🗓️ Kind of morning', `${DAYS[result.day].emoji} ${DAYS[result.day].label}`],
       ['🧑‍💼 Boss of the day', `${boss.emoji} ${boss.label}`],
       ['🏢 Office events', result.events.map(eventName).join(', ') || 'none'],
       ['⚡ Time in Deep Work', `${st.deepWorkTime.toFixed(1)}s`],
@@ -1145,13 +1163,22 @@
     office.reset();
     office.setRole(playRole);
     office.setProps(Awards.propsFor(loadAwards()));
+    const day = DAYS[game.day];
+    ui.dayChip.textContent = `${day.emoji} ${day.label}`;
+    ui.dayChip.title = `${day.summary} ${day.goal}`;
+    ui.dayChip.classList.toggle('odd', game.day !== 'normal');
+    ui.dayChip.hidden = false;
     const boss = BOSSES[game.boss];
     ui.bossChip.textContent = `${boss.emoji} ${boss.label}`;
     ui.bossChip.title = boss.summary;
     ui.bossChip.hidden = false;
     ui.eventBar.hidden = true;
     ui.banner.hidden = true;
-    showBanner(`${boss.emoji} Today's boss: ${boss.label}`);
+    // An unusual morning is worth saying out loud before the first message lands; an ordinary one just
+    // names the boss, as it always did.
+    showBanner(game.day === 'normal'
+      ? `${boss.emoji} Today's boss: ${boss.label}`
+      : `${day.emoji} ${day.label} — ${day.goal}`);
     document.body.classList.remove('deep', 'is-busy', 'coding', 'flash-bad', 'flash-trap');
     ui.startScreen.hidden = true;
     ui.endScreen.hidden = true;

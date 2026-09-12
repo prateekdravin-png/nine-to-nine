@@ -7,6 +7,8 @@ const assert = require('node:assert/strict');
 const Core = require('../core');
 const { LEVEL_ORDER, TELLS, BOSSES, EVENTS, FOLLOW_UPS } = require('../content');
 const { evaluate, evaluateHuman } = require('../bots');
+// Bosses and events are checked on an ordinary morning; day types get their own check (days.test.js).
+const DAY = 'normal';
 const T = Core.TUNING;
 
 // A game with a hand-picked morning: no scheduled messages, and exactly the events given.
@@ -251,8 +253,8 @@ test('design: every boss and every event stays fair to a first-time player', () 
   }
   for (const [key, all] of Object.entries(groups)) {
     const seeds = all.slice(0, 80);
-    const human = evaluateHuman('First-time player', seeds);
-    const perfect = evaluate('Perfect reader', seeds);
+    const human = evaluateHuman('First-time player', seeds, { day: DAY });
+    const perfect = evaluate('Perfect reader', seeds, { day: DAY });
     assert.ok(human.lostPct <= 0.04, `${key}: a first-time player lost ${(human.lostPct * 100).toFixed(1)}% of messages before reading them`);
     assert.ok(human.lostByPhasePct[0] <= 0.01, `${key}: the opening should stay calm`);
     assert.ok(perfect.goldRate >= 0.85, `${key}: good judgment should still earn gold (${perfect.goldRate})`);

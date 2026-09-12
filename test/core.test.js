@@ -12,9 +12,11 @@ const { evaluate, evaluateHuman, playBot } = require('../bots');
 const T = Core.TUNING;
 const { ROLES, ROLE_ORDER } = Content;
 
-// A session with no random notifications, so a test controls exactly what arrives.
+// A session with no random notifications, so a test controls exactly what arrives — and an ordinary
+// morning, so a rule check measures the rule and not which kind of day the seed happened to pick.
+// A test about a particular day type passes { day }.
 function quiet(opts) {
-  const s = Core.createGame(Object.assign({ seed: 1 }, opts));
+  const s = Core.createGame(Object.assign({ seed: 1, day: 'normal' }, opts));
   s.schedule = [];
   s.events = []; // no boss surprises either
   return s;

@@ -12,7 +12,7 @@ const T = Core.TUNING;
 const seeds = Array.from({ length: 120 }, (_, i) => i + 1);
 
 function gameWith(type) {
-  const s = Core.createGame({ seed: 42 });
+  const s = Core.createGame({ seed: 42, day: 'normal' });
   s.schedule = []; // nothing arrives on its own; the test places the one message it cares about
   const card = Core.spawnCard(s, type, 0);
   return { s, card };
@@ -65,13 +65,19 @@ test('the share grid never marks saying no as right or as a disaster', () => {
   }
 });
 
-test('saying no to a whole morning ends in a PIP', () => {
-  const s = Core.createGame({ seed: 7 });
-  while (!s.over) {
-    for (const card of s.cards.slice()) if (Core.canAct(s, 'decline')) Core.act(s, card.id, 'decline');
-    Core.step(s, 0.05, { holding: true });
+test('saying no to a whole morning never works, on any kind of morning', () => {
+  for (const day of Core.DAY_ORDER) {
+    const results = [1, 2, 3, 4, 5].map((seed) => {
+      const s = Core.createGame({ seed, day });
+      while (!s.over) {
+        for (const card of s.cards.slice()) if (Core.canAct(s, 'decline')) Core.act(s, card.id, 'decline');
+        Core.step(s, 0.05, { holding: true });
+      }
+      return Core.summary(s);
+    });
+    assert.ok(results.every((r) => r.rating.key !== 'gold'), `refusing everything reached gold on a ${day} morning`);
+    assert.ok(results.some((r) => r.endReason === 'pip'), `refusing everything never ended in a PIP on a ${day} morning`);
   }
-  assert.strictEqual(Core.summary(s).endReason, 'pip', 'refusing all morning has to end badly');
 });
 
 test('you cannot say no while stuck on a call or out on a fire drill', () => {
@@ -89,9 +95,9 @@ test('you cannot say no while stuck on a call or out on a fire drill', () => {
 // The whole point of the verb, and the only claim that matters: knowing that you cannot tell has to be
 // worth more than guessing, and still worth less than being able to read the message.
 test('knowing you cannot tell beats guessing, and still loses to reading it', () => {
-  const guessing = evaluateHuman('First-time player', seeds, { accuracy: 0.8 });
-  const sayingNo = evaluateHuman('First-time player', seeds, { accuracy: 0.8, verbs: 'hedge' });
-  const reading = evaluateHuman('First-time player', seeds, { accuracy: 1 });
+  const guessing = evaluateHuman('First-time player', seeds, { accuracy: 0.8, day: 'normal' });
+  const sayingNo = evaluateHuman('First-time player', seeds, { accuracy: 0.8, verbs: 'hedge', day: 'normal' });
+  const reading = evaluateHuman('First-time player', seeds, { accuracy: 1, day: 'normal' });
   assert.ok(sayingNo.goldRate > guessing.goldRate + 0.1,
     `saying no when unsure (${sayingNo.goldRate}) should clearly beat guessing (${guessing.goldRate})`);
   assert.ok(sayingNo.goldRate < reading.goldRate,
@@ -99,7 +105,7 @@ test('knowing you cannot tell beats guessing, and still loses to reading it', ()
 });
 
 test('a reader who is never unsure never needs it', () => {
-  const reading = evaluateHuman('First-time player', seeds, { accuracy: 1, verbs: 'hedge' });
+  const reading = evaluateHuman('First-time player', seeds, { accuracy: 1, verbs: 'hedge', day: 'normal' });
   assert.strictEqual(reading.declined, 0, 'it should be worth nothing to someone who can read every message');
 });
 

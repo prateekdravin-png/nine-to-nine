@@ -7,6 +7,8 @@ const assert = require('node:assert/strict');
 const Core = require('../core');
 const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS } = require('../content');
 const { evaluate, evaluateHuman } = require('../bots');
+// Levels are about how well traps hide, so these hold the kind of morning still and vary only the level.
+const DAY = 'normal';
 
 const words = (text) => text.split(/\s+/).filter(Boolean).length;
 
@@ -114,7 +116,7 @@ test('responding to a senior trap uses its own busy text and aftermath', () => {
 // while a reader who understands the messages does just as well at every level (the rules don't change).
 test('design: each promotion breaks the shortcut that worked before', () => {
   const seeds = Array.from({ length: 120 }, (_, i) => i + 1);
-  const gold = (strategy, level) => evaluate(strategy, seeds, { level }).goldRate;
+  const gold = (strategy, level) => evaluate(strategy, seeds, { level, day: DAY }).goldRate;
   const QUICK = 'Keyword reader: "quick" means trap';
   const ALARM = 'Keyword reader: alarm words mean urgent';
 
@@ -124,14 +126,14 @@ test('design: each promotion breaks the shortcut that worked before', () => {
   assert.ok(gold(QUICK, 'senior') <= 0.1, 'at senior, "quick means trap" falls for every trap');
   assert.ok(gold(QUICK, 'lead') <= 0.1, 'and it stays broken at lead');
 
-  assert.ok(evaluate(ALARM, seeds, { level: 'lead' }).pipRate >= 0.6, 'at lead, trusting alarm words gets you put on a PIP');
+  assert.ok(evaluate(ALARM, seeds, { level: 'lead', day: DAY }).pipRate >= 0.6, 'at lead, trusting alarm words gets you put on a PIP');
 });
 
 test('design: at every level and in every role, a first-time player still has time to read', () => {
   const seeds = Array.from({ length: 150 }, (_, i) => i + 1);
   for (const level of ['senior', 'lead']) { // junior is covered in core.test.js
     for (const role of ROLE_ORDER) {
-      const r = evaluateHuman('First-time player', seeds, { role, level });
+      const r = evaluateHuman('First-time player', seeds, { role, level, day: DAY });
       assert.ok(r.lostPct <= 0.03, `${role}/${level}: lost ${(r.lostPct * 100).toFixed(1)}% of messages before reading them`);
       assert.ok(r.lostByPhasePct[0] <= 0.01, `${role}/${level}: the opening should stay calm`);
     }
