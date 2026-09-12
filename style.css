@@ -265,6 +265,10 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 .event-track i { display: block; height: 100%; width: 100%; background: #9b6bff; transform-origin: left; }
 @media (max-width: 760px) { .event-bar span { display: none; } }
 
+/* Desk objects stay hidden until their achievement is unlocked (awards.js) */
+.office .prop { display: none; }
+.office .prop.on { display: inline; }
+
 /* What the office looks like during each event (scene.js) */
 .office .alarm, .office .wifi-out, .office .pizza, .office .boss-walk { opacity: 0; transition: opacity 0.25s; }
 .office[data-event="drill"] .alarm, .office[data-event="outage"] .alarm { opacity: 1; animation: alarm 0.8s steps(2) infinite; }
@@ -276,6 +280,17 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 .office[data-event="outage"] .screen { fill: #3A1417; }
 @keyframes alarm { 50% { opacity: 0.25; } }
 @keyframes walkby { from { transform: translateX(-170px); } to { transform: translateX(430px); } }
+
+/* ---- Achievements and the desk objects they unlock ---- */
+.awards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.award-count { grid-column: 1 / -1; margin: 0 0 2px; font: 600 12px var(--mono); color: var(--muted); }
+.award-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; }
+.award-item.got { border-color: #35c98a55; background: #35c98a12; }
+.award-emoji { font-size: 22px; line-height: 1; filter: grayscale(1); opacity: 0.5; }
+.award-item.got .award-emoji { filter: none; opacity: 1; }
+.award-item b { display: block; font-size: 13px; }
+.award-item span:last-child { font-size: 12px; color: var(--muted); }
+.award { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: #35c98a1f; border: 1px solid #35c98a66; color: #d9f7e8; font-size: 13.5px; text-align: center; }
 
 /* ---- Daily morning ---- */
 .daily { padding: 14px; border: 1px solid #f5b83d55; border-radius: 16px; background: linear-gradient(180deg, #f5b83d14, #f5b83d05); }
@@ -291,6 +306,13 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 a.secondary { display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--text); }
 .share-status { margin: 8px 0 0; font-size: 13px; color: var(--green); text-align: center; }
 .share-status:empty { display: none; }
+/* ---- Challenge links (challenge.js): the daily is gold, a challenge is blue ---- */
+.daily.challenge { border-color: #4d8dff55; background: linear-gradient(180deg, #4d8dff18, #4d8dff05); }
+#challengeCard { margin-bottom: 12px; }
+#endChallenge { margin-bottom: 14px; }
+.primary.challenge-send { background: linear-gradient(180deg, #7aaaff, #3f7ef0); color: #04101f; }
+.daily.challenge .share-status { color: var(--blue); }
+.daily.challenge .link { color: var(--blue); }
 .daily-cta { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; color: #c3cede; }
 .link { background: none; border: 0; padding: 0; color: var(--gold); font-weight: 700; text-decoration: underline; }
 .practice { display: grid; gap: 8px; margin-top: 10px; }

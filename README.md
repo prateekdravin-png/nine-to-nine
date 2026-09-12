@@ -82,6 +82,38 @@ plus unlimited practice on random mornings.
   🟩 right call · 🟨 answered small talk · 🟥 wrong call (ignored something urgent, or fell for a trap).
   Phones get the share sheet; desktops copy to the clipboard; there's also a WhatsApp button.
 
+## Challenge links
+
+The daily morning is for the whole team. A **challenge** is for one person: finish a practice round and
+send that exact morning on, with your score in the link for them to beat.
+
+```
+9 to 9 · a challenge from 💻 Senior Developer
+🥇 1840 to beat on this exact morning
+🧐 Boss of the day: The Micromanager
+Same seed, same interruptions, same three hours. Good luck.
+http://…/#c=1.1ps9wxb.1.1.0.mk.1.mfn
+```
+
+- **The whole challenge is in the link.** The seed, the role and career level it was played at, the
+  variant and the score — about 24 characters. Nothing is stored, there is no account, and a challenge
+  works on a static host with no back end.
+- **It rides in the fragment**, after the `#`, which browsers never send to a server. The play stats
+  hear only that *a* challenge was made or opened, never which one.
+- **The same morning for both players.** The recipient's game is rebuilt from the seed: the same boss,
+  the same office events, the same interruptions at the same moments. Only the wording of individual
+  messages can differ, because practice rounds deal recently seen messages last and the two players
+  have seen different ones — what each message *is* and *when* it lands is fixed by the seed, so the
+  two scores compare.
+- **Played at the sender's role and level**, for that round only: your own choices on the start screen
+  are untouched, and a level you haven't unlocked opens for the challenge without granting a promotion.
+- **Beat it and you can send it straight back** with your score on it, which is the loop worth watching.
+- **Never the daily morning.** A link to today's morning would hand the recipient the one thing the
+  daily has going for it, so the challenge button appears on practice results only.
+
+A mangled link — truncated by a chat app, a character eaten — fails a checksum and is ignored, so the
+game never plays a random morning while claiming it was the challenge.
+
 ## Every morning is different: bosses, office events and follow-ups
 
 **Boss of the day.** Each morning has one, and it changes the mix:
@@ -312,6 +344,7 @@ playtesting for real.
 | `core.js` | The rules. Pure and deterministic — no DOM, timers or sound |
 | `content.js` | The five roles: their messages, work screens and wording, with the tell rules they must follow |
 | `daily.js` | The daily morning: numbering, seeds, streaks and the share grid |
+| `challenge.js` | Challenge links: packing a morning and a score into a URL fragment, and reading it back |
 | `persona.js` | Work personalities: which one a round earns, and why |
 | `awards.js` | Achievements and the desk objects they unlock |
 | `scene.js` | The illustrated office scene and the portraits of the people who message you |

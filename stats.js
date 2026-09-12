@@ -1,6 +1,7 @@
-// stats.js — do people come back? Reads the anonymous events the server records for the daily morning
-// (data/events.jsonl) and prints, for each morning, how many players showed up, how many finished it,
-// and how many came back the next morning. Usage: npm run stats
+// stats.js — do people come back, and do they pass the game on? Reads the anonymous events the server
+// records (data/events.jsonl) and prints, for each morning, how many players showed up, how many
+// finished it and how many came back the next morning, then the challenge funnel: links made, links
+// opened, challenges played. Usage: npm run stats
 const fs = require('fs');
 const path = require('path');
 const Daily = require('./daily');
@@ -24,6 +25,9 @@ function summarise(events, today) {
   const finished = new Map();  // morning -> players who finished that morning
   const firstSeen = new Map(); // player -> their first morning
   const roles = {};
+  // The challenge loop, one player counted once per stage: sending a link is the ask, opening one is
+  // the answer, and a finished challenge is the only stage that proves the link actually worked.
+  const challenge = { sent: new Set(), opened: new Set(), played: new Set(), runs: 0, beaten: 0 };
   const add = (map, key, player) => {
     if (!map.has(key)) map.set(key, new Set());
     const set = map.get(key);
@@ -34,6 +38,13 @@ function summarise(events, today) {
   for (const e of events) {
     add(seen, e.day, e.player);
     if (e.kind === 'daily' && add(finished, e.day, e.player)) roles[e.role] = (roles[e.role] || 0) + 1;
+    if (e.kind === 'invite') challenge.sent.add(e.player);
+    if (e.kind === 'accept') challenge.opened.add(e.player);
+    if (e.kind === 'challenge') {
+      challenge.played.add(e.player);
+      challenge.runs++;
+      if (e.beat) challenge.beaten++;
+    }
     if (!firstSeen.has(e.player) || e.day < firstSeen.get(e.player)) firstSeen.set(e.player, e.day);
   }
   const none = new Set();
@@ -65,7 +76,20 @@ function summarise(events, today) {
   const daysPlayed = { 1: 0, 2: 0, '3+': 0 };
   for (const n of perPlayer.values()) daysPlayed[n >= 3 ? '3+' : n]++;
 
-  return { players: firstSeen.size, days, nextDay: { eligible, returned }, daysPlayed, roles };
+  return {
+    players: firstSeen.size,
+    days,
+    nextDay: { eligible, returned },
+    daysPlayed,
+    roles,
+    challenge: {
+      sent: challenge.sent.size,
+      opened: challenge.opened.size,
+      played: challenge.played.size,
+      runs: challenge.runs,
+      beaten: challenge.beaten
+    }
+  };
 }
 
 function main() {
@@ -96,6 +120,11 @@ function main() {
     .map(([id, n]) => `${ROLES[id] ? `${ROLES[id].emoji} ${ROLES[id].label}` : id} ${n}`)
     .join(' · ');
   if (roleLine) console.log(`Finished mornings by role: ${roleLine}`);
+  const c = r.challenge;
+  console.log(c.sent || c.opened || c.runs
+    ? `\nChallenges: ${players(c.sent)} sent a link · ${players(c.opened)} opened one · ${players(c.played)} played it ` +
+      `(${c.runs} round${c.runs === 1 ? '' : 's'}, ${c.beaten} beat the score)`
+    : '\nChallenges: none sent yet. The button is on the result screen of a practice round.');
   console.log('');
 }
 

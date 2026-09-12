@@ -9,6 +9,7 @@
   const Daily = window.NineDaily;
   const Persona = window.NinePersona;
   const Awards = window.NineAwards;
+  const Challenge = window.NineChallenge;
   const Scene = window.NineScene;
   const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, BOSSES, EVENTS } = window.NineContent;
   const T = Core.TUNING;
@@ -28,11 +29,11 @@
     hpBtn: $('hpBtn'), hpLabel: $('hpLabel'), codeBtn: $('codeBtn'), codeBtnLabel: $('codeBtnLabel'),
     startScreen: $('startScreen'), startLede: $('startLede'), rolePicker: $('rolePicker'), roleDesc: $('roleDesc'),
     levelPicker: $('levelPicker'), levelDesc: $('levelDesc'), trapTell: $('trapTell'),
-    dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
+    challengeCard: $('challengeCard'), dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
     startGoal: $('startGoal'), awards: $('awards'), statsNote: $('statsNote'), startHistory: $('startHistory'),
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
-    endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endStats: $('endStats'), endQuote: $('endQuote'),
+    endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endChallenge: $('endChallenge'), endStats: $('endStats'), endQuote: $('endQuote'),
     againBtn: $('againBtn'), changeRoleBtn: $('changeRoleBtn'),
     endNote: $('endNote'), endHistory: $('endHistory'), live: $('live')
   };
@@ -52,7 +53,9 @@
   let game = null;
   let role = Core.DEFAULT_ROLE;   // the role picked on the start screen; a running game keeps its own
   let level = Core.DEFAULT_LEVEL; // likewise for the career level
-  let mode = 'practice';          // 'daily' | 'practice' for the game in progress
+  let mode = 'practice';          // 'daily' | 'practice' | 'challenge' for the game in progress
+  let invite = null;              // the challenge this page was opened with, decoded from the link
+  let invitePlayed = false;       // and whether this visit has answered it yet
   let morning = null;             // the morning number of a daily game, fixed when it starts
   let busyKind = null;            // what you're stuck on: 'urgent' | 'trivial' | 'trap' (known once you've answered)
   let holding = false;
@@ -182,9 +185,9 @@
         `<div class="daily-head"><b>☀️ Morning #${n}</b>${streak ? `<span class="streak">🔥 ${streak}-day streak</span>` : ''}</div>` +
         `<p class="daily-sub">Today's boss: <b>${boss.emoji} ${escapeHtml(boss.label)}</b> — ${escapeHtml(boss.summary)}<br>` +
         'Everyone gets the same morning today, whatever their role or level. Your first finished run is the one you share.</p>' +
-        `<button class="primary" type="button" id="dailyBtn">Play Morning #${n} <kbd>Enter</kbd></button>`;
+        `<button class="primary" type="button" id="dailyBtn">Play Morning #${n}${pendingInvite() ? '' : ' <kbd>Enter</kbd>'}</button>`;
     }
-    ui.practiceKbd.hidden = !rec; // once today's morning is done, Enter goes to practice
+    ui.practiceKbd.hidden = !rec || pendingInvite(); // once today's morning is done, Enter goes to practice
   }
 
   // Phones get the native share sheet (WhatsApp, Slack, Teams…); desktops get the clipboard.
@@ -224,13 +227,102 @@
       cancelled: '',
       failed: "Couldn't copy automatically. The text above is selected: copy it from there."
     }[outcome];
-    if (outcome === 'failed') {
-      const range = document.createRange();
-      range.selectNodeContents(box.querySelector('.share-preview'));
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
+    if (outcome === 'failed') selectText(box.querySelector('.share-preview'));
+  }
+
+  // Nothing could be copied for them, so at least leave the text selected to copy by hand.
+  function selectText(node) {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  // ---------- challenge links ----------
+  // A challenge is a morning you send to one person: same seed, same boss, same interruptions, and your
+  // score in the link for them to beat. Practice rounds only. Sending today's daily morning this way
+  // would hand the recipient the morning early and spoil the one thing the daily has going for it.
+  const challengeUrl = () => location.origin + location.pathname;
+  // A challenge waiting to be answered owns the Enter key, so no other button may claim it.
+  const pendingInvite = () => !!invite && !invitePlayed;
+
+  // Everything the other player needs to rebuild this exact morning, plus the score to beat.
+  function challengeFor(result) {
+    return { seed: result.seed, role: result.role, level: result.level, variant: !!game.peekVariant, score: result.score, rating: result.rating.key };
+  }
+
+  function challengeText(c) {
+    return Challenge.shareText({
+      who: whoPlayed(c.role, c.level),
+      rating: Core.RATINGS[c.rating] || Core.RATINGS.bronze,
+      score: c.score,
+      boss: BOSSES[Core.planMorning(c.seed).boss],
+      url: Challenge.linkFor(challengeUrl(), c)
+    });
+  }
+
+  // The same shape as the daily share block, so both behave identically: the exact text, then the ways
+  // to send it. The challenge rides on the button, since these blocks are rebuilt each time.
+  function challengeBlockHtml(c, label) {
+    const text = challengeText(c);
+    return `<pre class="share-preview">${escapeHtml(text)}</pre>` +
+      '<div class="share-actions">' +
+        `<button class="primary challenge-send" type="button" data-share="challenge" data-code="${Challenge.encode(c)}">${label}</button>` +
+        `<a class="secondary" data-share="whatsapp" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` +
+      '</div>' +
+      '<p class="share-status" role="status"></p>';
+  }
+
+  async function sendChallenge(button) {
+    const c = Challenge.decode(button.dataset.code);
+    if (!c) return;
+    const box = button.closest('.daily');
+    const status = box.querySelector('.share-status');
+    const outcome = await shareOut(challengeText(c));
+    if (outcome === 'shared' || outcome === 'copied') report({ kind: 'invite', day: today() });
+    status.textContent = {
+      shared: 'Sent \u2713',
+      copied: 'Link copied \u2713 Send it to one person and see if they come back.',
+      cancelled: '',
+      failed: "Couldn't copy automatically. The text above is selected: copy it from there."
+    }[outcome];
+    if (outcome === 'failed') selectText(box.querySelector('.share-preview'));
+  }
+
+  // The card on the start screen when the page was opened with a challenge link.
+  function renderChallengeCard() {
+    ui.challengeCard.hidden = !pendingInvite();
+    if (ui.challengeCard.hidden) return;
+    const boss = BOSSES[Core.planMorning(invite.seed).boss];
+    const rating = Core.RATINGS[invite.rating] || Core.RATINGS.bronze;
+    const who = whoPlayed(invite.role, invite.level);
+    const locked = !unlockedLevels().includes(invite.level);
+    ui.challengeCard.innerHTML =
+      `<div class="daily-head"><b>\u2694\uFE0F You've been challenged</b><span class="daily-next">${escapeHtml(who)}</span></div>` +
+      `<p class="daily-sub"><b>${rating.emoji} ${invite.score} to beat</b> on their exact morning \u2014 ${boss.emoji} ${escapeHtml(boss.label)} in charge, the same interruptions at the same moments.<br>` +
+      `You play it as a ${escapeHtml(who)}${locked ? ", a level you haven't unlocked yet \u2014 the challenge opens it for this round only" : ''}. Today's own morning is untouched.</p>` +
+      '<button class="primary" type="button" id="challengeBtn">Take the challenge <kbd>Enter</kbd></button>';
+  }
+
+  // The result of a challenge round, and the rematch: the same morning sent back with your score on it.
+  function renderChallengeResult(result) {
+    const answered = mode === 'challenge' && !!invite;
+    const beat = answered && result.score > invite.score;
+    const drew = answered && result.score === invite.score;
+    const rematch = challengeFor(result);
+    const head = answered
+      ? `<div class="daily-head"><b>\u2694\uFE0F ${beat ? 'You beat it' : drew ? 'Dead heat' : 'Not this time'}</b>` +
+        `<span class="daily-next">${result.score} vs ${invite.score}${beat ? ` \u00b7 +${result.score - invite.score}` : ''}</span></div>` +
+        `<p class="daily-sub">${beat
+          ? 'Send the same morning back with your score on it and let them try again.'
+          : drew
+            ? 'Send it back and settle it.'
+            : `${invite.score - result.score} short. Send this morning to someone else, or play it again.`}</p>`
+      : '<div class="daily-head"><b>\u2694\uFE0F Challenge a colleague</b></div>' +
+        '<p class="daily-sub">Send this exact morning to one person \u2014 same boss, same interruptions, your score to beat. The whole thing travels in the link, so there is nothing for them to sign up for.</p>';
+    ui.endChallenge.innerHTML = head + challengeBlockHtml(rematch, answered ? '\u2694\uFE0F Send it back' : '\u2694\uFE0F Challenge a colleague');
+    ui.endChallenge.hidden = false;
   }
 
   // ---------- sound (synthesised, no files) ----------
@@ -426,7 +518,7 @@
     const played = LEVEL_ORDER.indexOf(result.level);
     const highest = Math.max(0, LEVEL_ORDER.indexOf(read(STORE.career)));
     const next = LEVEL_ORDER[played + 1];
-    if (!next || played < highest) return null;
+    if (!next || played !== highest) return null; // a challenge played above your level skips nothing
     store(STORE.career, next);
     return next;
   }
@@ -795,7 +887,7 @@
       .map((r) => {
         const played = ROLES[roleOf(r)];
         const label = `${whoPlayed(roleOf(r), levelOf(r))}: ${r.title}${r.mode === 'daily' ? ` (Morning #${r.morning})` : ''}`;
-        const marks = (r.mode === 'daily' ? '<i>☀</i>' : '') + (r.variant === 'B' ? '<i>B</i>' : '');
+        const marks = (r.mode === 'daily' ? '<i>☀</i>' : '') + (r.mode === 'challenge' ? '<i>⚔</i>' : '') + (r.variant === 'B' ? '<i>B</i>' : '');
         return `<span class="chip" title="${escapeHtml(label)}">${played ? played.emoji : ''}${r.emoji} ${r.score}${marks}</span>`;
       })
       .join('');
@@ -880,7 +972,7 @@
     const st = result.stats;
     ui.eventBar.hidden = true;
     ui.endEmoji.textContent = result.rating.emoji;
-    ui.endRole.textContent = `${whoPlayed(result.role, result.level)} · ${mode === 'daily' ? `Morning #${morning}` : 'Practice'}`;
+    ui.endRole.textContent = `${whoPlayed(result.role, result.level)} · ${mode === 'daily' ? `Morning #${morning}` : mode === 'challenge' ? 'Challenge' : 'Practice'}`;
     ui.endTitle.textContent = result.rating.title;
     ui.endBlurb.textContent = result.rating.blurb;
     ui.endScore.textContent = result.score;
@@ -955,8 +1047,19 @@
       ui.endDaily.innerHTML = ui.endDaily.hidden ? '' :
         `<div class="daily-cta">☀️ Today's Morning #${n} is still waiting. <button class="link" type="button" id="endDailyBtn">Play it</button></div>`;
       ui.againBtn.innerHTML = 'Play again <kbd>Enter</kbd>';
-      ui.endNote.textContent = 'The real test: do you want another round? Note your answer after 10 runs, and again after 30.';
+      ui.endNote.textContent = mode === 'challenge'
+        ? 'A challenge is one morning between two people. The daily morning is the one everybody plays.'
+        : 'The real test: do you want another round? Note your answer after 10 runs, and again after 30.';
     }
+
+    // Challenges: how this went against the link you arrived on, and the morning to send onward. Never
+    // offered on the daily morning \u2014 that link would spoil today for whoever received it.
+    if (mode === 'challenge' && invite) {
+      report({ kind: 'challenge', day: today(), role: result.role, level: result.level, rating: result.rating.key, score: result.score, deepWork: Math.round(st.deepWorkTime * 10) / 10, beat: result.score > invite.score });
+      invitePlayed = true;
+    }
+    ui.endChallenge.hidden = true;
+    if (mode !== 'daily') renderChallengeResult(result);
 
     // Achievements, from this round plus what you have done across rounds. Cosmetic unlocks only.
     const progress = loadProgress();
@@ -994,20 +1097,27 @@
   }
 
   // ---------- lifecycle ----------
-  function startGame(daily) {
+  // kind: 'daily' | 'practice' | 'challenge'
+  function startGame(kind) {
+    const daily = kind === 'daily';
     if (daily && loadDaily()[today()]) { showStart(); return; } // today's morning is already done
+    if (kind === 'challenge' && !invite) kind = 'practice';
     unlockAudio();
-    if (!daily) store(STORE.variant, ui.variantToggle.checked ? 'B' : 'A');
-    mode = daily ? 'daily' : 'practice';
+    if (kind === 'practice') store(STORE.variant, ui.variantToggle.checked ? 'B' : 'A');
+    mode = kind;
     morning = daily ? today() : null;
     // The daily morning always uses the standard rules and no message history, so it is the same for
-    // everyone. Practice rounds deal recently seen messages last, so they keep feeling different.
+    // everyone. A challenge does the same from the sender's seed, at the role and level they played,
+    // for this one round \u2014 the start screen keeps whatever you had picked. Practice rounds deal
+    // recently seen messages last, so they keep feeling different.
+    const challenged = kind === 'challenge';
+    const playRole = challenged ? invite.role : role;
     game = Core.createGame({
-      role,
-      level,
-      peekVariant: !daily && ui.variantToggle.checked,
-      seed: daily ? Daily.seedFor(morning) : undefined,
-      recent: daily ? undefined : loadRecent()
+      role: playRole,
+      level: challenged ? invite.level : level,
+      peekVariant: challenged ? invite.variant : (kind === 'practice' && ui.variantToggle.checked),
+      seed: daily ? Daily.seedFor(morning) : (challenged ? invite.seed : undefined),
+      recent: kind === 'practice' ? loadRecent() : undefined
     });
     holding = false;
     busyKind = null;
@@ -1019,7 +1129,7 @@
     ui.cards.querySelectorAll('.card').forEach((n) => n.remove());
     resetCode();
     office.reset();
-    office.setRole(role);
+    office.setRole(playRole);
     office.setProps(Awards.propsFor(loadAwards()));
     const boss = BOSSES[game.boss];
     ui.bossChip.textContent = `${boss.emoji} ${boss.label}`;
@@ -1040,6 +1150,7 @@
     ui.endScreen.hidden = true;
     ui.startScreen.hidden = false;
     applyRoleText();
+    renderChallengeCard();
     renderDailyCard();
     renderAwards();
     // Focus leaves the hidden button so Enter starts the morning; Tab still reaches the pickers.
@@ -1139,7 +1250,10 @@
   document.addEventListener('click', (e) => {
     const copy = e.target.closest('[data-share="copy"]');
     if (copy) { shareResult(copy); return; }
-    if (e.target.closest('#dailyBtn, #endDailyBtn')) startGame(true);
+    const send = e.target.closest('[data-share="challenge"]');
+    if (send) { sendChallenge(send); return; }
+    if (e.target.closest('#challengeBtn')) { startGame('challenge'); return; }
+    if (e.target.closest('#dailyBtn, #endDailyBtn')) startGame('daily');
   });
 
   ui.hpBtn.addEventListener('click', () => {
@@ -1148,8 +1262,8 @@
     render();
   });
   ui.muteBtn.addEventListener('click', () => setMuted(!muted));
-  ui.practiceBtn.addEventListener('click', () => startGame(false));
-  ui.againBtn.addEventListener('click', () => startGame(false));
+  ui.practiceBtn.addEventListener('click', () => startGame('practice'));
+  ui.againBtn.addEventListener('click', () => startGame('practice'));
   ui.changeRoleBtn.addEventListener('click', showStart);
 
   const ARROWS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
@@ -1178,7 +1292,11 @@
       const el = document.activeElement;
       if (el && el.closest && el.closest('#changeRoleBtn, [data-share]')) return;
       e.preventDefault();
-      startGame(!ui.startScreen.hidden && !loadDaily()[today()]);
+      // From the start screen Enter plays what the screen is offering, topmost first: an unanswered
+      // challenge, then today's morning, then a practice round.
+      const onStart = !ui.startScreen.hidden;
+      if (onStart && pendingInvite()) startGame('challenge');
+      else startGame(onStart && !loadDaily()[today()] ? 'daily' : 'practice');
       return;
     }
     if (e.repeat || overlayOpen || !game || game.over) {
@@ -1216,6 +1334,12 @@
   renderRolePicker();
   renderLevelPicker();
   applyRoleText();
+  // A challenge link, if the page was opened with one. The hash stays in the address bar so the link
+  // can be reopened or forwarded, and never leaves the browser: the stats hear that a challenge was
+  // opened, never which one.
+  invite = Challenge.decode(Challenge.codeFromUrl(location.href));
+  if (invite) report({ kind: 'accept', day: today() });
+  renderChallengeCard();
   renderDailyCard();
   renderAwards();
   if (read(STORE.visit) !== String(today())) {

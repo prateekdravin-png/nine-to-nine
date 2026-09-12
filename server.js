@@ -24,6 +24,7 @@ const PUBLIC = {
   '/daily.js': 'text/javascript; charset=utf-8',
   '/persona.js': 'text/javascript; charset=utf-8',
   '/awards.js': 'text/javascript; charset=utf-8',
+  '/challenge.js': 'text/javascript; charset=utf-8',
   '/scene.js': 'text/javascript; charset=utf-8',
   '/game.js': 'text/javascript; charset=utf-8'
 };
@@ -33,8 +34,9 @@ const MAX_EVENTS_BYTES = 5 * 1024 * 1024; // a few colleagues for months is well
 const has = (obj, key) => typeof key === 'string' && Object.prototype.hasOwnProperty.call(obj, key);
 
 // What gets stored, and nothing more: a random player ID made by the browser, the morning number, and
-// for a finished morning the role, career level, rating, score and seconds of deep work. No names, IP
-// addresses or browser details. Anything malformed is rejected rather than cleaned up.
+// for a finished morning or challenge the role, career level, rating, score and seconds of deep work.
+// No names, IP addresses or browser details, and a challenge link never reaches here at all — it lives
+// in the URL fragment. Anything malformed is rejected rather than cleaned up.
 function cleanEvent(body) {
   let e;
   try { e = JSON.parse(body); } catch (err) { return null; }
@@ -43,12 +45,17 @@ function cleanEvent(body) {
   const today = Daily.morningNumber(Date.now());
   if (!Number.isInteger(e.day) || e.day < 1 || e.day > today + 1) return null; // +1 allows for clock skew
   const event = { ts: new Date().toISOString(), player: e.player, kind: e.kind, day: e.day };
-  if (e.kind === 'visit') return event;
-  if (e.kind !== 'daily') return null;
+  // Openings, and the two halves of the challenge loop: a link made, a link opened.
+  if (e.kind === 'visit' || e.kind === 'invite' || e.kind === 'accept') return event;
+  if (e.kind !== 'daily' && e.kind !== 'challenge') return null;
   if (!has(ROLES, e.role) || !has(RATINGS, e.rating)) return null;
   if (e.level !== undefined && !has(LEVELS, e.level)) return null; // optional: older pages don't send it
   if (!Number.isInteger(e.score) || e.score < 0 || e.score > 100000) return null;
   if (typeof e.deepWork !== 'number' || !(e.deepWork >= 0 && e.deepWork <= TUNING.DURATION)) return null;
+  if (e.kind === 'challenge') {
+    if (typeof e.beat !== 'boolean') return null; // did they beat the score in the link?
+    event.beat = e.beat;
+  }
   return Object.assign(event, {
     role: e.role,
     level: e.level || 'junior',
