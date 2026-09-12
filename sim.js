@@ -181,6 +181,27 @@ console.log('   Five mornings on one set of meters (week.js). Habits differ only
   }
 }
 
+console.log('\n9) BOUGHT TIME — does a run of right calls reward reading, without paying off the mistakes?');
+console.log(`   A run of ${TUNING.TIME_BONUS.run} right calls in a row banks ${TUNING.TIME_BONUS.seconds}s, spent automatically on later interruptions.\n`);
+{
+  const { playBot } = require('./bots');
+  console.log('player                                        gold   earns it   banked   spent   (bonus is a 5s gift into a 60s morning)');
+  console.log('\u2500'.repeat(108));
+  const verbRow2 = (label, name, opts) => {
+    const r = evaluate(name, seeds, Object.assign({ day: PLAIN }, opts));
+    let won = 0, spent = 0, rounds = 0;
+    for (const seed of seeds.slice(0, 80)) {
+      const one = playBot(seed, name, Object.assign({ day: PLAIN }, opts));
+      won += one.stats.timeWon; spent += one.stats.timeSaved; rounds++;
+    }
+    console.log(label.padEnd(44) + pct(r.goldRate) + (won / rounds > 0 ? '' : '') + `${((won / rounds) / TUNING.TIME_BONUS.seconds * 100).toFixed(0)}%`.padStart(11) + `${(won / rounds).toFixed(1)}s`.padStart(9) + `${(spent / rounds).toFixed(1)}s`.padStart(8));
+  };
+  verbRow2('reads the messages', 'Perfect reader');
+  verbRow2('answers everyone but traps', 'Sociable reader: answers all but traps');
+  verbRow2('falls for every trap (senior keyword reader)', 'Keyword reader: "quick" means trap', { level: 'senior' });
+  verbRow2('answers absolutely everything', 'Respond to everything');
+}
+
 console.log('\nWhat healthy looks like:');
 console.log('  1) both naive strategies fail, perfect play ships reliably, and every drop in accuracy costs something.');
 console.log('  2) in EVERY role, a first-time player loses almost nothing before they can read it (the frustrating kind');
@@ -189,6 +210,9 @@ console.log('  3) using favours scores higher than ignoring all small talk, but 
 console.log('     a worse reader with them: favours reward being a decent colleague, not replace reading messages well.');
 console.log('  4) understanding the messages works at every level, "quick means trap" works only at junior, and trusting');
 console.log('     alarm words fails at lead. How much harder levels feel to real people is for playtesting to show.');
+console.log('  9) the bonus goes to players who read well and stays out of reach of players who do not: a reader who');
+console.log('     falls for every trap should almost never collect it, because a trap taken ends the run. It must never');
+console.log('     narrow the margin between reading the messages and not reading them.');
 console.log('  8) a week spent flat out ends with the most points and the worst Friday; pacing and answering the people');
 console.log('     outside work delivers a little less and ends the week still standing. If one habit won both, the two');
 console.log('     meters would be decoration — what you delivered and what it cost have to be able to come apart.');

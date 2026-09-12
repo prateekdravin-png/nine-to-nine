@@ -105,6 +105,35 @@
     },
     // Answering someone at home is not the same size of interruption as answering a colleague's chat,
     // and across a week that difference is the whole decision: keeping a life costs working time.
+    // Time bought back. Reading well has only ever been rewarded by what it SAVES you — no reputation
+    // lost, no call taken — and avoiding a loss is a much weaker feeling than being handed something.
+    // A run of right calls in a row banks seconds, and the bank is spent automatically on the next
+    // thing that pulls you away: you are on top of your inbox, so you get off the call faster.
+    //
+    // The obvious version of this was to add the seconds to the end of the morning, and the simulated
+    // players killed it. A longer morning means the backlog you were carrying at noon now expires
+    // instead of being saved by the bell: messages lost before they could be read went from 3% to 14%,
+    // and a first-timer's gold rate FELL from 62% to 52% the more time they won. A reward that punishes
+    // you for earning it is worse than no reward. Spending the seconds on interruptions instead cannot
+    // cost anyone a message, gives the time back as the thing players actually want (working time), and
+    // is worth most to the player who is getting interrupted most.
+    //
+    // Only decisions you actually make count. A message that expires never builds a run, or a player
+    // could walk away and collect one; an urgent one expiring still breaks it, because that is a miss.
+    //
+    // Neither the size of the gift nor the length of the run is a matter of taste; both were swept
+    // against the simulated players. Seconds are the biggest unit in this game — an urgent call is 1.6
+    // of them and a trap 4.5, out of a morning that is only sixty — so five is a large gift, and behind
+    // a short run it went to everybody: answering every message blindly went from 43% gold to 88%, and a
+    // reader who fell for every trap at senior went from 7% to 21%. Giving back working time pays off
+    // exactly the mistake the game is about.
+    //
+    // The fix was not to shrink the gift but to put it out of reach of anyone making that mistake. A
+    // trap taken breaks the run, so a long run excludes those players while leaving a good reader
+    // untouched: at twelve, the margin between reading the messages and not reading them is wider than
+    // with no bonus at all (55 points against 52), and the keyword reader is back to 8%. A morning at
+    // full marks earns it every time, a strong reader two mornings in three, a shaky one about a quarter.
+    TIME_BONUS: { run: 12, seconds: 5, maxPerRound: 5, minBusy: 1.1 },
     PERSONAL_BUSY: 1.8,
     PEEK_FLOW_COST: 18,        // variant B only: reading a collapsed message costs focus
     HEADPHONES: { charges: 1, duration: 10 },
@@ -422,6 +451,8 @@
       peekVariant: !!o.peekVariant,
       t: 0,
       duration: TUNING.DURATION,
+      run: 0,       // right calls in a row, toward the next few seconds banked
+      timeBank: 0,  // seconds in hand, spent automatically on the next interruption
       over: false,
       endReason: null,
       progress: 0,
@@ -449,7 +480,7 @@
         peeks: 0, cardsSeen: 0, headphonesUsed: 0,
         favoursBanked: 0, favoursUsed: 0, urgentDelegated: 0,
         followUps: 0, escalations: 0, walkbyPassed: 0, walkbyCaught: 0, rescues: 0,
-        declined: 0, personalAnswered: 0, personalIgnored: 0,
+        declined: 0, personalAnswered: 0, personalIgnored: 0, timeWon: 0, timeSaved: 0, bestRun: 0,
         busyTime: 0, deepWorkTime: 0, codingTime: 0, peakFlow: 0,
         aftermaths: [],
         decisions: [] // { at: when the message arrived, outcome: 'good' | 'meh' | 'bad' }
@@ -505,8 +536,30 @@
     return i === -1 ? null : s.cards.splice(i, 1)[0];
   }
 
-  function decide(s, card, action) {
-    s.stats.decisions.push({ at: Math.round(card.spawnedAt * 100) / 100, outcome: OUTCOME[action][card.type] });
+  // Every decision is recorded for the share grid, and the good ones build toward more morning.
+  // `passive` is a message that ran out on its own: it can break a run but never build one.
+  function decide(s, card, action, events, passive) {
+    const outcome = OUTCOME[action][card.type];
+    s.stats.decisions.push({ at: Math.round(card.spawnedAt * 100) / 100, outcome });
+    // A run means right calls, not merely the absence of wrong ones. Letting 'meh' carry a run through
+    // handed the bonus to the strategy of answering everything — that player never makes a bad call, so
+    // they cruised to it as easily as someone actually reading. Hedging with a polite no, or stopping to
+    // answer small talk, is a fine thing to do and is simply not what this rewards.
+    if (outcome !== 'good') s.run = 0;
+    if (outcome === 'good' && !passive) {
+      s.run++;
+      s.stats.bestRun = Math.max(s.stats.bestRun, s.run);
+      const B = TUNING.TIME_BONUS;
+      // The ceiling is on what a morning can earn in total, not on what is in hand: capping the bank
+      // alone let it refill all morning, and the simulated readers spent twenty-odd seconds a round.
+      if (s.run >= B.run && s.stats.timeWon < B.maxPerRound) {
+        const won = Math.min(B.seconds, B.maxPerRound - s.stats.timeWon);
+        s.run = 0;
+        s.timeBank += won;
+        s.stats.timeWon += won;
+        if (events) events.push({ type: 'time-won', seconds: won, bank: s.timeBank });
+      }
+    }
   }
 
   function checkPip(s, events) {
@@ -543,7 +596,7 @@
       s.stats.trivialIgnored++;
       if (card.personal) s.stats.personalIgnored++; // nobody notices once; a week notices
     }
-    decide(s, card, 'ignore');
+    decide(s, card, 'ignore', events, expired);
     queueFollowUp(s, card, expired);
     events.push({ type: expired ? 'expire' : 'ignore', card, rep: eff.rep });
     checkPip(s, events);
@@ -687,7 +740,7 @@
       s.stats.trapsDodged++;
       s.stats.aftermaths.push(`${helper} took your "quick" one. ${helper} will remember this.`);
     }
-    decide(s, card, 'delegate');
+    decide(s, card, 'delegate', events);
     events.push({ type: 'delegate', card, helper, rep });
     return events;
   }
@@ -708,7 +761,7 @@
     s.busyType = 'decline'; // and a polite no is not what the boss counts as looking busy
     s.stats.declined++;
     if (card.type === 'trap') s.stats.trapsDodged++; // you didn't take the call, which is the whole trap
-    decide(s, card, 'decline');
+    decide(s, card, 'decline', events);
     events.push({ type: 'decline', card, rep, busy: TUNING.DECLINE.busy });
     checkPip(s, events);
     return events;
@@ -754,10 +807,26 @@
     s.rep += eff.rep;
     clampRep(s);
     // A quick reply to a colleague's chat takes less time than dealing with anything else.
-    const busy = card.type !== 'trivial' ? eff.busy
+    const wanted = card.type !== 'trivial' ? eff.busy
       : card.personal ? TUNING.PERSONAL_BUSY
       : msg.favour ? TUNING.FAVOURS.replyBusy
       : eff.busy;
+    // Seconds banked by reading well are spent here, automatically, and ONLY on a real emergency: the
+    // calls you were right to take cost you less when you are on top of your inbox. Spending them on
+    // anything you answered was a version that paid off your mistakes — the simulated players walked
+    // straight through it, answering every message blindly and still reaching gold, because a trap that
+    // costs nothing is not a trap. It never takes an interruption to nothing either: there is always a
+    // moment of being dragged out of what you were doing.
+    // minBusy is the floor an interruption can be discounted to, and it exists to keep colleague
+    // favours worth having. At a low floor the bank made handling an emergency yourself nearly as cheap
+    // as having someone else take it, and being a decent colleague stopped paying at all. It never pays
+    // for a trap: that is the mistake the game is about, and a bonus that softened it would be paying
+    // players to stop reading.
+    const canSpend = card.type !== 'trap';
+    const saved = canSpend ? Math.min(s.timeBank, Math.max(0, wanted - TUNING.TIME_BONUS.minBusy)) : 0;
+    s.timeBank -= saved;
+    s.stats.timeSaved += saved;
+    const busy = wanted - saved;
     s.busyUntil = s.t + busy;
     s.busyDuration = busy;
     s.busyText = msg.busyText || Content.BUSY_TEXT[card.type];
@@ -780,8 +849,8 @@
         } else favourFull = true;
       }
     }
-    decide(s, card, 'respond');
-    events.push({ type: 'respond', card, rep: eff.rep, busy, favour, favourFull });
+    decide(s, card, 'respond', events);
+    events.push({ type: 'respond', card, rep: eff.rep, busy, saved, favour, favourFull });
     return events;
   }
 
@@ -841,6 +910,7 @@
       events: s.events.map((e) => e.id),
       progress: s.progress,
       rep: s.rep,
+      timeBank: s.timeBank,
       endReason: s.endReason,
       seed: s.seed,
       stats: Object.assign({}, s.stats, {

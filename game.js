@@ -22,7 +22,7 @@
   const DEV = params.has('dev');
 
   const ui = {
-    clock: $('clock'), progressMeter: $('progressMeter'), progressLabel: $('progressLabel'), progressFill: $('progressFill'), progressPct: $('progressPct'),
+    clock: $('clock'), bank: $('bank'), progressMeter: $('progressMeter'), progressLabel: $('progressLabel'), progressFill: $('progressFill'), progressPct: $('progressPct'),
     repMeter: $('repMeter'), repFill: $('repFill'), repVal: $('repVal'), muteBtn: $('muteBtn'),
     stage: document.querySelector('.stage'), scene: $('scene'), dayChip: $('dayChip'), bossChip: $('bossChip'), eventBar: $('eventBar'),
     ide: $('ide'), workFile: $('workFile'), code: $('code'), tierLabel: $('tierLabel'),
@@ -834,6 +834,12 @@
         case 'respond': {
           const anchor = anchorFor(ev.card.id);
           busyKind = ev.card.type; // the office shows a call, or a dizzy you if it was a trap
+          if (ev.saved >= 0.05) {
+            ui.bank.classList.remove('spending');
+            void ui.bank.offsetWidth;
+            ui.bank.classList.add('spending');
+            popup(`⏳ −${ev.saved.toFixed(1)}s off this one`, 'flow', ui.clock);
+          }
           if (ev.card.type === 'urgent') { popup(`Saved the day +${ev.rep} rep`, 'good', anchor); sfx.click(); }
           else if (ev.card.type === 'trap') { popup(LEVELS[game.level].trapPop, 'bad', anchor); flash('trap'); sfx.buzz(); }
           else if (ev.favour) { popup(`🤝 ${ev.favour} owes you one`, 'good', anchor); sfx.click(); }
@@ -863,6 +869,12 @@
           removeCard(ev.card.id, 'answered');
           break;
         }
+        case 'time-won':
+          popup(`⏳ +${ev.seconds}s — you're ahead of the queue`, 'good', ui.clock);
+          showBanner(`⏳ ${Core.TUNING.TIME_BONUS.run} right calls in a row. ${ev.seconds} seconds in hand.`);
+          sfx.ding();
+          announce(`${ev.seconds} seconds banked`);
+          break;
         case 'peek':
           popup(`−${ev.flowCost} flow`, 'flow', anchorFor(ev.card.id));
           refreshCardText(ev.card);
@@ -904,6 +916,8 @@
     const r = ROLES[s.role];
 
     ui.clock.textContent = clockText(s.t);
+    ui.bank.hidden = s.timeBank < 0.05;
+    if (!ui.bank.hidden) ui.bank.textContent = `⏳ ${s.timeBank.toFixed(1)}s in hand`;
     if (ui.progressLabel.textContent !== progressLabel()) ui.progressLabel.textContent = progressLabel();
     // The bar fills toward the day's target, which is not always 100%: a backlog morning asks for more
     // and an appraisal morning for less, and the meter has to mean the same thing on all of them.
@@ -1113,6 +1127,7 @@
       ['📞 Time stuck on calls', `${st.busyTime.toFixed(1)}s`],
       ['🚨 Urgent handled / missed', `${st.urgentHandled} / ${st.urgentMissed}`],
       ['🪤 Traps taken / dodged', `${st.trapsTaken} / ${st.trapsDodged}`],
+      ['⏳ Best run / time banked', `${st.bestRun} in a row / ${st.timeWon}s`],
       ['🙅 Said no politely', `${st.declined}`],
       ['↩️ Follow-ups / escalations', `${st.followUps} / ${st.escalations}`],
       ['💬 Small talk answered / ignored', `${st.trivialAnswered} / ${st.trivialIgnored}`],

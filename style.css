@@ -301,6 +301,12 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 .flat-flow .flow-track i { background: var(--dim); }
 .day-note { margin: 6px 0 0; font-size: 13px; color: #c3cede; }
 
+/* Seconds in hand, next to the clock (core.js TIME_BONUS). */
+.bank { font: 700 12px var(--mono); color: #ffe9b8; background: #f5b83d22; border: 1px solid #f5b83d66; border-radius: 99px; padding: 2px 9px; white-space: nowrap; }
+.bank.spending { animation: bank-spend 0.45s ease; }
+@keyframes bank-spend { 0% { transform: scale(1.18); background: #f5b83d55; } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .bank.spending { animation: none; } }
+
 /* ---- The work week ---- */
 .daily.week { border-color: #9b6bff55; background: linear-gradient(180deg, #9b6bff16, #9b6bff05); }
 #weekCard { margin-bottom: 12px; }

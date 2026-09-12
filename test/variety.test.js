@@ -8,7 +8,12 @@ const Core = require('../core');
 const { ROLES, ROLE_ORDER, LEVEL_ORDER } = require('../content');
 
 const TYPES = ['urgent', 'trivial', 'trap'];
-const textsOf = (s, type) => s.schedule.filter((a) => a.type === type).map((a) => ROLES[s.role].byLevel[s.level][type][a.msgIndex].text);
+// The schedule is built past noon so that time won by playing well has arrivals waiting in it (core.js
+// TIME_BONUS). Only the part inside the morning is guaranteed to be seen, so that is what variety is
+// measured on; a player who earns the tail is being given more content, not less of it.
+const textsOf = (s, type) => s.schedule
+  .filter((a) => a.type === type && a.at < Core.TUNING.DURATION)
+  .map((a) => ROLES[s.role].byLevel[s.level][type][a.msgIndex].text);
 
 test('a round never repeats a message while unseen ones remain', () => {
   for (const role of ROLE_ORDER) {

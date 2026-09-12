@@ -29,6 +29,9 @@ It listens on your network too, so you can playtest on your phone at `http://<th
 - Notifications keep arriving. **Respond** and you're pulled away for a while. **Ignore** and it's
   gone — but ignoring something genuinely urgent costs **Reputation**.
 - Some messages are traps. Anything *quick*, *small* or *just 2 mins* never is.
+- ⏳ **A run of right calls buys time.** Twelve decisions right in a row banks **5 seconds**, spent
+  automatically on your next interruptions — on top of your inbox, you get off calls faster. Falling
+  for a trap ends the run, and the bank never pays for a trap.
 - 🙅 **Say no** when you genuinely can't tell. It costs a few points of Reputation every time, whatever
   the message turns out to be — far less than ignoring a real emergency, far more than reading it
   properly. It's for the messages you can't read in time, not for all of them.
@@ -43,6 +46,40 @@ It listens on your network too, so you can playtest on your phone at `http://<th
 
 Keys: `1`–`5` pick a role (start screen) · `Space` hold to work · `R` respond · `N` say no · `X` ignore · `P` peek ·
 `D` pass to a colleague · `H` headphones · `M` sound. Keys act on the notification closest to expiring, which is outlined.
+
+## Bought time: what a run of right calls is worth
+
+Reading well had only ever been rewarded by what it *saves* you — no reputation lost, no call taken —
+and avoiding a loss is a much weaker feeling than being handed something. Twelve right calls in a row
+banks **5 seconds**, spent automatically on your next interruptions, down to a floor.
+
+Both numbers were set by the simulator, and both fights are worth recording.
+
+**Adding the seconds to the end of the morning does not work.** It is the obvious design and it is
+backwards: a longer morning means the backlog you were carrying at noon now expires instead of being
+saved by the bell. Messages lost before they could be read went from 3% to 14%, and a first-timer's gold
+rate *fell* from 62% to 52% the more time they won. A reward that punishes you for earning it is worse
+than no reward. Spending the seconds on interruptions instead can't cost anyone a message.
+
+**Five seconds is an enormous gift.** An urgent call is 1.6 seconds and a trap is 4.5, out of a morning
+that is only sixty. Behind a short run, the bonus went to everyone: answering every message blindly went
+from 43% gold to 88%, and a reader who fell for every trap at senior went from 7% to 21%. Giving back
+working time pays off exactly the mistake the game is about.
+
+The fix was not to shrink the gift but to put it out of reach of anyone making that mistake — **a trap
+taken ends the run**, so a long run excludes those players and leaves a good reader untouched:
+
+| Run required | Gift | Reading beats answering-everyone by | Falls-for-every-trap reaches gold |
+|---|---|---|---|
+| *no bonus* | – | 52 points | 7% |
+| 4 | 5s | **11 points** | **21%** |
+| 8 | 5s | 52 points | **13%** |
+| **12** | **5s** | **55 points** | **8%** |
+
+A morning at full marks earns it every time, a strong reader about two mornings in three, a shaky one
+about a quarter. Two smaller rules keep it honest: the bank never pays for a trap, and it can't discount
+an interruption below a floor — without that floor, handling an emergency yourself became as cheap as
+having a colleague take it, and colleague favours stopped paying. `test/timebank.test.js` holds all of it.
 
 ## Saying no: a third option
 
