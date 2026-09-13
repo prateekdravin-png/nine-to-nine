@@ -8,6 +8,7 @@ const Core = require('../core');
 const Campaign = require('../campaign');
 const Content = require('../content');
 const { playBot } = require('../bots');
+const Week = require('../week');
 
 // How a player who has learned the level would approach it.
 const APPROACH = {
@@ -22,7 +23,10 @@ const APPROACH = {
   backlog: { strategy: 'Perfect reader' },
   release: { strategy: 'Perfect reader' },
   'on-a-roll': { strategy: 'Perfect reader' },
-  lead: { strategy: 'Perfect reader' }
+  lead: { strategy: 'Perfect reader' },
+  // The last level is a whole week, so its approach is a habit rather than a strategy for one morning:
+  // pace yourself and answer the people outside work.
+  'the-week': { strategy: 'Perfect reader + answers home', pace: true }
 };
 
 // And one who has not. Level 1 has none: it only asks you to hold the button.
@@ -37,11 +41,32 @@ const NAIVE = {
   backlog: 'Respond to everything',
   release: 'Respond to everything',
   'on-a-roll': '80% accurate reader',
-  lead: 'Keyword reader: alarm words mean urgent'
+  lead: 'Keyword reader: alarm words mean urgent',
+  'the-week': 'Perfect reader'   // delivers every morning by emptying itself, which is the whole lesson
 };
 
 const play = (level, role, strategy, opts) =>
   playBot(level.setup.seed, strategy, Object.assign({ role, day: level.setup.day, level: level.setup.level }, opts));
+
+// A week level is judged on a finished week, in the same shape game.js hands to Campaign.check.
+function playWeek(seed, role, strategy, pace) {
+  let week = Week.newWeek(seed);
+  const plan = Week.dayPlan(seed, Core.DAY_ORDER);
+  while (!week.over) {
+    const i = week.index;
+    week = Week.afterMorning(week, playBot(Week.seedForMorning(seed, i), strategy, {
+      role, day: plan[i], carry: Week.carryFor(week), stopAtTarget: !!pace
+    }));
+  }
+  const v = Week.verdict(week);
+  return { shipped: v.shipped, energy: week.energy, home: week.home, golds: v.golds, played: v.played };
+}
+
+// Weeks are the player's own, not a pinned seed, so a week level has to hold across many of them.
+const WEEK_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8];
+const attempt = (level, role, strategy, opts) => (Campaign.isWeek(level)
+  ? WEEK_SEEDS.map((seed) => playWeek(seed, role, strategy, opts && opts.pace))
+  : [play(level, role, strategy, opts)]);
 
 test('every level is described well enough to attempt', () => {
   const ids = new Set();
@@ -53,6 +78,7 @@ test('every level is described well enough to attempt', () => {
     assert.ok(level.goals.length >= 1, `level ${level.n} asks for nothing`);
     for (const g of level.goals) assert.ok(g.id && g.label && typeof g.test === 'function', `level ${level.n} has a malformed goal`);
     assert.ok(Content.DAYS[level.setup.day], `level ${level.n} wants a day type that does not exist`);
+    if (Campaign.isWeek(level)) assert.strictEqual(level.n, Campaign.LEVELS.length, 'the week belongs at the end of the ladder');
     assert.ok(Content.LEVELS[level.setup.level], `level ${level.n} wants a career level that does not exist`);
     assert.ok(Number.isInteger(level.setup.seed), `level ${level.n} needs a pinned seed`);
   });
@@ -63,10 +89,13 @@ test('every level can be cleared, in every role', () => {
     const approach = APPROACH[level.id];
     assert.ok(approach, `level ${level.n} (${level.id}) has no known way through`);
     for (const role of Content.ROLE_ORDER) {
-      const result = play(level, role, approach.strategy, { headphonesAt: approach.headphonesAt });
-      const card = Campaign.check(level, result);
-      assert.ok(Campaign.cleared(card),
-        `level ${level.n} (${level.id}) as ${role}: ${card.filter((g) => !g.done).map((g) => g.label).join(', ')}`);
+      const results = attempt(level, role, approach.strategy, { headphonesAt: approach.headphonesAt, pace: approach.pace });
+      // A pinned morning has to clear every time; a week is the player's own, so most of them is the bar.
+      const clears = results.filter((r) => Campaign.cleared(Campaign.check(level, r))).length;
+      const need = Campaign.isWeek(level) ? Math.ceil(results.length * 0.75) : results.length;
+      assert.ok(clears >= need,
+        `level ${level.n} (${level.id}) as ${role}: cleared ${clears} of ${results.length}, ` +
+        `missing ${Campaign.check(level, results[0]).filter((g) => !g.done).map((g) => g.label).join(', ')}`);
     }
   }
 });
@@ -74,9 +103,10 @@ test('every level can be cleared, in every role', () => {
 test('no level falls to a player who has not learned it', () => {
   for (const level of Campaign.LEVELS) {
     if (!NAIVE[level.id]) continue;
-    const result = play(level, 'developer', NAIVE[level.id]);
-    assert.ok(!Campaign.cleared(Campaign.check(level, result)),
-      `level ${level.n} (${level.id}) was cleared by "${NAIVE[level.id]}", so it does not test its own lesson`);
+    const results = attempt(level, 'developer', NAIVE[level.id]);
+    const clears = results.filter((r) => Campaign.cleared(Campaign.check(level, r))).length;
+    assert.ok(clears === 0,
+      `level ${level.n} (${level.id}) was cleared ${clears} time(s) by "${NAIVE[level.id]}", so it does not test its own lesson`);
   }
 });
 
@@ -118,6 +148,7 @@ test('career levels are campaign rewards, and arrive in order', () => {
 test('a goal only ever asks for something the rules already measure', () => {
   const summary = Core.summary(Core.createGame({ seed: 1, day: 'normal' }));
   for (const level of Campaign.LEVELS) {
+    if (Campaign.isWeek(level)) continue; // judged on a week, checked above
     for (const g of level.goals) {
       assert.doesNotThrow(() => g.test(summary), `level ${level.n} goal "${g.label}" reads something that is not there`);
     }

@@ -332,6 +332,14 @@
   }
   const saveCleared = (ids) => store(STORE.campaign, JSON.stringify(ids));
 
+  // A week level is judged on the finished week, not on a morning. An unfinished (or absent) week reads
+  // as nothing achieved, which is what the start screen wants to show before you have played one.
+  function weekResult(w) {
+    if (!w || !w.over) return null;
+    const v = Week.verdict(w);
+    return { shipped: v.shipped, energy: w.energy, home: w.home, golds: v.golds, played: v.played };
+  }
+
   function goalList(card) {
     return '<ul class="goals">' + card.map((row) =>
       `<li class="${row.done ? 'done' : 'miss'}"><b>${row.done ? '✓' : '○'}</b><span>${escapeHtml(row.label)}</span></li>`).join('') + '</ul>';
@@ -354,20 +362,26 @@
         '<p class="daily-sub">Every level cleared, and every role, level and kind of morning is open. The daily morning and the work week are where it goes from here.</p>';
       return;
     }
-    const careerLevel = LEVELS[next.setup.level];
-    const day = DAYS[next.setup.day];
-    ui.campaignCard.innerHTML =
-      `<div class="daily-head"><b>${next.emoji} Level ${next.n} · ${escapeHtml(next.title)}</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length} cleared</span></div>` +
+    const head = `<div class="daily-head"><b>${next.emoji} Level ${next.n} · ${escapeHtml(next.title)}</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length} cleared</span></div>` +
       ladderHtml(done) +
       `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
-      goalList(Campaign.check(next, null)) +
+      goalList(Campaign.check(next, weekResult(loadWeek())));
+    // The last level is a whole week, so the card becomes the week: the same strip, meters and button
+    // the standalone card uses, rather than a second place that describes a week.
+    if (Campaign.isWeek(next)) {
+      ui.campaignCard.innerHTML = head + weekBody(loadWeek(), true);
+      return;
+    }
+    const careerLevel = LEVELS[next.setup.level];
+    const day = DAYS[next.setup.day];
+    ui.campaignCard.innerHTML = head +
       `<p class="campaign-teaches">${day.emoji} ${escapeHtml(day.label)} · ${careerLevel.emoji} ${escapeHtml(careerLevel.label)}${next.unlocks ? ` · clears to ${LEVELS[next.unlocks].emoji} ${escapeHtml(LEVELS[next.unlocks].label)}` : ''}</p>` +
       `<button class="primary" type="button" id="campaignBtn">Play level ${next.n} <kbd>Enter</kbd></button>`;
   }
 
   // What the attempt came to, shown as the whole card so a near miss reads as a near miss.
-  function renderCampaignResult(result) {
-    const level = levelPlaying;
+  function renderCampaignResult(result, level) {
+    level = level || levelPlaying;
     const card = Campaign.check(level, result);
     const won = Campaign.cleared(card);
     const done = loadCleared();
@@ -380,14 +394,17 @@
       if (LEVEL_ORDER.indexOf(earned) > Math.max(0, LEVEL_ORDER.indexOf(read(STORE.career)))) store(STORE.career, earned);
     }
     const next = Campaign.nextFor(done);
+    const again = Campaign.isWeek(level) ? 'weekBtn' : 'campaignBtn';
     ui.endCampaign.innerHTML =
       `<div class="daily-head"><b>${won ? '✅' : '↻'} Level ${level.n} · ${escapeHtml(level.title)}</b><span class="daily-next">${won ? 'cleared' : 'not this time'}</span></div>` +
       goalList(card) +
       (won
         ? `<p class="daily-sub">${escapeHtml(level.teaches)}${next ? ` Next up: ${next.emoji} ${escapeHtml(next.title)}.` : ' That was the last one.'}</p>` +
           (next ? `<button class="primary" type="button" id="campaignBtn">Play level ${next.n} <kbd>Enter</kbd></button>` : '')
-        : '<p class="daily-sub">The morning is the same every time you try it, so you already know what is coming.</p>' +
-          `<button class="primary" type="button" id="campaignBtn">Try level ${level.n} again <kbd>Enter</kbd></button>`);
+        : `<p class="daily-sub">${Campaign.isWeek(level)
+            ? 'A week is never the same twice. The habits that carry one are, though.'
+            : 'The morning is the same every time you try it, so you already know what is coming.'}</p>` +
+          `<button class="primary" type="button" id="${again}">Try level ${level.n} again <kbd>Enter</kbd></button>`);
     ui.endCampaign.hidden = false;
     if (isNew && level.unlocks) {
       const unlocked = LEVELS[level.unlocks];
@@ -429,35 +446,43 @@
     }).join('') + '</div>';
   }
 
-  function renderWeekCard() {
-    const w = loadWeek();
+  // The body of a week card: where the week is, what it has cost, and what to press. Used both by the
+  // campaign card when the week IS the level you are on, and by the standalone card once the ladder is
+  // finished — so there is only ever one description of a week in the game, in one place.
+  function weekBody(w, headline) {
     if (!w) {
-      ui.weekCard.innerHTML =
-        '<div class="daily-head"><b>🗓️ The work week</b><span class="daily-next">5 mornings, about 5 minutes</span></div>' +
+      return (headline ? '' : '<div class="daily-head"><b>🗓️ The work week</b><span class="daily-next">5 mornings, about 5 minutes</span></div>') +
         '<p class="daily-sub">Monday to Friday on one set of meters. ⚡ Energy is spent by the very thing that wins a morning — deep focus is tiring — and only partly comes back overnight. 🏡 Home is spent by leaving the people outside work unanswered.<br>' +
         'A morning you win by emptying yourself is a morning Tuesday pays for. Past a point you can\'t reach deep work at all.</p>' +
-        '<button class="primary" type="button" id="weekBtn">Start a week</button>';
-      return;
+        '<button class="primary" type="button" id="weekBtn">Start the week</button>';
     }
     const v = Week.verdict(w);
     if (w.over) {
-      ui.weekCard.innerHTML =
-        `<div class="daily-head"><b>${v.emoji} ${escapeHtml(v.title)}</b><span class="daily-next">${v.shipped} of ${v.played} delivered</span></div>` +
+      return (headline ? '' : `<div class="daily-head"><b>${v.emoji} ${escapeHtml(v.title)}</b><span class="daily-next">${v.shipped} of ${v.played} delivered</span></div>`) +
         weekStrip(w) +
         `<p class="daily-sub">${escapeHtml(v.blurb)}</p>` +
         '<div class="meters">' + meterBar('energy', w.energy) + meterBar('home', w.home) + '</div>' +
         '<button class="primary" type="button" id="weekBtn">Start a new week</button>';
-      return;
     }
     const plan = weekDays(w);
     const day = DAYS[plan[w.index]];
-    ui.weekCard.innerHTML =
-      `<div class="daily-head"><b>🗓️ ${Week.currentDayName(w)}</b><span class="daily-next">morning ${w.index + 1} of ${Week.LENGTH}</span></div>` +
+    return (headline ? '' : `<div class="daily-head"><b>🗓️ ${Week.currentDayName(w)}</b><span class="daily-next">morning ${w.index + 1} of ${Week.LENGTH}</span></div>`) +
       weekStrip(w) +
       `<p class="daily-sub">Up next: <b>${day.emoji} ${escapeHtml(day.label)}</b> — ${escapeHtml(day.summary)}</p>` +
       '<div class="meters">' + meterBar('energy', w.energy) + meterBar('home', w.home) + '</div>' +
       `<button class="primary" type="button" id="weekBtn">Play ${Week.currentDayName(w)}</button>` +
       '<button class="link week-quit" type="button" id="abandonWeekBtn">Start the week over</button>';
+  }
+
+  // The standalone card is only for replaying a week once the ladder has been finished, or for picking
+  // up one that is already going. Before that the week lives inside the campaign, so the start screen
+  // never offers two unrelated runs of mornings at once.
+  function renderWeekCard() {
+    const w = loadWeek();
+    const done = loadCleared();
+    const show = !Campaign.nextFor(done) || (w && !w.over && Campaign.nextFor(done).kind !== 'week');
+    ui.weekCard.hidden = !show;
+    if (show) ui.weekCard.innerHTML = weekBody(w);
   }
 
   // The evening: what the morning cost, itemised, before the next one starts.
@@ -478,6 +503,14 @@
     ui.nightNote.textContent = last
       ? `${v.shipped} of ${v.played} delivered · ${v.golds} gold · ${v.score} points.`
       : (tired.note || 'Rested enough. Tomorrow is a fresh start.');
+    // A finished week is the moment the campaign's last level is decided.
+    if (last) {
+      const level = Campaign.nextFor(loadCleared());
+      if (Campaign.isWeek(level)) {
+        renderCampaignResult(weekResult(week), level);
+        renderCampaignCard();
+      }
+    }
     ui.nextMorningBtn.innerHTML = last ? 'See the week <kbd>Enter</kbd>' : `Play ${Week.currentDayName(week)} <kbd>Enter</kbd>`;
     ui.quitWeekBtn.hidden = last;
     ui.nightScreen.hidden = false;
@@ -1323,7 +1356,7 @@
     }
 
     ui.endCampaign.hidden = true;
-    if (mode === 'campaign' && levelPlaying) renderCampaignResult(result);
+    if (mode === 'campaign' && levelPlaying && !Campaign.isWeek(levelPlaying)) renderCampaignResult(result);
 
     // In a week the morning is not the end of anything: the evening screen takes over, shows what it
     // cost, and leads into tomorrow. The result screen still renders underneath for when the week ends.
@@ -1384,6 +1417,7 @@
     const daily = kind === 'daily';
     levelPlaying = kind === 'campaign' ? Campaign.nextFor(loadCleared()) : null;
     if (kind === 'campaign' && !levelPlaying) { showStart(); return; } // the ladder is finished
+    if (kind === 'campaign' && Campaign.isWeek(levelPlaying)) { levelPlaying = null; kind = 'week'; } // the last level IS the week
     if (daily && loadDaily()[today()]) { showStart(); return; } // today's morning is already done
     if (kind === 'challenge' && !invite) kind = 'practice';
     if (kind === 'week') {

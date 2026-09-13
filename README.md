@@ -118,6 +118,14 @@ each, every one asking for something the level before it taught.**
 | 10 | 🚀 Release day | Miss nothing urgent | No slack on the days that matter |
 | 11 | ⏳ On a roll | A run of 12 right calls | Reading well is worth time, not just calm |
 | 12 | 👑 Lead | Finish on a gold | Alarm words mislead → **👑 Lead** |
+| 13 | 🗓️ A week that holds | 3 of 5 mornings, 40 energy, 40 at home | Everything above, five times running |
+
+**The work week is the last level, not a mode beside it.** Levels 1–12 each teach a piece of a single
+morning; level 13 asks whether you can do it five times running without emptying yourself, which is the
+question the whole game is about. Before you reach it the week has no separate card at all, so the start
+screen never offers two unrelated runs of mornings at once; at level 13 the campaign card *becomes* the
+week, and once the ladder is finished the week returns as a standalone card you can replay. One
+description of a week, in one place, in one renderer.
 
 **Career levels are campaign rewards now.** They used to unlock by scoring a gold, which promoted you
 for a good morning rather than for learning anything. Clearing the level that teaches senior traps is
@@ -132,7 +140,12 @@ every run:
 
 - **every level can be cleared, in all five roles**, by a simulated player who has learned its lesson
 - **no level falls to a player who has not** — level 3 must beat "respond to everything", level 7 must
-  beat the same reader guessing instead of hedging, level 12 must beat trusting alarm words
+  beat the same reader guessing instead of hedging, level 12 must beat trusting alarm words, and level 13
+  must beat the player who delivers all five mornings by emptying themselves
+
+The week level is checked differently from the rest, because it has to be: a week is the player's own
+rather than a pinned seed, so it is played across eight of them and has to clear most and fail all when
+played badly.
 
 A level nobody can pass is a wall; a level a naive strategy clears teaches nothing. Both are easy to
 create by accident with a tuning change somewhere else, which is exactly what that file is for.
@@ -281,6 +294,9 @@ A mangled link — truncated by a chat app, a character eaten — fails a checks
 game never plays a random morning while claiming it was the challenge.
 
 ## The work week
+
+**This is level 13, the last rung of the campaign** — it has no separate entry point until the ladder is
+finished, and then it becomes freely replayable.
 
 A single morning has no tomorrow, so there is never a reason not to spend everything you have: hold the
 button every second, take every call, answer nobody at home. **The week exists to put a price on that.**

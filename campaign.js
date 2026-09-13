@@ -119,6 +119,21 @@
       setup: { day: 'normal', level: 'lead', seed: 1120 },
       goals: [SHIP, goal('gold', 'Finish on a gold', (r) => r.rating.key === 'gold')],
       unlocks: 'lead'
+    },
+    {
+      // The only level that is not one morning. Everything before it teaches a piece of a morning; this
+      // asks whether you can do it five times running without emptying yourself, which is the actual
+      // question the game is about. It is the destination of the ladder rather than a mode beside it.
+      n: 13, id: 'the-week', title: 'A week that holds', emoji: '🗓️',
+      kind: 'week',
+      brief: 'Five mornings on one set of meters. Monday to Friday, and still a person on Friday.',
+      teaches: 'A morning you win by emptying yourself is a morning Tuesday pays for.',
+      setup: { day: 'normal', level: 'lead', seed: 0 },
+      goals: [
+        goal('delivered', 'Deliver at least 3 of the 5 mornings', (w) => w.shipped >= 3),
+        goal('energy', 'Finish the week on 40 energy', (w) => w.energy >= 40),
+        goal('home', 'And on 40 at home', (w) => w.home >= 40)
+      ]
     }
   ];
 
@@ -134,6 +149,9 @@
   }
 
   const cleared = (results) => results.length > 0 && results.every((r) => r.done);
+
+  // A week level is judged on a finished week (week.js verdict), not on one morning's summary.
+  const isWeek = (level) => !!level && level.kind === 'week';
 
   // The next level to play: the first one not yet cleared, or null once the ladder is finished.
   function nextFor(clearedIds) {
@@ -155,5 +173,5 @@
     return highest;
   }
 
-  return { LEVELS, LAST, byNumber, check, cleared, nextFor, isOpen, careerFrom };
+  return { LEVELS, LAST, byNumber, check, cleared, isWeek, nextFor, isOpen, careerFrom };
 });
