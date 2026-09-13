@@ -65,6 +65,7 @@
   let mode = 'practice';          // 'daily' | 'practice' | 'challenge' for the game in progress
   let week = null;                // the work week in progress, if there is one
   let levelPlaying = null;        // the campaign level this round is an attempt at, if any
+  let pickedLevel = null;         // a cleared level chosen from the ladder to play again
   let invite = null;              // the challenge this page was opened with, decoded from the link
   let invitePlayed = false;       // and whether this visit has answered it yet
   let morning = null;             // the morning number of a daily game, fixed when it starts
@@ -345,25 +346,41 @@
       `<li class="${row.done ? 'done' : 'miss'}"><b>${row.done ? '✓' : '○'}</b><span>${escapeHtml(row.label)}</span></li>`).join('') + '</ul>';
   }
 
-  function ladderHtml(done) {
+  // The ladder doubles as the level picker: anything you have cleared stays open to play again, and it
+  // stays green whatever happens in the replay — clearing a level is a fact about you, not a score you
+  // can lose. Levels you have not reached yet are shown but not selectable.
+  function ladderHtml(done, shown) {
+    const next = Campaign.nextFor(done);
     return '<div class="ladder">' + Campaign.LEVELS.map((l) => {
-      const state = done.indexOf(l.id) !== -1 ? 'done' : (Campaign.nextFor(done) || {}).id === l.id ? 'now' : '';
-      return `<span class="rung ${state}" title="${escapeHtml(l.title)}">${l.n}</span>`;
+      const isDone = done.indexOf(l.id) !== -1;
+      const open = Campaign.isOpen(l, done);
+      const state = [isDone ? 'done' : '', (next || {}).id === l.id ? 'now' : '', (shown || {}).id === l.id ? 'picked' : '']
+        .filter(Boolean).join(' ');
+      const label = isDone ? `Level ${l.n}: ${l.title} — cleared, play again`
+        : open ? `Level ${l.n}: ${l.title}`
+        : `Level ${l.n} — clear level ${l.n - 1} first`;
+      return `<button type="button" class="rung ${state}" data-rung="${l.n}"${open ? '' : ' disabled'} title="${escapeHtml(label)}">${l.n}</button>`;
     }).join('') + '</div>';
   }
 
+  // Which level the card is showing: one you picked from the ladder, or the next one to clear.
+  const shownLevel = () => pickedLevel || Campaign.nextFor(loadCleared());
+
   function renderCampaignCard() {
     const done = loadCleared();
-    const next = Campaign.nextFor(done);
+    const next = shownLevel();
     if (!next) {
       ui.campaignCard.innerHTML =
         `<div class="daily-head"><b>🏅 Campaign complete</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length}</span></div>` +
         ladderHtml(done) +
-        '<p class="daily-sub">Every level cleared, and every role, level and kind of morning is open. The daily morning and the work week are where it goes from here.</p>';
+        '<p class="daily-sub">Every level cleared, and every role, level and kind of morning is open. Pick any level above to play it again; the daily morning and the work week are where it goes from here.</p>';
       return;
     }
-    const head = `<div class="daily-head"><b>${next.emoji} Level ${next.n} · ${escapeHtml(next.title)}</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length} cleared</span></div>` +
-      ladderHtml(done) +
+    const replaying = done.indexOf(next.id) !== -1;
+    const upNext = Campaign.nextFor(done);
+    const head = `<div class="daily-head"><b>${next.emoji} Level ${next.n} · ${escapeHtml(next.title)}${replaying ? ' ✓' : ''}</b>` +
+      `<span class="daily-next">${done.length} of ${Campaign.LEVELS.length} cleared</span></div>` +
+      ladderHtml(done, next) +
       `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
       goalList(Campaign.check(next, weekResult(loadWeek())));
     // The last level is a whole week, so the card becomes the week: the same strip, meters and button
@@ -376,7 +393,8 @@
     const day = DAYS[next.setup.day];
     ui.campaignCard.innerHTML = head +
       `<p class="campaign-teaches">${day.emoji} ${escapeHtml(day.label)} · ${careerLevel.emoji} ${escapeHtml(careerLevel.label)}${next.unlocks ? ` · clears to ${LEVELS[next.unlocks].emoji} ${escapeHtml(LEVELS[next.unlocks].label)}` : ''}</p>` +
-      `<button class="primary" type="button" id="campaignBtn">Play level ${next.n} <kbd>Enter</kbd></button>`;
+      `<button class="primary" type="button" id="campaignBtn">${replaying ? 'Play level ' + next.n + ' again' : 'Play level ' + next.n} <kbd>Enter</kbd></button>` +
+      (replaying && upNext ? `<button class="link week-quit" type="button" id="backToNextBtn">Back to level ${upNext.n}, ${escapeHtml(upNext.title)}</button>` : '');
   }
 
   // What the attempt came to, shown as the whole card so a near miss reads as a near miss.
@@ -389,6 +407,7 @@
     if (isNew) {
       done.push(level.id);
       saveCleared(done);
+      pickedLevel = null; // a newly cleared level hands the card to the next one
       // Career levels are campaign rewards now. Anything unlocked before this existed is left alone.
       const earned = Campaign.careerFrom(done);
       if (LEVEL_ORDER.indexOf(earned) > Math.max(0, LEVEL_ORDER.indexOf(read(STORE.career)))) store(STORE.career, earned);
@@ -482,7 +501,7 @@
     // the first version of this and it put the two runs of mornings back on screen side by side, which is
     // the whole thing the week became level 13 to avoid. Nothing is lost — a half-played week is still in
     // storage, and it is waiting on the level 13 card (with "start the week over") when you get there.
-    const show = !Campaign.nextFor(loadCleared());
+    const show = !Campaign.nextFor(loadCleared()) && !Campaign.isWeek(shownLevel());
     ui.weekCard.hidden = !show;
     if (show) ui.weekCard.innerHTML = weekBody(loadWeek());
   }
@@ -1417,7 +1436,7 @@
   // kind: 'daily' | 'practice' | 'challenge' | 'week' | 'campaign'
   function startGame(kind) {
     const daily = kind === 'daily';
-    levelPlaying = kind === 'campaign' ? Campaign.nextFor(loadCleared()) : null;
+    levelPlaying = kind === 'campaign' ? shownLevel() : null;
     if (kind === 'campaign' && !levelPlaying) { showStart(); return; } // the ladder is finished
     if (kind === 'campaign' && Campaign.isWeek(levelPlaying)) { levelPlaying = null; kind = 'week'; } // the last level IS the week
     if (daily && loadDaily()[today()]) { showStart(); return; } // today's morning is already done
@@ -1608,6 +1627,15 @@
     const send = e.target.closest('[data-share="challenge"]');
     if (send) { sendChallenge(send); return; }
     if (e.target.closest('#challengeBtn')) { startGame('challenge'); return; }
+    const rung = e.target.closest('[data-rung]');
+    if (rung) {
+      const level = Campaign.byNumber[Number(rung.dataset.rung)];
+      pickedLevel = Campaign.isOpen(level, loadCleared()) ? level : pickedLevel;
+      renderCampaignCard();
+      renderWeekCard();
+      return;
+    }
+    if (e.target.closest('#backToNextBtn')) { pickedLevel = null; renderCampaignCard(); renderWeekCard(); return; }
     if (e.target.closest('#campaignBtn')) { startGame('campaign'); return; }
     if (e.target.closest('#weekBtn')) { startGame('week'); return; }
     if (e.target.closest('#abandonWeekBtn')) { saveWeek(null); week = null; renderWeekCard(); return; }

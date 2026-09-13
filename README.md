@@ -131,6 +131,11 @@ description of a week, in one place, in one renderer.
 for a good morning rather than for learning anything. Clearing the level that teaches senior traps is
 what makes you a senior. One ladder instead of two.
 
+**The ladder is also the level picker.** Anything you have cleared stays open to play again, and stays
+green whatever happens in the replay — clearing a level is a fact about you, not a score you can lose.
+Levels you have not reached yet are shown but not selectable, so the strip is both your progress and
+your menu.
+
 Each level **pins its seed**, so it is a designed challenge you can learn rather than a lottery you
 re-roll — fail it and you already know what is coming. Your **role is never pinned**: it changes only
 wording, so the campaign plays the same for a tester as for a developer.
