@@ -27,7 +27,8 @@
   const DEV = params.has('dev') && LOCAL;
 
   const ui = {
-    clock: $('clock'), bank: $('bank'), goalBar: $('goalBar'), progressMeter: $('progressMeter'), progressLabel: $('progressLabel'), progressFill: $('progressFill'), progressPct: $('progressPct'),
+    clock: $('clock'), bank: $('bank'), goalBar: $('goalBar'), pauseBtn: $('pauseBtn'),
+    pauseScreen: $('pauseScreen'), pauseNote: $('pauseNote'), resumeBtn: $('resumeBtn'), restartBtn: $('restartBtn'), quitBtn: $('quitBtn'), progressMeter: $('progressMeter'), progressLabel: $('progressLabel'), progressFill: $('progressFill'), progressPct: $('progressPct'),
     repMeter: $('repMeter'), repFill: $('repFill'), repVal: $('repVal'), muteBtn: $('muteBtn'),
     stage: document.querySelector('.stage'), scene: $('scene'), dayChip: $('dayChip'), bossChip: $('bossChip'), eventBar: $('eventBar'),
     ide: $('ide'), workFile: $('workFile'), code: $('code'), tierLabel: $('tierLabel'),
@@ -73,6 +74,8 @@
   let invite = null;              // the challenge this page was opened with, decoded from the link
   let invitePlayed = false;       // and whether this visit has answered it yet
   let morning = null;             // the morning number of a daily game, fixed when it starts
+  let paused = false;             // the morning is held: nothing arrives, nothing expires, no clock
+  let startedAs = null;           // the kind of round in progress, so it can be started again
   let endShown = false;            // showEnd must run once per game: in a week it leaves the result screen
                                   // hidden and shows the evening instead, so "is it visible" cannot be the guard
   let busyKind = null;            // what you're stuck on: 'urgent' | 'trivial' | 'trap' (known once you've answered)
@@ -1324,6 +1327,8 @@
   function showEnd() {
     if (!game || !game.over || endShown) return;
     endShown = true;
+    paused = false;
+    ui.pauseScreen.hidden = true;
     keepAwake(false);
     const result = Core.summary(game);
     const r = ROLES[result.role];
@@ -1466,6 +1471,35 @@
     if (!ui.endPromotion.hidden) Scene.burst(ui.endPromotion, 40); // after the overlay is visible, so the burst is seen
   }
 
+  // ---------- pausing ----------
+  // A phone rings, a real one. You can stop the morning, and the clock, the arrivals and the expiry
+  // timers all stop with it because the loop simply stops advancing — no special case in the rules.
+  function setPaused(on) {
+    if (!game || game.over || paused === on) return;
+    paused = on;
+    setHolding(false);
+    keepAwake(!on);
+    ui.pauseBtn.textContent = on ? '▶' : '⏸';
+    ui.pauseBtn.title = on ? 'Back to it (Esc)' : 'Pause (Esc)';
+    // Today's morning is the same one for everybody and you get one go at it, so it cannot be re-rolled
+    // halfway through; every other kind of round can.
+    ui.restartBtn.hidden = mode === 'daily';
+    ui.pauseNote.textContent = mode === 'daily'
+      ? "The morning waits. Leaving now means today's morning is still unplayed."
+      : 'The morning waits. Nothing is arriving while this is up.';
+    ui.pauseScreen.hidden = !on;
+    if (!on) lastTs = 0; // do not hand the loop the time spent paused
+    announce(on ? 'Paused' : 'Back to it');
+  }
+
+  function leaveRound() {
+    setPaused(false);
+    game = null;
+    keepAwake(false);
+    ui.goalBar.hidden = true;
+    showStart();
+  }
+
   // ---------- lifecycle ----------
   // kind: 'daily' | 'practice' | 'challenge' | 'week' | 'campaign'
   function startGame(kind) {
@@ -1543,6 +1577,10 @@
       ? `${boss.emoji} Today's boss: ${boss.label}`
       : `${day.emoji} ${day.label} — ${day.goal}`);
     document.body.classList.remove('deep', 'is-busy', 'coding', 'flash-bad', 'flash-trap');
+    startedAs = kind;
+    paused = false;
+    ui.pauseScreen.hidden = true;
+    ui.pauseBtn.textContent = '⏸';
     ui.startScreen.hidden = true;
     ui.endScreen.hidden = true;
     ui.nightScreen.hidden = true;
@@ -1554,6 +1592,8 @@
 
   // The start screen, from the results, keeping the last role and level selected.
   function showStart() {
+    ui.pauseScreen.hidden = true;
+    paused = false;
     ui.endScreen.hidden = true;
     ui.startScreen.hidden = false;
     applyRoleText();
@@ -1588,7 +1628,7 @@
 
   function frame(ts) {
     requestAnimationFrame(frame);
-    if (!game || game.over || document.hidden) { lastTs = ts; accumulator = 0; return; }
+    if (!game || game.over || paused || document.hidden) { lastTs = ts; accumulator = 0; return; }
     const elapsed = lastTs ? Math.min(MAX_CATCH_UP_S, (ts - lastTs) / 1000) : 0;
     lastTs = ts;
     advance(elapsed);
@@ -1682,6 +1722,12 @@
     handle(Core.useHeadphones(game));
     render();
   });
+  ui.pauseBtn.addEventListener('click', () => setPaused(!paused));
+  ui.resumeBtn.addEventListener('click', () => setPaused(false));
+  // Guarded as well as hidden: today's morning is the same one for everybody and you get one go at it,
+  // so it must not be restartable even if something clicks the button anyway.
+  ui.restartBtn.addEventListener('click', () => { if (mode !== 'daily') startGame(startedAs || 'practice'); });
+  ui.quitBtn.addEventListener('click', leaveRound);
   ui.muteBtn.addEventListener('click', () => setMuted(!muted));
   ui.practiceBtn.addEventListener('click', () => startGame('practice'));
   ui.againBtn.addEventListener('click', () => startGame('practice'));
@@ -1696,7 +1742,8 @@
   const ARROWS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
 
   window.addEventListener('keydown', (e) => {
-    const overlayOpen = !ui.startScreen.hidden || !ui.endScreen.hidden || !ui.nightScreen.hidden;
+    if (e.key === 'Escape' && game && !game.over) { e.preventDefault(); setPaused(!paused); return; }
+    const overlayOpen = !ui.startScreen.hidden || !ui.endScreen.hidden || !ui.nightScreen.hidden || paused;
     if (e.code === 'Space') {
       e.preventDefault(); // never scroll the page or click a focused button
       if (!e.repeat && game && !game.over && !overlayOpen) setHolding(true);

@@ -31,6 +31,7 @@
       <div class="meter-label"><span>Reputation</span><b id="repVal">60</b></div>
       <div class="meter-track"><i id="repFill" data-level="mid"></i></div>
     </div>
+    <button class="icon-btn" id="pauseBtn" title="Pause (Esc)" aria-label="Pause">⏸</button>
     <button class="icon-btn" id="muteBtn" title="Sound (M)" aria-label="Toggle sound">🔊</button>
   </header>
 
@@ -152,6 +153,21 @@
     </div>
     <p class="playtest" id="endNote"></p>
     <div class="history" id="endHistory"></div>
+  </div>
+</div>
+
+<!-- Paused. The panel covers the whole screen on purpose: a pause you can read your inbox through is a
+     way to study every message at leisure, which is the one skill the game is about. -->
+<div class="overlay" id="pauseScreen" hidden>
+  <div class="panel pause">
+    <div class="panel-logo">9<i>to</i>9</div>
+    <h1>Paused</h1>
+    <p class="lede" id="pauseNote">The morning waits. Nothing is arriving while this is up.</p>
+    <div class="end-actions">
+      <button class="primary" id="resumeBtn">Back to it <kbd>Esc</kbd></button>
+      <button class="secondary" id="restartBtn">Start this morning again</button>
+    </div>
+    <button class="link week-quit" type="button" id="quitBtn">Leave the morning</button>
   </div>
 </div>
 
