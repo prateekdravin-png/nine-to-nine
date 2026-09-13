@@ -22,6 +22,19 @@ command `npm run build` and output directory `dist`.
 
 ### The stats endpoint
 
+Cloudflare hosts this two ways and the dashboard steers you to whichever it prefers, so the repo
+supports both rather than depending on which button was pressed:
+
+| | reads | serves the game from |
+|---|---|---|
+| **Pages** |  by convention | the build output |
+| **Workers** |  →  | the  binding |
+
+The endpoints are written once.  imports the very same handlers the Pages build uses, so
+there is one copy of the validation and one copy of the storage whichever product is running, and a
+test fails if it ever stops importing them.
+
+
 A static host has no `/api/event`, and the game is built to shrug that off — the post fails and play
 carries on. To keep the retention numbers, `functions/` holds the same endpoint as a Cloudflare Pages
 Function, storing events in KV instead of `data/events.jsonl`. Cloudflare picks that directory up from

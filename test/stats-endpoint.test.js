@@ -94,3 +94,38 @@ test('it stores nothing it was not asked to store', () => {
   assert.deepStrictEqual(Object.keys(stored).sort(), ['day', 'deepWork', 'kind', 'level', 'player', 'rating', 'role', 'score', 'ts'],
     'the endpoint kept a field nobody agreed to send');
 });
+
+// Cloudflare hosts this two ways and the dashboard steers you to whichever it prefers this month, so the
+// repo supports both: Pages reads functions/api/*.js by convention, Workers reads wrangler.toml and runs
+// worker.js. What must never happen is the two growing separate copies of the endpoint.
+test('the Workers entry routes to the very same handlers, and serves everything else from the assets', async () => {
+  const worker = await import('../worker.js');
+  const asked = [];
+  const env = { ASSETS: { fetch: (req) => { asked.push(new URL(req.url).pathname); return new Response('asset'); } } };
+  const call = (path, method) => worker.default.fetch(new Request(`https://example.test${path}`, { method }), env, {});
+
+  await call('/', 'GET');
+  await call('/game.js', 'GET');
+  assert.deepStrictEqual(asked, ['/', '/game.js'], 'the game itself has to come from the static assets');
+
+  assert.strictEqual((await call('/api/event', 'GET')).status, 405, 'the write endpoint is POST only');
+  assert.strictEqual((await call('/api/events', 'POST')).status, 405, 'the read endpoint is GET only');
+
+  // 415 rather than 404 proves the shared handler ran: that is its answer to a post with no JSON type.
+  assert.strictEqual((await call('/api/event', 'POST')).status, 415, 'POST /api/event should reach the real handler');
+  assert.strictEqual(asked.length, 2, 'and no api request should have fallen through to the assets');
+});
+
+test('both hosting shapes exist, and point at the same code', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const root = path.join(__dirname, '..');
+  assert.ok(fs.existsSync(path.join(root, 'functions', 'api', 'event.js')), 'the Pages convention');
+  assert.ok(fs.existsSync(path.join(root, 'worker.js')), 'the Workers entry');
+  const wrangler = fs.readFileSync(path.join(root, 'wrangler.toml'), 'utf8');
+  assert.match(wrangler, /main = "worker\.js"/);
+  assert.match(wrangler, /directory = "\.\/dist"/, 'Workers must serve what npm run build assembles');
+  const entry = fs.readFileSync(path.join(root, 'worker.js'), 'utf8');
+  assert.match(entry, /from '\.\/functions\/api\/event\.js'/, 'the worker must reuse the Pages handler, not copy it');
+  assert.match(entry, /from '\.\/functions\/api\/events\.js'/);
+});

@@ -1,0 +1,22 @@
+# wrangler.toml — how Cloudflare's Workers product builds and serves this.
+#
+# Only read when the project is a Worker. A Pages project ignores this file entirely and uses
+# functions/api/*.js instead; both end up running the same handlers (see worker.js).
+#
+# Still to do by hand in the dashboard, because neither can be created from a config file:
+#   Settings → Bindings → KV namespace:  variable STATS, bound to a namespace you create
+#   Settings → Variables and Secrets:    STATS_TOKEN, any long random string, kept secret
+# Without them the game plays perfectly and the stats endpoint answers 503.
+
+name = "nine-to-nine"
+main = "worker.js"
+compatibility_date = "2026-09-13"
+
+# npm run build assembles dist/ — the fifteen files the browser actually loads, and nothing else.
+[build]
+command = "npm run build"
+
+# Serve those files for every request the worker does not handle itself.
+[assets]
+directory = "./dist"
+binding = "ASSETS"
