@@ -3,7 +3,12 @@
 // morning, then the challenge funnel: links made, links opened, challenges played.
 //
 //   npm run stats                                         the local server's data/events.jsonl
-//   npm run stats -- --from https://<site> --token <tok>   a hosted copy (functions/api/events.js)
+//   npm run stats -- --from https://<site>                a hosted copy (functions/api/events.js),
+//                                                          with the token in NINE_STATS_TOKEN
+//
+// The token comes from the environment rather than an argument, because an argument ends up in shell
+// history, in the scrollback and in any screenshot of the terminal. --token still works for a one-off,
+// but the environment is the way that does not leave a copy behind.
 //
 // The two are the same events in the same shape, so everything below this line cannot tell which it
 // was given — the playtest reads the same whether it ran on your laptop or on the internet.
@@ -103,9 +108,9 @@ async function fetchEvents(base, token) {
   let cursor = null;
   do {
     const url = new URL('/api/events', base);
-    url.searchParams.set('token', token);
     if (cursor) url.searchParams.set('cursor', cursor);
-    const response = await fetch(url);
+    // The token goes in a header, not the query string: hosts log query strings, they do not log headers.
+    const response = await fetch(url, { headers: { authorization: `Bearer ${token}` } });
     if (!response.ok) throw new Error(`${url.origin} said ${response.status} ${response.statusText}`);
     const page = await response.json();
     all.push(...page.events);
@@ -121,9 +126,12 @@ function argOf(name) {
 
 async function main() {
   const from = argOf('from');
-  const token = argOf('token');
+  const token = argOf('token') || process.env.NINE_STATS_TOKEN;
   if (from && !token) {
-    console.log('\n--from needs --token as well: the hosted endpoint will not hand the events to anyone else.\n');
+    console.log('\nReading a hosted copy needs the token it was given, which is not in this repository.');
+    console.log('Put it in the environment for the session and it stays out of your shell history:\n');
+    console.log('  PowerShell:  $env:NINE_STATS_TOKEN = "..."');
+    console.log('  bash:        export NINE_STATS_TOKEN=...\n');
     return;
   }
   const events = from ? await fetchEvents(from, token) : readEvents(EVENTS_FILE);

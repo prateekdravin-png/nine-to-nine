@@ -50,7 +50,7 @@ Then read the log back the same way you always did:
 
 ```
 npm run stats                                          # data/events.jsonl, from npm start
-npm run stats -- --from https://<site> --token <tok>    # the hosted log
+npm run stats -- --from https://<site>                  # the hosted log, token in NINE_STATS_TOKEN
 ```
 
 Everything below that line is the same code, because it is the same events in the same shape: the
