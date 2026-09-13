@@ -47,6 +47,45 @@ It listens on your network too, so you can playtest on your phone at `http://<th
 Keys: `1`–`5` pick a role (start screen) · `Space` hold to work · `R` respond · `N` say no · `X` ignore · `P` peek ·
 `D` pass to a colleague · `H` headphones · `M` sound. Keys act on the notification closest to expiring, which is outlined.
 
+## The campaign: the game as a ladder
+
+Everything this prototype can do used to arrive at once — flow, traps, headphones, favours, saying no,
+day types, career levels, bought time. The campaign is the curriculum: **twelve levels, one morning
+each, every one asking for something the level before it taught.**
+
+| # | Level | What it asks | What it teaches |
+|---|---|---|---|
+| 1 | 💼 First morning | Finish the work | The work only moves while you are working |
+| 2 | 🚨 Read the room | Miss nothing urgent | Silence on a real emergency costs reputation |
+| 3 | 🪤 It's never quick | Dodge 5 traps | Traps give themselves away at junior |
+| 4 | 🌊 The deep end | 25 seconds in Deep Work | Flow is the point of protecting your attention |
+| 5 | 🎧 Headphones on | Use them, take no traps | You have one tool, once a morning |
+| 6 | 🤝 Be a colleague | Bank 3 favours, spend one | A little focus now for a rescue later |
+| 7 | 🙅 When you can't tell | ≤2 traps, say no twice | Saying no is the cheapest way to be wrong → **🚀 Senior** |
+| 8 | 📋 Appraisal week | Finish on 88 reputation | A day type changes what the morning is for |
+| 9 | 🗃️ Backlog day | Clear it, ≤1 trap | Sometimes focus buys you nothing |
+| 10 | 🚀 Release day | Miss nothing urgent | No slack on the days that matter |
+| 11 | ⏳ On a roll | A run of 12 right calls | Reading well is worth time, not just calm |
+| 12 | 👑 Lead | Finish on a gold | Alarm words mislead → **👑 Lead** |
+
+**Career levels are campaign rewards now.** They used to unlock by scoring a gold, which promoted you
+for a good morning rather than for learning anything. Clearing the level that teaches senior traps is
+what makes you a senior. One ladder instead of two.
+
+Each level **pins its seed**, so it is a designed challenge you can learn rather than a lottery you
+re-roll — fail it and you already know what is coming. Your **role is never pinned**: it changes only
+wording, so the campaign plays the same for a tester as for a developer.
+
+Every seed was found by search, not by guessing, and `test/campaign.test.js` re-checks two things on
+every run:
+
+- **every level can be cleared, in all five roles**, by a simulated player who has learned its lesson
+- **no level falls to a player who has not** — level 3 must beat "respond to everything", level 7 must
+  beat the same reader guessing instead of hedging, level 12 must beat trusting alarm words
+
+A level nobody can pass is a wall; a level a naive strategy clears teaches nothing. Both are easy to
+create by accident with a tuning change somewhere else, which is exactly what that file is for.
+
 ## Bought time: what a run of right calls is worth
 
 Reading well had only ever been rewarded by what it *saves* you — no reputation lost, no call taken —
@@ -382,8 +421,10 @@ hides, and so which reading skill each level tests.
 | 🚀 Senior | "Whenever you get a moment, thoughts?" | same as junior | is anything actually wrong? |
 | 👑 Lead | "URGENT: need estimates for next quarter" | "Checkout errors climbing since your deploy" | what's broken, and who's waiting |
 
-- A 🥇 at your highest level, in any role, unlocks the next. Pick your level on the start screen; locked
-  levels say how to unlock them. (`?dev` unlocks everything.)
+- Levels unlock by clearing the campaign level that teaches them: level 7 for 🚀 Senior, level 12 for
+  👑 Lead. They used to unlock by scoring a 🥇, which promoted you for a good morning rather than for
+  learning anything. Pick your level on the start screen; locked ones say how to unlock. (`?dev` unlocks
+  everything.)
 - The daily morning has the same rhythm at every level; the share text says who played it
   ("🧪 Senior Tester").
 - All career wording is plain English with no local references.
@@ -511,6 +552,7 @@ playtesting for real.
 | `test/days.test.js` | Day types: that the best way to play really does change with the morning |
 | `challenge.js` | Challenge links: packing a morning and a score into a URL fragment, and reading it back |
 | `week.js` | The work week: what a morning costs you, what the night gives back, and how a week is judged |
+| `campaign.js` | The twelve levels, what each one asks for, and which of them promote you |
 | `persona.js` | Work personalities: which one a round earns, and why |
 | `awards.js` | Achievements and the desk objects they unlock |
 | `scene.js` | The illustrated office scene and the portraits of the people who message you |

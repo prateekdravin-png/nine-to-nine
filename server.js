@@ -26,6 +26,7 @@ const PUBLIC = {
   '/awards.js': 'text/javascript; charset=utf-8',
   '/challenge.js': 'text/javascript; charset=utf-8',
   '/week.js': 'text/javascript; charset=utf-8',
+  '/campaign.js': 'text/javascript; charset=utf-8',
   '/scene.js': 'text/javascript; charset=utf-8',
   '/game.js': 'text/javascript; charset=utf-8'
 };

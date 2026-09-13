@@ -11,6 +11,7 @@
   const Awards = window.NineAwards;
   const Challenge = window.NineChallenge;
   const Week = window.NineWeek;
+  const Campaign = window.NineCampaign;
   const Scene = window.NineScene;
   const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, DAYS, WEEKDAYS, METERS, BOSSES, EVENTS } = window.NineContent;
   const T = Core.TUNING;
@@ -32,7 +33,7 @@
     hpBtn: $('hpBtn'), hpLabel: $('hpLabel'), codeBtn: $('codeBtn'), codeBtnLabel: $('codeBtnLabel'),
     startScreen: $('startScreen'), startLede: $('startLede'), rolePicker: $('rolePicker'), roleDesc: $('roleDesc'),
     levelPicker: $('levelPicker'), levelDesc: $('levelDesc'), trapTell: $('trapTell'),
-    challengeCard: $('challengeCard'), weekCard: $('weekCard'), dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
+    campaignCard: $('campaignCard'), endCampaign: $('endCampaign'), challengeCard: $('challengeCard'), weekCard: $('weekCard'), dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
     startGoal: $('startGoal'), awards: $('awards'), statsNote: $('statsNote'), startHistory: $('startHistory'),
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
@@ -54,7 +55,8 @@
     recent: 'nineToNine.recent',   // message texts seen in the last few rounds
     awards: 'nineToNine.awards',   // achievements unlocked so far
     progress: 'nineToNine.progress', // rounds played and roles finished, for the long-run achievements
-    week: 'nineToNine.week'          // the work week in progress, so it survives a reload
+    week: 'nineToNine.week',         // the work week in progress, so it survives a reload
+    campaign: 'nineToNine.campaign'  // which campaign levels have been cleared
   };
 
   let game = null;
@@ -62,6 +64,7 @@
   let level = Core.DEFAULT_LEVEL; // likewise for the career level
   let mode = 'practice';          // 'daily' | 'practice' | 'challenge' for the game in progress
   let week = null;                // the work week in progress, if there is one
+  let levelPlaying = null;        // the campaign level this round is an attempt at, if any
   let invite = null;              // the challenge this page was opened with, decoded from the link
   let invitePlayed = false;       // and whether this visit has answered it yet
   let morning = null;             // the morning number of a daily game, fixed when it starts
@@ -255,6 +258,82 @@
     const selection = window.getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
+  }
+
+  // ---------- the campaign ----------
+  // The ladder: one morning per level, each asking for something the level before it taught. All the
+  // rules of it live in campaign.js; this stores what has been cleared and draws it.
+  function loadCleared() {
+    try {
+      const ids = JSON.parse(read(STORE.campaign) || '[]');
+      return Array.isArray(ids) ? ids.filter((id) => Campaign.LEVELS.some((l) => l.id === id)) : [];
+    } catch (e) { return []; }
+  }
+  const saveCleared = (ids) => store(STORE.campaign, JSON.stringify(ids));
+
+  function goalList(card) {
+    return '<ul class="goals">' + card.map((row) =>
+      `<li class="${row.done ? 'done' : 'miss'}"><b>${row.done ? '✓' : '○'}</b><span>${escapeHtml(row.label)}</span></li>`).join('') + '</ul>';
+  }
+
+  function ladderHtml(done) {
+    return '<div class="ladder">' + Campaign.LEVELS.map((l) => {
+      const state = done.indexOf(l.id) !== -1 ? 'done' : (Campaign.nextFor(done) || {}).id === l.id ? 'now' : '';
+      return `<span class="rung ${state}" title="${escapeHtml(l.title)}">${l.n}</span>`;
+    }).join('') + '</div>';
+  }
+
+  function renderCampaignCard() {
+    const done = loadCleared();
+    const next = Campaign.nextFor(done);
+    if (!next) {
+      ui.campaignCard.innerHTML =
+        `<div class="daily-head"><b>🏅 Campaign complete</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length}</span></div>` +
+        ladderHtml(done) +
+        '<p class="daily-sub">Every level cleared, and every role, level and kind of morning is open. The daily morning and the work week are where it goes from here.</p>';
+      return;
+    }
+    const careerLevel = LEVELS[next.setup.level];
+    const day = DAYS[next.setup.day];
+    ui.campaignCard.innerHTML =
+      `<div class="daily-head"><b>${next.emoji} Level ${next.n} · ${escapeHtml(next.title)}</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length} cleared</span></div>` +
+      ladderHtml(done) +
+      `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
+      goalList(Campaign.check(next, null)) +
+      `<p class="campaign-teaches">${day.emoji} ${escapeHtml(day.label)} · ${careerLevel.emoji} ${escapeHtml(careerLevel.label)}${next.unlocks ? ` · clears to ${LEVELS[next.unlocks].emoji} ${escapeHtml(LEVELS[next.unlocks].label)}` : ''}</p>` +
+      `<button class="primary" type="button" id="campaignBtn">Play level ${next.n} <kbd>Enter</kbd></button>`;
+  }
+
+  // What the attempt came to, shown as the whole card so a near miss reads as a near miss.
+  function renderCampaignResult(result) {
+    const level = levelPlaying;
+    const card = Campaign.check(level, result);
+    const won = Campaign.cleared(card);
+    const done = loadCleared();
+    const isNew = won && done.indexOf(level.id) === -1;
+    if (isNew) {
+      done.push(level.id);
+      saveCleared(done);
+      // Career levels are campaign rewards now. Anything unlocked before this existed is left alone.
+      const earned = Campaign.careerFrom(done);
+      if (LEVEL_ORDER.indexOf(earned) > Math.max(0, LEVEL_ORDER.indexOf(read(STORE.career)))) store(STORE.career, earned);
+    }
+    const next = Campaign.nextFor(done);
+    ui.endCampaign.innerHTML =
+      `<div class="daily-head"><b>${won ? '✅' : '↻'} Level ${level.n} · ${escapeHtml(level.title)}</b><span class="daily-next">${won ? 'cleared' : 'not this time'}</span></div>` +
+      goalList(card) +
+      (won
+        ? `<p class="daily-sub">${escapeHtml(level.teaches)}${next ? ` Next up: ${next.emoji} ${escapeHtml(next.title)}.` : ' That was the last one.'}</p>` +
+          (next ? `<button class="primary" type="button" id="campaignBtn">Play level ${next.n} <kbd>Enter</kbd></button>` : '')
+        : '<p class="daily-sub">The morning is the same every time you try it, so you already know what is coming.</p>' +
+          `<button class="primary" type="button" id="campaignBtn">Try level ${level.n} again <kbd>Enter</kbd></button>`);
+    ui.endCampaign.hidden = false;
+    if (isNew && level.unlocks) {
+      const unlocked = LEVELS[level.unlocks];
+      ui.endPromotion.hidden = false;
+      ui.endPromotion.textContent = `🎉 Promoted! ${unlocked.emoji} ${unlocked.label} unlocked: ${unlocked.summary}`;
+      announce(`Promoted to ${unlocked.label}`);
+    }
   }
 
   // ---------- the work week ----------
@@ -614,17 +693,6 @@
     level = id;
     store(STORE.level, id);
     applyLevelText();
-  }
-
-  // A 🥇 at your highest unlocked level unlocks the next one. Returns the newly unlocked level, if any.
-  function promote(result) {
-    if (result.rating.key !== 'gold') return null;
-    const played = LEVEL_ORDER.indexOf(result.level);
-    const highest = Math.max(0, LEVEL_ORDER.indexOf(read(STORE.career)));
-    const next = LEVEL_ORDER[played + 1];
-    if (!next || played !== highest) return null; // a challenge played above your level skips nothing
-    store(STORE.career, next);
-    return next;
   }
 
   ui.levelPicker.addEventListener('click', (e) => {
@@ -1112,7 +1180,7 @@
     const st = result.stats;
     ui.eventBar.hidden = true;
     ui.endEmoji.textContent = result.rating.emoji;
-    ui.endRole.textContent = `${whoPlayed(result.role, result.level)} · ${mode === 'daily' ? `Morning #${morning}` : mode === 'challenge' ? 'Challenge' : mode === 'week' && week ? `${WEEKDAYS[Math.max(0, week.index - 1)]} of your week` : 'Practice'}`;
+    ui.endRole.textContent = `${whoPlayed(result.role, result.level)} · ${mode === 'daily' ? `Morning #${morning}` : mode === 'challenge' ? 'Challenge' : mode === 'week' && week ? `${WEEKDAYS[Math.max(0, week.index - 1)]} of your week` : mode === 'campaign' && levelPlaying ? `Level ${levelPlaying.n}` : 'Practice'}`;
     ui.endTitle.textContent = result.rating.title;
     ui.endBlurb.textContent = result.rating.blurb;
     ui.endScore.textContent = result.score;
@@ -1138,14 +1206,8 @@
     ui.endStats.innerHTML = rows.map(([k, v]) => `<div class="stat"><span>${escapeHtml(k)}</span><b>${escapeHtml(v)}</b></div>`).join('');
     ui.endQuote.textContent = quoteFor(st);
 
-    // A 🥇 at your highest level is a promotion.
-    const promotedTo = promote(result);
-    ui.endPromotion.hidden = !promotedTo;
-    if (promotedTo) {
-      const next = LEVELS[promotedTo];
-      ui.endPromotion.textContent = `🎉 Promoted! ${next.emoji} ${next.label} unlocked: ${next.summary} Pick it on the start screen.`;
-      announce(`Promoted to ${next.label}`);
-    }
+    // Promotions come from the campaign now (renderCampaignResult), not from scoring a gold.
+    ui.endPromotion.hidden = true;
 
     // The work personality, and whether it's new to this player's collection.
     const persona = Persona.personaFor(result, r);
@@ -1195,6 +1257,9 @@
         : 'The real test: do you want another round? Note your answer after 10 runs, and again after 30.';
     }
 
+    ui.endCampaign.hidden = true;
+    if (mode === 'campaign' && levelPlaying) renderCampaignResult(result);
+
     // In a week the morning is not the end of anything: the evening screen takes over, shows what it
     // cost, and leads into tomorrow. The result screen still renders underneath for when the week ends.
     if (mode === 'week' && week && !week.over) {
@@ -1210,7 +1275,7 @@
       invitePlayed = true;
     }
     ui.endChallenge.hidden = true;
-    if (mode !== 'daily' && mode !== 'week') renderChallengeResult(result);
+    if (mode !== 'daily' && mode !== 'week' && mode !== 'campaign') renderChallengeResult(result);
 
     // Achievements, from this round plus what you have done across rounds. Cosmetic unlocks only.
     const progress = loadProgress();
@@ -1245,13 +1310,15 @@
     ui.endHistory.innerHTML = historyHtml(loadRuns(), result.role, result.level);
     if (mode === 'week' && week) { showNight(result); return; } // the evening, not the end
     ui.endScreen.hidden = false;
-    if (promotedTo) Scene.burst(ui.endPromotion, 40); // after the overlay is visible, so the burst is seen
+    if (!ui.endPromotion.hidden) Scene.burst(ui.endPromotion, 40); // after the overlay is visible, so the burst is seen
   }
 
   // ---------- lifecycle ----------
-  // kind: 'daily' | 'practice' | 'challenge' | 'week'
+  // kind: 'daily' | 'practice' | 'challenge' | 'week' | 'campaign'
   function startGame(kind) {
     const daily = kind === 'daily';
+    levelPlaying = kind === 'campaign' ? Campaign.nextFor(loadCleared()) : null;
+    if (kind === 'campaign' && !levelPlaying) { showStart(); return; } // the ladder is finished
     if (daily && loadDaily()[today()]) { showStart(); return; } // today's morning is already done
     if (kind === 'challenge' && !invite) kind = 'practice';
     if (kind === 'week') {
@@ -1270,15 +1337,16 @@
     // recently seen messages last, so they keep feeling different.
     const challenged = kind === 'challenge';
     const inWeek = kind === 'week';
+    const inCampaign = kind === 'campaign';
     const playRole = challenged ? invite.role : role;
     // A week pins the kind of morning itself (week.js deals one of each, Monday first) and carries in
     // how tired the player is, which is the only thing it is allowed to change about the rules.
     game = Core.createGame({
       role: playRole,
-      level: challenged ? invite.level : level,
+      level: challenged ? invite.level : inCampaign ? levelPlaying.setup.level : level,
       peekVariant: challenged ? invite.variant : (kind === 'practice' && ui.variantToggle.checked),
-      seed: daily ? Daily.seedFor(morning) : challenged ? invite.seed : inWeek ? Week.seedForMorning(week.seed, week.index) : undefined,
-      day: inWeek ? weekDays(week)[week.index] : undefined,
+      seed: daily ? Daily.seedFor(morning) : challenged ? invite.seed : inWeek ? Week.seedForMorning(week.seed, week.index) : inCampaign ? levelPlaying.setup.seed : undefined,
+      day: inWeek ? weekDays(week)[week.index] : inCampaign ? levelPlaying.setup.day : undefined,
       carry: inWeek ? Week.carryFor(week) : undefined,
       // A week and a practice round both deal recently seen messages last, which matters most in a
       // week: five mornings back to back was the worst case for repeats. The daily morning and a
@@ -1328,6 +1396,7 @@
     ui.startScreen.hidden = false;
     applyRoleText();
     renderChallengeCard();
+    renderCampaignCard();
     renderWeekCard();
     renderDailyCard();
     renderAwards();
@@ -1431,6 +1500,7 @@
     const send = e.target.closest('[data-share="challenge"]');
     if (send) { sendChallenge(send); return; }
     if (e.target.closest('#challengeBtn')) { startGame('challenge'); return; }
+    if (e.target.closest('#campaignBtn')) { startGame('campaign'); return; }
     if (e.target.closest('#weekBtn')) { startGame('week'); return; }
     if (e.target.closest('#abandonWeekBtn')) { saveWeek(null); week = null; renderWeekCard(); return; }
     if (e.target.closest('#dailyBtn, #endDailyBtn')) startGame('daily');
@@ -1528,6 +1598,7 @@
   invite = Challenge.decode(Challenge.codeFromUrl(location.href));
   if (invite) report({ kind: 'accept', day: today() });
   renderChallengeCard();
+  renderCampaignCard();
   renderWeekCard();
   renderDailyCard();
   renderAwards();
