@@ -92,9 +92,34 @@
 
   function officeSvg() {
     return '<svg class="office" viewBox="0 0 600 180" preserveAspectRatio="xMidYMax slice" data-state="idle" data-hp="0" data-stress="0" aria-hidden="true" focusable="false">' +
-      '<defs><clipPath id="nine-window"><rect x="76" y="22" width="138" height="84" rx="3"/></clipPath></defs>' +
-      '<rect width="600" height="180" fill="#F1E3D1"/>' +
-      '<rect y="146" width="600" height="34" fill="#D9C3AB"/><rect y="144" width="600" height="4" fill="#C7AB8F"/>' +
+      '<defs>' +
+        '<clipPath id="nine-window"><rect x="76" y="22" width="138" height="84" rx="3"/></clipPath>' +
+        // The wall is lit from the window, so it is brightest on the left and falls away to the right.
+        '<linearGradient id="nine-wall" x1="0" y1="0" x2="1" y2="0.35">' +
+          '<stop offset="0" stop-color="#FBF0E2"/><stop offset="0.45" stop-color="#F1E3D1"/><stop offset="1" stop-color="#E3D0B9"/>' +
+        '</linearGradient>' +
+        // The same wall an hour and a half later, with the sun higher and the light warmer.
+        '<linearGradient id="nine-wall-noon" x1="0" y1="0" x2="1" y2="0.35">' +
+          '<stop offset="0" stop-color="#FFF4DC"/><stop offset="0.45" stop-color="#F7E6C8"/><stop offset="1" stop-color="#E6CDA8"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="nine-floor" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="#D9C3AB"/><stop offset="1" stop-color="#C2A488"/>' +
+        '</linearGradient>' +
+        // The shaft of light from the window across the desk, and the glow the monitor throws back.
+        '<linearGradient id="nine-beam" x1="0" y1="0" x2="0.6" y2="1">' +
+          '<stop offset="0" stop-color="#FFE9B8" stop-opacity="0.85"/><stop offset="1" stop-color="#FFE9B8" stop-opacity="0"/>' +
+        '</linearGradient>' +
+        '<radialGradient id="nine-screenglow"><stop offset="0" stop-color="#8FE0A5" stop-opacity="0.5"/><stop offset="1" stop-color="#8FE0A5" stop-opacity="0"/></radialGradient>' +
+        '<radialGradient id="nine-vignette" cx="0.5" cy="0.45" r="0.72">' +
+          '<stop offset="0.55" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#2B1B12" stop-opacity="0.3"/>' +
+        '</radialGradient>' +
+        '<radialGradient id="nine-contact"><stop offset="0" stop-color="#8C5F3C" stop-opacity="0.45"/><stop offset="1" stop-color="#8C5F3C" stop-opacity="0"/></radialGradient>' +
+      '</defs>' +
+      '<rect class="wall" width="600" height="180" fill="url(#nine-wall)"/>' +
+      '<rect y="146" width="600" height="34" fill="url(#nine-floor)"/>' +
+      '<rect y="144" width="600" height="4" fill="#C7AB8F"/>' +
+      // A skirting board: two lines of shadow where the wall meets the floor is most of what reads as depth.
+      '<rect y="138" width="600" height="6" fill="#E0CDB4"/><rect y="136" width="600" height="2" fill="#CBB294" opacity="0.7"/>' +
       // window: the sky and sun follow the clock from 10 AM to 1 PM
       '<rect x="70" y="16" width="150" height="96" rx="6" fill="#FFFFFF"/>' +
       '<rect class="sky" x="76" y="22" width="138" height="84" rx="3" fill="#CDE8F7"/>' +
@@ -115,10 +140,20 @@
       '<g class="wifi-out" transform="translate(250 30)"><path d="M-16 6 Q0 -10 16 6" fill="none" stroke="#2E3A4F" stroke-width="3"/><path d="M-9 12 Q0 3 9 12" fill="none" stroke="#2E3A4F" stroke-width="3"/><circle cy="17" r="3" fill="#2E3A4F"/><path d="M-18 -8 L18 22" stroke="#E24B4A" stroke-width="3" stroke-linecap="round"/></g>' +
       // plant
       '<path d="M44 118 Q30 96 40 84 Q50 100 48 118 Z" fill="#5B9A3B"/><path d="M50 118 Q52 90 66 82 Q66 104 54 118 Z" fill="#6FA84A"/><path d="M46 118 Q40 104 28 100 Q34 116 44 120 Z" fill="#4E8A33"/><rect x="36" y="118" width="26" height="28" rx="3" fill="#C88B5A"/>' +
+      // The shaft of daylight lands on the floor and across the desk. It strengthens toward noon, which
+      // ties the light to the clock rather than making it decoration.
+      '<g class="beam"><path d="M80 26 L214 26 L438 176 L150 176 Z" fill="url(#nine-beam)"/>' +
+        '<g class="motes" fill="#FFF6DE"><circle cx="200" cy="60" r="1.8"/><circle cx="252" cy="96" r="1.4"/><circle cx="170" cy="118" r="1.6"/><circle cx="300" cy="140" r="1.5"/><circle cx="228" cy="42" r="1.2"/></g>' +
+      '</g>' +
       // the boss, walking past behind your desk
       '<g class="boss-walk"><g class="boss-body"></g></g>' +
+      // Contact shadows: nothing looks like it is standing on the floor without one.
+      '<ellipse cx="238" cy="168" rx="70" ry="9" fill="url(#nine-contact)"/>' +
+      '<ellipse cx="315" cy="170" rx="180" ry="8" fill="url(#nine-contact)" opacity="0.7"/>' +
+      '<ellipse cx="49" cy="148" rx="26" ry="5" fill="url(#nine-contact)"/>' +
       // you: chair, deep-work glow, body, face, headphones, call, sweat, dizzy
       '<rect x="206" y="66" width="64" height="76" rx="16" fill="#3A4A6B"/>' +
+      '<rect x="206" y="66" width="20" height="76" rx="16" fill="#2F3D59" opacity="0.55"/>' +
       '<g class="aura" fill="#FFD36E"><circle cx="238" cy="88" r="62" opacity="0.16"/><circle cx="238" cy="88" r="46" opacity="0.22"/></g>' +
       '<g class="me">' +
         `<rect class="shirt" x="204" y="104" width="68" height="40" rx="14" fill="${PLAYER.shirt}"/>` +
@@ -133,6 +168,7 @@
       // desk and everything on it
       '<rect x="150" y="116" width="330" height="12" rx="3" fill="#C8966A"/><rect x="158" y="128" width="314" height="18" fill="#A9754C"/><rect x="166" y="146" width="8" height="20" fill="#8C5F3C"/><rect x="456" y="146" width="8" height="20" fill="#8C5F3C"/>' +
       '<rect x="364" y="102" width="12" height="12" fill="#2E3A4F"/><rect x="348" y="112" width="44" height="5" rx="2" fill="#2E3A4F"/>' +
+      '<ellipse class="screenglow" cx="330" cy="96" rx="96" ry="46" fill="url(#nine-screenglow)"/>' +
       '<rect x="316" y="42" width="108" height="64" rx="5" fill="#2E3A4F"/><rect class="screen" x="322" y="48" width="96" height="52" rx="2" fill="#1B2233"/>' +
       '<g class="lines"><rect x="328" y="54" width="36" height="4" rx="2" fill="#FF7AB2"/><rect x="332" y="62" width="58" height="4" rx="2" fill="#8FE0A5"/><rect x="332" y="70" width="44" height="4" rx="2" fill="#C7D3E3"/><rect x="336" y="78" width="62" height="4" rx="2" fill="#9B6BFF"/><rect x="332" y="86" width="30" height="4" rx="2" fill="#5F6F86"/><rect x="328" y="94" width="20" height="4" rx="2" fill="#8FE0A5"/></g>' +
       '<rect x="212" y="111" width="52" height="6" rx="2" fill="#DDE2EA"/>' +
@@ -161,6 +197,8 @@
         '<g><rect x="400" y="14" width="56" height="22" rx="11" fill="#FFFFFF"/><path d="M444 34 L452 42 L436 35 Z" fill="#FFFFFF"/>' +
         '<text x="428" y="29" text-anchor="middle" font-size="11" font-weight="700" fill="#2E3A4F" font-family="system-ui, sans-serif">On it!</text></g>' +
       '</g>' +
+      // Last of all, so it darkens the whole room a little at the edges and keeps the eye on the desk.
+      '<rect class="vignette" width="600" height="180" fill="url(#nine-vignette)" pointer-events="none"/>' +
     '</svg>';
   }
 
@@ -210,6 +248,8 @@
     const svg = container.querySelector('svg');
     const q = (selector) => svg.querySelector(selector);
     const sky = q('.sky');
+    const wall = q('.wall');
+    const beam = q('.beam');
     const sun = q('.sun');
     const hourHand = q('.hand-hour');
     const minuteHand = q('.hand-minute');
@@ -238,6 +278,9 @@
         if (minute !== lastMinute) {
           lastMinute = minute;
           sky.setAttribute('fill', mix('#CDE8F7', '#7CC4EC', f));
+          // The room warms and the shaft of light sharpens as the sun climbs toward noon.
+          if (wall) wall.setAttribute('fill', f > 0.62 ? 'url(#nine-wall-noon)' : 'url(#nine-wall)');
+          if (beam) beam.setAttribute('opacity', (0.35 + f * 0.5).toFixed(2));
           sun.setAttribute('cx', String(90 + f * 110));
           sun.setAttribute('cy', String(96 - f * 64));
           const clockMinutes = 600 + minute; // 10:00 AM onwards

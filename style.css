@@ -444,6 +444,25 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
 .office .steam { opacity: var(--steam, 0.3); animation: steam 2.6s ease-in-out infinite; }
 .office .steam-2 { animation-delay: 1.3s; }
 .office .cloud { animation: drift 38s linear infinite; }
+
+/* Light and depth. The wall, the shaft of daylight and the monitor's glow all move with the morning or
+   with what you are doing, so none of it is wallpaper. */
+.office .wall, .office .beam { transition: opacity 1.2s linear, fill 1.2s linear; }
+.office .beam { opacity: 0.45; }
+.office .motes circle { opacity: 0.75; animation: motes 9s ease-in-out infinite; }
+.office .motes circle:nth-child(2n) { animation-duration: 13s; animation-delay: -4s; }
+.office .motes circle:nth-child(3n) { animation-duration: 16s; animation-delay: -9s; }
+.office .screenglow { opacity: 0; transition: opacity 0.4s, fill 0.4s; }
+.office[data-state="typing"] .screenglow { opacity: 0.75; }
+.office[data-state="deep"] .screenglow { opacity: 1; }
+/* Deep work turns the screen gold, so the light it throws has to turn gold with it. */
+.office[data-state="deep"] .screenglow { fill: #F5B83D; }
+/* Everyone is outside for a drill, and the lights go off in an outage: the room stops being cheerful. */
+.office[data-event="drill"] .beam { opacity: 0; }
+.office[data-event="outage"] .beam { opacity: 0.2; }
+.office[data-event="outage"] .screenglow { fill: #FF5D6C; opacity: 0.5; }
+.office[data-event="outage"] .wall { fill: #C9B49B; }
+.office .vignette { opacity: 0.85; }
 .office .cloud-2 { animation-duration: 52s; animation-delay: -20s; }
 .office .dizzy { transform-box: view-box; transform-origin: 238px 46px; animation: orbit 1.4s linear infinite; }
 .office .bubble circle { animation: dots 1.2s ease-in-out infinite; }
@@ -466,6 +485,7 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
 @keyframes tap { to { transform: translateY(3px); } }
 @keyframes code { from { opacity: 1; } to { opacity: 0.45; } }
 @keyframes steam { 0%, 100% { transform: translateY(4px); } 50% { transform: translateY(-3px); } }
+@keyframes motes { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-6px, -14px); } }
 @keyframes drift { from { transform: translateX(-60px); } to { transform: translateX(160px); } }
 @keyframes orbit { to { transform: rotate(360deg); } }
 @keyframes dots { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }

@@ -1,13 +1,21 @@
 // sw.js — the service worker. Two jobs: make the game start instantly and work with no network at all,
 // and never let a stale copy of it linger after an update.
 //
-// Everything the game needs is a handful of small static files, so they are all cached on install and
-// served cache-first. Bump VERSION on any change to them — a new version installs alongside the old one,
-// then takes over on the next launch and deletes what it replaced.
+// Everything the game needs is a handful of small static files, cached on install so the game works with
+// no network at all. They are served NETWORK-FIRST with the cache as the fallback, which matters more
+// than it sounds: the first cut of this served cache-first, and the very next change to the game simply
+// did not reach the browser — the file on disk was right and the page was a version behind, silently.
+// That is a miserable thing to debug, and it would have happened on every edit.
+//
+// Network-first costs a few hundred kilobytes of text on a connection that has one, and falls back to
+// the cache the moment the network does not answer within TIMEOUT_MS, so offline and flaky connections
+// still start instantly. Bump VERSION when the list below changes; the new worker takes over at once and
+// deletes what it replaced.
 //
 // The one thing that must NEVER be cached is /api/event: the anonymous play stats are fire-and-forget,
 // and a cached response would either swallow them or replay them.
-const VERSION = 'nine-to-nine-v1';
+const VERSION = 'nine-to-nine-v2';
+const TIMEOUT_MS = 2500; // how long a slow network gets before the cache answers instead
 
 const SHELL = [
   './',
@@ -46,20 +54,26 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;           // anything off-site is not ours to serve
   if (url.pathname.includes('/api/')) return;
 
+  const fromCache = () => caches.match(request, { ignoreSearch: true })
+    // Offline and never cached: a navigation still has to land somewhere, so it lands on the game.
+    .then((hit) => hit || (request.mode === 'navigate' ? caches.match('index.html') : undefined));
+
+  const fromNetwork = fetch(request).then((response) => {
+    // Keep the cache current, so the copy that runs offline is the copy that ran online.
+    if (response && response.ok && response.type === 'basic') {
+      const copy = response.clone();
+      caches.open(VERSION).then((cache) => cache.put(request, copy));
+    }
+    return response;
+  });
+
+  // Whichever answers first, with the cache standing in for a network that is slow as well as for one
+  // that is absent.
+  const slowNetwork = new Promise((resolve) => setTimeout(resolve, TIMEOUT_MS)).then(fromCache);
+
   event.respondWith(
-    caches.match(request, { ignoreSearch: true }).then((hit) => {
-      if (hit) return hit;
-      return fetch(request)
-        .then((response) => {
-          // Cache what we fetch, so a file added after install is there next time too.
-          if (response && response.ok && response.type === 'basic') {
-            const copy = response.clone();
-            caches.open(VERSION).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        // Offline and not cached: a navigation still has to land somewhere, so it lands on the game.
-        .catch(() => (request.mode === 'navigate' ? caches.match('index.html') : Promise.reject(new Error('offline'))));
-    })
+    Promise.race([fromNetwork, slowNetwork])
+      .then((response) => response || fromNetwork)
+      .catch(() => fromCache().then((hit) => hit || Response.error()))
   );
 });

@@ -459,6 +459,13 @@ earned. `awards.js` holds the conditions, `test/awards.test.js` checks each one.
 
 ## Graphics: the illustrated office
 
+The room is lit, not flat-filled. The wall carries a gradient that falls away from the window, the
+floor has a skirting line and everything on it has a contact shadow, a shaft of daylight crosses the
+desk with dust turning in it, the monitor throws its own light back onto the desk, and a vignette keeps
+the eye on the middle. All of it is still reactive: the wall warms and the shaft sharpens as the clock
+runs to noon, the monitor glow turns gold in deep work and red in an outage, and the daylight fades out
+altogether during a fire drill when everyone has left the floor. Still no image files.
+
 The work panel opens on a little office scene (`scene.js`) that reacts to how you play:
 
 - You type while you hold the button, glow gold in DEEP WORK, take a call (with a speech bubble) when you
