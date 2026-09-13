@@ -20,7 +20,11 @@
   const topTier = () => Core.topTier(game ? game.rules : null);
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
-  const DEV = params.has('dev');
+  // ?dev unlocks every career level and exposes nineDev.advance, which is a cheat as much as a tool.
+  // On a hosted copy anyone could add it to the URL and walk through the campaign, so it only works where
+  // the game is being developed.
+  const LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:';
+  const DEV = params.has('dev') && LOCAL;
 
   const ui = {
     clock: $('clock'), bank: $('bank'), goalBar: $('goalBar'), progressMeter: $('progressMeter'), progressLabel: $('progressLabel'), progressFill: $('progressFill'), progressPct: $('progressPct'),

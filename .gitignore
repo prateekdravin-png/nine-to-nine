@@ -3,3 +3,6 @@ node_modules/
 
 # local play stats recorded by the server
 data/
+
+# the deployable copy, assembled by npm run build
+dist/
