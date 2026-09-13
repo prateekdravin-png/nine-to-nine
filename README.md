@@ -10,6 +10,29 @@ The design idea it tests: in real IT work, the coding isn't the hard part. The i
 So the game isn't about typing speed. It's about deciding, fast and under pressure, what deserves
 to break your focus.
 
+## Taking it to a phone
+
+It is already an installable app: a manifest, a maskable icon, and a service worker that caches every
+file, so once it has been opened on a phone it starts from the home screen with no browser chrome and
+runs with no network at all. Verified by killing the server and reloading.
+
+On a phone it also buzzes on the two things worth feeling — falling for a trap, letting a real emergency
+go — holds the screen awake for the sixty seconds of a round, and refuses pinch-zoom and pull-to-refresh,
+because a zoom in the middle of a round is never something the player meant. Every one of those is
+guarded: the game plays identically on a browser that offers none of them.
+
+**Android is the target.** The plan, in order:
+
+1. ~~Installable, offline, native feel~~ — done, and needed for every path
+2. Capacitor wrapper and an Android project (buildable from Windows; iOS would need a Mac)
+3. Store assets: 512×512 icon, feature graphic, screenshots, privacy policy, age rating, and a data
+   disclosure for the anonymous play stats
+4. Closed test on Play — a new personal developer account needs 12 testers for 14 consecutive days
+   before production, which is also the playtest this prototype has been waiting for
+5. Production
+
+The stats endpoint is the one thing that needs a server; everything else is static files.
+
 ## Run it
 
 ```bash

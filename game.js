@@ -623,6 +623,35 @@
     ui.endChallenge.hidden = false;
   }
 
+  // ---------- the phone ----------
+  // Everything here is a nicety the browser may not offer, so every call is guarded and the game plays
+  // exactly the same without any of it.
+
+  // A short buzz on the things worth feeling: falling for a trap, and letting a real emergency go. Not on
+  // every ping — a phone that buzzes twenty times a morning is a phone you put face down.
+  const buzz = (pattern) => { try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { /* no haptics */ } };
+
+  // A round is sixty seconds of holding a button and reading, which looks like idling to a phone: without
+  // this the screen dims mid-morning. Released the moment the round ends, and re-taken when the player
+  // comes back, because the lock is dropped whenever the page is hidden.
+  let wakeLock = null;
+  async function keepAwake(on) {
+    try {
+      if (!('wakeLock' in navigator)) return;
+      if (on && !wakeLock) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      } else if (!on && wakeLock) {
+        const held = wakeLock;
+        wakeLock = null;
+        await held.release();
+      }
+    } catch (e) { wakeLock = null; /* denied, or not allowed while hidden */ }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && game && !game.over) keepAwake(true);
+  });
+
   // ---------- sound (synthesised, no files) ----------
   let actx = null;
   function unlockAudio() {
@@ -1009,7 +1038,7 @@
           break;
         case 'ignore': {
           const anchor = anchorFor(ev.card.id);
-          if (ev.card.type === 'urgent') { popup(`That was urgent! ${ev.rep} rep`, 'bad', anchor); flash('bad'); shake(); sfx.buzz(); }
+          if (ev.card.type === 'urgent') { popup(`That was urgent! ${ev.rep} rep`, 'bad', anchor); flash('bad'); shake(); sfx.buzz(); buzz(35); }
           else if (ev.card.type === 'trap') { popup('Dodged 🛡️', 'good', anchor); sfx.click(); }
           else sfx.click();
           removeCard(ev.card.id, 'leaving');
@@ -1025,7 +1054,7 @@
             popup(`⏳ −${ev.saved.toFixed(1)}s off this one`, 'flow', ui.clock);
           }
           if (ev.card.type === 'urgent') { popup(`Saved the day +${ev.rep} rep`, 'good', anchor); sfx.click(); }
-          else if (ev.card.type === 'trap') { popup(LEVELS[game.level].trapPop, 'bad', anchor); flash('trap'); sfx.buzz(); }
+          else if (ev.card.type === 'trap') { popup(LEVELS[game.level].trapPop, 'bad', anchor); flash('trap'); sfx.buzz(); buzz([18, 40, 18]); }
           else if (ev.favour) { popup(`🤝 ${ev.favour} owes you one`, 'good', anchor); sfx.click(); }
           else if (ev.favourFull) { popup(`+${ev.rep} rep · you're owed enough favours`, 'info', anchor); sfx.click(); }
           else { popup(`+${ev.rep} rep, but was it worth it?`, 'info', anchor); sfx.click(); }
@@ -1291,6 +1320,7 @@
   function showEnd() {
     if (!game || !game.over || endShown) return;
     endShown = true;
+    keepAwake(false);
     const result = Core.summary(game);
     const r = ROLES[result.role];
     const boss = BOSSES[result.boss];
@@ -1512,6 +1542,7 @@
     ui.startScreen.hidden = true;
     ui.endScreen.hidden = true;
     ui.nightScreen.hidden = true;
+    keepAwake(true);
     ui.goalBar.dataset.html = ''; // rebuilt on the first frame of the new morning
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     render();
@@ -1742,5 +1773,12 @@
     report({ kind: 'visit', day: today() });
     store(STORE.visit, String(today()));
   }
+
+  // Offline, and instant on a second launch. Service workers only run over https or on localhost, which
+  // is every place this is served from; opened as a file:// copy it simply runs without one.
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* not fatal */ }));
+  }
+
   requestAnimationFrame(frame);
 })();

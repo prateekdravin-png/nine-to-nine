@@ -27,6 +27,9 @@ const PUBLIC = {
   '/challenge.js': 'text/javascript; charset=utf-8',
   '/week.js': 'text/javascript; charset=utf-8',
   '/campaign.js': 'text/javascript; charset=utf-8',
+  '/sw.js': 'text/javascript; charset=utf-8',
+  '/manifest.webmanifest': 'application/manifest+json; charset=utf-8',
+  '/icon.svg': 'image/svg+xml; charset=utf-8',
   '/scene.js': 'text/javascript; charset=utf-8',
   '/game.js': 'text/javascript; charset=utf-8'
 };
