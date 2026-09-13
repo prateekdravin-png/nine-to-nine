@@ -202,6 +202,12 @@ description of a week, in one place, in one renderer.
 for a good morning rather than for learning anything. Clearing the level that teaches senior traps is
 what makes you a senior. One ladder instead of two.
 
+**Progress is your career, not the role's.** A level is the same morning in every role — the same
+arrival times, the same types, the same boss, the same target, with only the wording of the messages
+changed — so clearing it counts once rather than five times. Per-role progress would be thirteen levels
+times five roles of the same thirteen lessons. The card says so, and each cleared level records which
+role you actually played it as, so "I did that one as a developer" is visible and true.
+
 **The ladder is also the level picker.** Anything you have cleared stays open to play again, and stays
 green whatever happens in the replay — clearing a level is a fact about you, not a score you can lose.
 Levels you have not reached yet are shown but not selectable, so the strip is both your progress and

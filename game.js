@@ -332,13 +332,24 @@
   // ---------- the campaign ----------
   // The ladder: one morning per level, each asking for something the level before it taught. All the
   // rules of it live in campaign.js; this stores what has been cleared and draws it.
-  function loadCleared() {
+  // What has been cleared, and as which role: { levelId: roleId }. The first version stored a plain array
+  // of ids, so an array is still read and simply has no role attached to it.
+  function loadClearedBy() {
     try {
-      const ids = JSON.parse(read(STORE.campaign) || '[]');
-      return Array.isArray(ids) ? ids.filter((id) => Campaign.LEVELS.some((l) => l.id === id)) : [];
-    } catch (e) { return []; }
+      const saved = JSON.parse(read(STORE.campaign) || '{}');
+      const known = (id) => Campaign.LEVELS.some((l) => l.id === id);
+      const out = {};
+      if (Array.isArray(saved)) {
+        saved.filter(known).forEach((id) => { out[id] = null; });
+        return out;
+      }
+      if (!saved || typeof saved !== 'object') return {};
+      for (const id of Object.keys(saved)) if (known(id)) out[id] = ROLES[saved[id]] ? saved[id] : null;
+      return out;
+    } catch (e) { return {}; }
   }
-  const saveCleared = (ids) => store(STORE.campaign, JSON.stringify(ids));
+  const loadCleared = () => Object.keys(loadClearedBy());
+  const saveClearedBy = (map) => store(STORE.campaign, JSON.stringify(map));
 
   // A week level is judged on the finished week, not on a morning. An unfinished (or absent) week reads
   // as nothing achieved, which is what the start screen wants to show before you have played one.
@@ -358,12 +369,14 @@
   // can lose. Levels you have not reached yet are shown but not selectable.
   function ladderHtml(done, shown) {
     const next = Campaign.nextFor(done);
+    const clearedBy = loadClearedBy();
     return '<div class="ladder">' + Campaign.LEVELS.map((l) => {
       const isDone = done.indexOf(l.id) !== -1;
       const open = Campaign.isOpen(l, done);
       const state = [isDone ? 'done' : '', (next || {}).id === l.id ? 'now' : '', (shown || {}).id === l.id ? 'picked' : '']
         .filter(Boolean).join(' ');
-      const label = isDone ? `Level ${l.n}: ${l.title} — cleared, play again`
+      const as = ROLES[clearedBy[l.id]];
+      const label = isDone ? `Level ${l.n}: ${l.title} — cleared${as ? ` as a ${as.label.toLowerCase()}` : ''}, play again`
         : open ? `Level ${l.n}: ${l.title}`
         : `Level ${l.n} — clear level ${l.n - 1} first`;
       return `<button type="button" class="rung ${state}" data-rung="${l.n}"${open ? '' : ' disabled'} title="${escapeHtml(label)}">${l.n}</button>`;
@@ -383,11 +396,17 @@
         '<p class="daily-sub">Every level cleared, and every role, level and kind of morning is open. Pick any level above to play it again; the daily morning and the work week are where it goes from here.</p>';
       return;
     }
+    const clearedBy = loadClearedBy();
     const replaying = done.indexOf(next.id) !== -1;
+    const clearedAs = ROLES[clearedBy[next.id]];
     const upNext = Campaign.nextFor(done);
     const head = `<div class="daily-head"><b>${next.emoji} Level ${next.n} · ${escapeHtml(next.title)}${replaying ? ' ✓' : ''}</b>` +
-      `<span class="daily-next">${done.length} of ${Campaign.LEVELS.length} cleared</span></div>` +
+      `<span class="daily-next">${replaying && clearedAs ? `cleared as ${clearedAs.emoji} ${escapeHtml(clearedAs.label)}` : `${done.length} of ${Campaign.LEVELS.length} cleared`}</span></div>` +
       ladderHtml(done, next) +
+      // Said out loud because the ladder sits directly under the role picker, which makes it look as
+      // though it belongs to whichever role is selected. It does not: a level is the same morning in
+      // every role, down to the arrival times, and only the wording of the messages changes.
+      '<p class="campaign-teaches">Your career, whatever role you play. A level is the same morning in every role — only the words change — so clearing it counts once.</p>' +
       `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
       goalList(Campaign.check(next, weekResult(loadWeek())));
     // The last level is a whole week, so the card becomes the week: the same strip, meters and button
@@ -413,7 +432,9 @@
     const isNew = won && done.indexOf(level.id) === -1;
     if (isNew) {
       done.push(level.id);
-      saveCleared(done);
+      const by = loadClearedBy();
+      by[level.id] = result.role; // the role you were actually playing when it fell
+      saveClearedBy(by);
       pickedLevel = null; // a newly cleared level hands the card to the next one
       // Career levels are campaign rewards now. Anything unlocked before this existed is left alone.
       const earned = Campaign.careerFrom(done);
