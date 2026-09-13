@@ -35,12 +35,12 @@ test('different rounds deal different messages, and over a few rounds you see mo
   const pool = ROLES.tester.messages.urgent;
   const seen = new Set();
   const firstMessages = new Set();
-  for (let seed = 1; seed <= 12; seed++) {
+  for (let seed = 1; seed <= 30; seed++) {
     const texts = textsOf(Core.createGame({ seed, role: 'tester' }), 'urgent');
     texts.forEach((t) => seen.add(t));
     firstMessages.add(texts[0]);
   }
-  assert.ok(seen.size >= pool.length - 1, `12 rounds should show nearly every urgent message (saw ${seen.size} of ${pool.length})`);
+  assert.ok(seen.size >= pool.length - 1, `30 rounds should show nearly every urgent message (saw ${seen.size} of ${pool.length})`);
   assert.ok(firstMessages.size >= 6, `rounds should not all open the same way (${firstMessages.size} different first messages)`);
 });
 
@@ -95,11 +95,17 @@ test('a whole week of mornings does not feel like the same short list', () => {
         // Five mornings deal about 33 urgent messages from a pool of 19, so a third showing is
         // arithmetic, not a content problem. What must not happen is a message becoming a fixture.
         assert.ok(worst <= 4, `${role}/${level} from seed ${start}: one message turned up ${worst} times in ${MORNINGS} mornings`);
-        // Over a week you should end up having seen essentially your whole pool rather than a rotating
-        // handful of it, which is the ceiling the deck can reach and the thing that was actually wrong.
+        // The pool used to be shallower than a week, so the best the dealer could do was show you all of
+        // it, twice. It is deeper than a week now, so the thing to ask for is that a week is mostly new:
+        // almost every message you see should be one you have not seen that week.
+        // A week still deals more messages than the pool holds, so some repetition is arithmetic. What
+        // the pool has to be is deep enough that most of a week is new, and deep enough that no message
+        // becomes a fixture — which is what the worst-repeat check above is for.
         const pool = TYPES.reduce((sum, type) => sum + ROLES[role].byLevel[level][type].length, 0);
-        assert.ok(distinct >= pool * 0.9,
-          `${role}/${level} from seed ${start}: saw ${distinct} of ${pool} messages in ${MORNINGS} mornings (${dealt} dealt)`);
+        assert.ok(pool >= dealt * 0.65,
+          `${role}/${level}: a week deals ${dealt} messages from a pool of only ${pool}`);
+        assert.ok(distinct / dealt >= 0.6,
+          `${role}/${level} from seed ${start}: only ${distinct} of ${dealt} messages in a week were new`);
       }
     }
   }

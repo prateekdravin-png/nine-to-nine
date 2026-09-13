@@ -49,6 +49,75 @@
     { from: 'Weather App', avatar: '🌦️', text: 'Rain expected at 5 PM' }
   ];
 
+
+  // ---- Interruptions that reach everybody ----
+  // HR, IT, facilities, finance, legal, the front desk: none of it cares what your job title is, and
+  // all of it lands in the same inbox. These pools are shared by every role, which is also the cheapest
+  // honest way to deepen the game — one message written here is one message added for all five roles,
+  // where a role-specific one is a fifth of that. Roles still hear mostly about their own work.
+  //
+  // They follow the same tells as everything else, so they are split by career level where the tell
+  // differs: shared traps minimise at junior, go politely open-ended at senior, and shout at lead,
+  // while shared emergencies stay calm at lead.
+  const SHARED_URGENT = [
+    { from: 'IT Helpdesk', avatar: '🛠️', text: 'Your laptop certificate expires in 10 minutes', busyText: 'Renewing the certificate…' },
+    { from: 'Security Desk', avatar: '🛡️', text: 'Badge access revoked. Confirm identity now', busyText: 'Proving who you are…' },
+    { from: 'Facilities', avatar: '🏢', text: 'Fire panel fault. Evacuation may be called', busyText: 'Waiting on facilities…' },
+    { from: 'Payroll', avatar: '💰', text: 'Bank details changed. Confirm it was you', busyText: 'Checking with payroll…' },
+    { from: 'IT Security', avatar: '🛡️', text: 'Malware alert on your machine. Disconnect', busyText: 'Disconnecting…' },
+    { from: 'Travel Desk', avatar: '✈️', text: 'Visa appointment today or the trip cancels', busyText: 'On the phone to the embassy…' },
+    { from: 'Legal', avatar: '⚖️', text: 'Client contract clause needs an answer today', busyText: 'Reading the clause…' },
+    { from: 'IT Helpdesk', avatar: '🛠️', text: 'Mandatory patch reboot in five minutes', busyText: 'Saving everything…' },
+    { from: 'Reception', avatar: '💁', text: 'Client waiting downstairs. Nobody told you', busyText: 'Running downstairs…' }
+  ];
+
+  // The same people, on a morning where the real emergencies are the calm ones (lead).
+  const SHARED_LEAD_URGENT = [
+    { from: 'IT Helpdesk', avatar: '🛠️', text: 'Your account has been locked since nine', busyText: 'Unlocking the account…' },
+    { from: 'Security Desk', avatar: '🛡️', text: 'Someone signed in as you from Pune', busyText: 'Checking the sign-in…' },
+    { from: 'Facilities', avatar: '🏢', text: 'The floor loses power for an hour', busyText: 'Preparing for the outage…' },
+    { from: 'Payroll', avatar: '💰', text: 'Half the team has not been paid', busyText: 'Chasing payroll…' },
+    { from: 'Legal', avatar: '⚖️', text: 'The client has not signed the renewal', busyText: 'Following up on the renewal…' },
+    { from: 'HR', avatar: '🗂️', text: 'Two of your team have no laptops', busyText: 'Finding laptops…' },
+    { from: 'Finance', avatar: '💰', text: 'The vendor has stopped work over invoices', busyText: 'Unblocking the vendor…' },
+    { from: 'IT Security', avatar: '🛡️', text: 'A shared folder is open to everyone', busyText: 'Locking the folder…' },
+    { from: 'IT Helpdesk', avatar: '🛠️', text: 'Your mailbox stopped receiving at eight', busyText: 'Fixing the mailbox…' }
+  ];
+
+  const SHARED_TRAP = {
+    junior: [
+    { from: 'HR', avatar: '🗂️', text: 'Quick engagement survey, just 2 minutes?', busyText: 'Filling in the survey…', aftermath: 'The two-minute survey had forty questions.' },
+    { from: 'Admin', avatar: '🏢', text: 'Small favour: confirm your seat number?', busyText: 'Finding your seat number…', aftermath: 'Seating was reshuffled again that afternoon.' },
+    { from: 'Facilities', avatar: '🏢', text: 'Quick walk-through of the new floor?', busyText: 'Walking the new floor…', aftermath: 'The walk-through became a furniture debate.' },
+    { from: 'IT Helpdesk', avatar: '🛠️', text: 'Only 5 mins: test our new tool?', busyText: 'Testing their tool…', aftermath: 'You are the pilot user for it now.' },
+    { from: 'Finance', avatar: '💰', text: 'Tiny thing: re-file last month expenses?', busyText: 'Re-filing expenses…', aftermath: 'Every receipt needed a new code.' },
+    { from: 'Travel Desk', avatar: '✈️', text: 'Quick form for your passport details?', busyText: 'Filling in the travel form…', aftermath: 'The trip was cancelled the next day.' },
+    { from: 'Culture Club', avatar: '🎉', text: 'Just pick a theme for Fun Friday?', busyText: 'Picking a theme…', aftermath: 'You are on the culture committee now.' },
+    { from: 'Intern · Rohit', avatar: '🧑‍🎓', text: 'Got a sec to explain the codebase?', busyText: 'Explaining everything…', aftermath: 'Rohit understands now. Your morning does not.' }
+    ],
+    senior: [
+    { from: 'HR', avatar: '🗂️', text: 'Would you join the culture committee?', busyText: 'Joining the committee…', aftermath: 'You are on the culture committee. Indefinitely.' },
+    { from: 'Admin', avatar: '🏢', text: 'Any thoughts on the seating plan?', busyText: 'Thinking about seating…', aftermath: 'Your thoughts moved nobody, twice.' },
+    { from: 'Facilities', avatar: '🏢', text: 'Could you walk the new floor?', busyText: 'Walking the floor…', aftermath: 'You chose a colour for a wall.' },
+    { from: 'IT Helpdesk', avatar: '🛠️', text: 'Would you pilot our replacement tool?', busyText: 'Piloting the tool…', aftermath: 'You are the pilot. There is a feedback form.' },
+    { from: 'Finance', avatar: '💰', text: 'A view on the expense policy?', busyText: 'Reviewing the policy…', aftermath: 'The policy is unchanged. You are cc-ed forever.' },
+    { from: 'Legal', avatar: '⚖️', text: 'Could we talk through this clause?', busyText: 'Talking through the clause…', aftermath: 'The clause was standard. The call was not.' },
+    { from: 'Culture Club', avatar: '🎉', text: 'Would you host the next town hall?', busyText: 'Preparing to host…', aftermath: 'You are hosting. There are slides to write.' },
+    { from: 'Intern · Rohit', avatar: '🧑‍🎓', text: 'Could we set up a regular catch-up?', busyText: 'Setting up a catch-up…', aftermath: 'It is weekly now, and in your calendar.' },
+    { from: 'Travel Desk', avatar: '✈️', text: 'Any preference on hotels for the trip?', busyText: 'Comparing hotels…', aftermath: 'You compared nine hotels. Finance picked one.' }
+    ],
+    lead: [
+    { from: 'HR', avatar: '🗂️', text: 'URGENT: sign off the training deadline', busyText: 'Signing off training…', aftermath: 'The deadline was in six weeks.' },
+    { from: 'Admin', avatar: '🏢', text: 'Critical: confirm your seat for the audit', busyText: 'Confirming a seat…', aftermath: 'Nobody audited the seating.' },
+    { from: 'Facilities', avatar: '🏢', text: 'Immediate: approve the floor plan changes', busyText: 'Approving floor plans…', aftermath: 'The floor plan changed twice more anyway.' },
+    { from: 'IT Helpdesk', avatar: '🛠️', text: 'ASAP: choose your replacement laptop model', busyText: 'Choosing a laptop…', aftermath: 'Procurement takes eleven weeks regardless.' },
+    { from: 'Finance', avatar: '💰', text: 'Important!! Approve the stationery budget', busyText: 'Approving stationery…', aftermath: 'It was four hundred rupees of pens.' },
+    { from: 'Legal', avatar: '⚖️', text: 'Top priority: initial every policy page', busyText: 'Initialling pages…', aftermath: 'Twenty-two pages. All initialled.' },
+    { from: 'Culture Club', avatar: '🎉', text: 'URGENT: vote on the party venue', busyText: 'Voting on a venue…', aftermath: 'The party is in March.' },
+    { from: 'Intern · Rohit', avatar: '🧑‍🎓', text: 'URGENT: my build is broken again', busyText: 'Fixing their build…', aftermath: 'Rohit had not saved the file.' }
+    ]
+  };
+
   const ROLE_ORDER = ['developer', 'tester', 'analyst', 'support', 'manager'];
 
   const ROLES = {
@@ -525,8 +594,12 @@
     }
   };
 
-  // Every role's small talk includes the shared personal messages.
-  for (const id of ROLE_ORDER) ROLES[id].messages.trivial = ROLES[id].messages.trivial.concat(SHARED_TRIVIAL);
+  // Every role's messages include the ones that reach everybody, at the level whose tell they follow.
+  for (const id of ROLE_ORDER) {
+    ROLES[id].messages.trivial = ROLES[id].messages.trivial.concat(SHARED_TRIVIAL);
+    ROLES[id].messages.urgent = ROLES[id].messages.urgent.concat(SHARED_URGENT);
+    ROLES[id].messages.trap = ROLES[id].messages.trap.concat(SHARED_TRAP.junior);
+  }
 
   // ---- Career levels ----
   // As your career grows, traps stop giving themselves away. The rules and timing never change; only
@@ -899,6 +972,9 @@
   for (const id of ROLE_ORDER) {
     const junior = ROLES[id].messages;
     const career = CAREER[id];
+    career.senior.trap = career.senior.trap.concat(SHARED_TRAP.senior);
+    career.lead.urgent = career.lead.urgent.concat(SHARED_LEAD_URGENT);
+    career.lead.trap = career.lead.trap.concat(SHARED_TRAP.lead);
     ROLES[id].byLevel = {
       junior,
       senior: { urgent: junior.urgent, trivial: junior.trivial, trap: career.senior.trap },
@@ -991,5 +1067,5 @@
     }
   };
 
-  return { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS, SHARED_TRIVIAL, BUSY_TEXT, DAYS, WEEKDAYS, METERS, VERDICTS, BOSSES, EVENTS, FOLLOW_UPS };
+  return { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS, SHARED_TRIVIAL, SHARED_URGENT, SHARED_LEAD_URGENT, SHARED_TRAP, BUSY_TEXT, DAYS, WEEKDAYS, METERS, VERDICTS, BOSSES, EVENTS, FOLLOW_UPS };
 });

@@ -1452,7 +1452,13 @@
       // A week and a practice round both deal recently seen messages last, which matters most in a
       // week: five mornings back to back was the worst case for repeats. The daily morning and a
       // challenge pass none, so they stay identical for everyone who plays them.
-      recent: (kind === 'practice' || kind === 'week') ? loadRecent() : undefined
+      // Practice, the week and the campaign all deal recently seen messages last. It matters most in the
+      // campaign: a level pins its seed so the challenge is learnable, which without this meant a level you
+      // retried five times showed you the same twenty messages five times. History changes only WHICH text
+      // is dealt, never when it arrives or what type it is, so the level stays the identical challenge and
+      // only reads differently. The daily morning and a challenge still pass none, so they are the same for
+      // everyone who plays them.
+      recent: kind === 'daily' || kind === 'challenge' ? undefined : loadRecent()
     });
     holding = false;
     endShown = false;

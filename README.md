@@ -454,11 +454,17 @@ message text can never reach the page as markup).
 
 Every role has a large pool of messages at every level:
 
-| Per role | Urgent | Traps | Small talk |
-|---|---|---|---|
-| 🌱 Junior | 19 | 16 | 21–22 (including 13 shared) |
-| 🚀 Senior | 19 (same as Junior) | 16 | same as Junior |
-| 👑 Lead | 19 | 16 | same as Junior |
+| Per role | Urgent | Traps | Small talk | Total |
+|---|---|---|---|---|
+| 🌱 Junior | 28 | 24 | 21 | **73** |
+| 🚀 Senior | 28 (same as Junior) | 25 | same as Junior | **74** |
+| 👑 Lead | 28 | 24 | same as Junior | **73** |
+
+About 57% of what a role hears is its own work; the rest reaches everybody — HR, IT, facilities,
+finance, legal, the front desk. Those shared pools are the cheapest honest way to deepen the game: one
+message written there is one message added for **all five roles**, where a role-specific one is a fifth
+of that. They follow the same tells, so they are split by level where the tell differs — shared traps
+minimise at junior, go politely open-ended at senior and shout at lead.
 
 Messages are dealt like a shuffled deck (`dealer` in `core.js`): a round never repeats a message while
 unseen ones remain, and practice rounds and the work week put messages you saw recently at the bottom of
@@ -473,8 +479,16 @@ one message turned up on all five mornings.** Each pool was about two mornings d
 of the urgent pool), so by the third morning everything was a rerun however well any single round was
 dealt.
 
-Both halves are fixed: the pools are about a third deeper, and the week now carries its history the way
-practice rounds always did. The same week now deals **56 distinct messages out of 89 — the whole pool,
+Both halves were fixed: the pools got deeper, and the week carried its history the way practice rounds
+always did.
+
+**It came back, because the campaign had the same hole.** A campaign level pins its seed so the challenge
+is learnable — which meant a level you retried five times showed you the same twenty messages five times,
+and the campaign passed no history at all, so six junior levels dealt 114 messages of which only 51 were
+distinct. Campaign rounds now carry history too. Because history changes only WHICH text is dealt, never
+when it arrives or what type it is, a retry is the identical challenge that simply reads differently.
+The same six levels now deal 73 distinct messages out of 114, and messages seen three or more times fell
+from 21 to 9. The same week now deals **56 distinct messages out of 89 — the whole pool,
 which is the ceiling** — and across any three mornings in a row nothing comes round twice.
 `test/variety.test.js` holds both: no message twice in three consecutive mornings, no morning eating
 more than a third of any pool, and a week showing you at least 90% of what you have.

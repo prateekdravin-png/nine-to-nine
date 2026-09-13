@@ -228,22 +228,32 @@ test('roles: every role in the picker is fully defined', () => {
 });
 
 test('roles: a game only ever sends messages written for its role', () => {
-  const shared = new Set(Content.SHARED_TRIVIAL.map(m => m.text));
+  // Everything that reaches everybody: small talk, emergencies and traps from HR, IT, facilities and
+  // the rest. None of it counts toward a role sounding like its own job.
+  const shared = new Set([...Content.SHARED_TRIVIAL, ...Content.SHARED_URGENT, ...Content.SHARED_LEAD_URGENT,
+    ...Content.SHARED_TRAP.junior, ...Content.SHARED_TRAP.senior, ...Content.SHARED_TRAP.lead].map(m => m.text));
   for (const id of ROLE_ORDER) {
     const own = new Set(['urgent', 'trivial', 'trap'].flatMap(type => ROLES[id].messages[type].map(m => m.text)));
     let roleSpecific = 0;
+    let total = 0;
     for (let seed = 1; seed <= 10; seed++) {
       const s = Core.createGame({ seed, role: id });
       while (!s.over) {
         for (const ev of Core.step(s, 0.05, { holding: true })) {
           if (ev.type !== 'spawn' || ev.card.followUp) continue; // follow-ups have their own lines (content.js)
           assert.ok(own.has(ev.card.text), `${id} received a message from another role: "${ev.card.text}"`);
+          total++;
           if (!shared.has(ev.card.text)) roleSpecific++;
         }
         for (const c of s.cards.slice()) Core.act(s, c.id, 'ignore');
       }
     }
-    assert.ok(roleSpecific > 50, `${id} should mostly hear about its own job (${roleSpecific} role messages in 10 runs)`);
+    // A ratio, not a count: this loop ignores every message, so a round ends in a PIP long before noon
+    // and how MANY arrive says more about how fast reputation runs out than about the content. What
+    // matters is the mix — most of what a role hears should be about its own work, with the rest the
+    // things that reach everybody (HR, IT, facilities).
+    assert.ok(roleSpecific / total >= 0.5,
+      `${id} should mostly hear about its own job (${roleSpecific} of ${total} messages were its own)`);
   }
 });
 
@@ -319,7 +329,9 @@ test('design: every role has enough variety, and its urgent and trap messages ar
     assert.ok(urgent.length >= 14 && trap.length >= 14 && trivial.length >= 18, `${id} needs at least 14 urgent, 14 traps and 18 small talk (has ${urgent.length}/${trap.length}/${trivial.length})`);
     const texts = [...urgent, ...trivial, ...trap].map(m => m.text);
     assert.equal(new Set(texts).size, texts.length, `${id} repeats a message`);
-    for (const m of [...urgent, ...trap]) {
+    // Shared messages are deliberately identical everywhere; what must never repeat is a role's OWN work.
+    const sharedHere = new Set([...Content.SHARED_URGENT, ...Content.SHARED_TRAP.junior].map(m => m.text));
+    for (const m of [...urgent, ...trap].filter((m) => !sharedHere.has(m.text))) {
       assert.ok(!seen.has(m.text), `"${m.text}" appears in both ${seen.get(m.text)} and ${id}`);
       seen.set(m.text, id);
     }

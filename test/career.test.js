@@ -70,12 +70,18 @@ test('each level holds to its own tell', () => {
   }
 });
 
-test('urgent and trap messages are unique across every role and level', () => {
+test("a role's own urgent and trap messages are unique across every role and level", () => {
+  const Content = require('../content');
+  // The pools that reach everybody are identical in every role by design, so they are excluded: the
+  // thing this guards is a role's OWN work turning up in someone else's inbox.
+  const shared = new Set([...Content.SHARED_URGENT, ...Content.SHARED_LEAD_URGENT,
+    ...Content.SHARED_TRAP.junior, ...Content.SHARED_TRAP.senior, ...Content.SHARED_TRAP.lead].map((m) => m.text));
   const seen = new Map();
   for (const role of ROLE_ORDER) {
     for (const level of LEVEL_ORDER) {
       const { urgent, trap } = ROLES[role].byLevel[level];
-      const own = level === 'senior' ? trap : [...urgent, ...trap]; // senior reuses junior urgent messages
+      const all = level === 'senior' ? trap : [...urgent, ...trap]; // senior reuses junior urgent messages
+      const own = all.filter((m) => !shared.has(m.text));
       for (const m of own) {
         const where = `${role}/${level}`;
         assert.ok(!seen.has(m.text) || seen.get(m.text) === where, `"${m.text}" appears in ${seen.get(m.text)} and ${where}`);
