@@ -478,11 +478,13 @@
   // up one that is already going. Before that the week lives inside the campaign, so the start screen
   // never offers two unrelated runs of mornings at once.
   function renderWeekCard() {
-    const w = loadWeek();
-    const done = loadCleared();
-    const show = !Campaign.nextFor(done) || (w && !w.over && Campaign.nextFor(done).kind !== 'week');
+    // Only once the ladder is finished. A week already in progress is NOT a reason to show it: that was
+    // the first version of this and it put the two runs of mornings back on screen side by side, which is
+    // the whole thing the week became level 13 to avoid. Nothing is lost — a half-played week is still in
+    // storage, and it is waiting on the level 13 card (with "start the week over") when you get there.
+    const show = !Campaign.nextFor(loadCleared());
     ui.weekCard.hidden = !show;
-    if (show) ui.weekCard.innerHTML = weekBody(w);
+    if (show) ui.weekCard.innerHTML = weekBody(loadWeek());
   }
 
   // The evening: what the morning cost, itemised, before the next one starts.
