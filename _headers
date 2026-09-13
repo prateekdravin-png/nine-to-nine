@@ -1,0 +1,14 @@
+# Cache rules for the deployed copy (Cloudflare Pages reads this from the output directory).
+#
+# no-cache does not mean "do not cache" — it means "check with the server first", so the browser still
+# gets a cheap 304 when nothing changed. It is the right setting for a game that is one screen of small
+# files and is being changed daily: a long max-age on game.js would leave people playing last week's
+# rules with no way to know, and the service worker sits behind the browser's own HTTP cache, so it
+# cannot save them from that either.
+/*
+  Cache-Control: no-cache
+
+# The worker itself most of all: a stale copy of this is a stale copy of everything it caches.
+/sw.js
+  Cache-Control: no-cache
+  Content-Type: text/javascript; charset=utf-8

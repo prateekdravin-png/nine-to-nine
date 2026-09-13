@@ -22,7 +22,8 @@ function shipped() {
     .split(',')
     .map((line) => line.trim().replace(/^['"]|['"]$/g, ''))
     .filter((name) => name && name !== './');
-  return [...new Set(files.concat(['sw.js']))];
+  // Plus the worker itself, which it would never cache, and the host's cache rules.
+  return [...new Set(files.concat(['sw.js', '_headers']))];
 }
 
 function build() {
