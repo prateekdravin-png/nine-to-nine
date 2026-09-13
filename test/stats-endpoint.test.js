@@ -125,6 +125,10 @@ test('both hosting shapes exist, and point at the same code', () => {
   const wrangler = fs.readFileSync(path.join(root, 'wrangler.toml'), 'utf8');
   assert.match(wrangler, /main = "worker\.js"/);
   assert.match(wrangler, /directory = "\.\/dist"/, 'Workers must serve what npm run build assembles');
+  // A KV binding added in the dashboard is wiped by the next deploy, so this file has to declare it;
+  // without it every write answers 503 and the stats quietly stop being collected.
+  assert.match(wrangler, /binding = "STATS"/, 'the config must bind a KV namespace for the events to land in');
+  assert.match(wrangler, /^id = "[0-9a-f]{32}"$/m, 'and name which namespace');
   const entry = fs.readFileSync(path.join(root, 'worker.js'), 'utf8');
   assert.match(entry, /from '\.\/functions\/api\/event\.js'/, 'the worker must reuse the Pages handler, not copy it');
   assert.match(entry, /from '\.\/functions\/api\/events\.js'/);

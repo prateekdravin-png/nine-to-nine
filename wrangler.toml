@@ -3,10 +3,10 @@
 # Only read when the project is a Worker. A Pages project ignores this file entirely and uses
 # functions/api/*.js instead; both end up running the same handlers (see worker.js).
 #
-# Still to do by hand in the dashboard, because neither can be created from a config file:
-#   Settings → Bindings → KV namespace:  variable STATS, bound to a namespace you create
-#   Settings → Variables and Secrets:    STATS_TOKEN, any long random string, kept secret
-# Without them the game plays perfectly and the stats endpoint answers 503.
+# Still to do by hand in the dashboard, because a secret cannot live in a file that is in git:
+#   Settings → Variables and Secrets:  STATS_TOKEN, any long random string, kept secret
+# Without it the game plays perfectly and /api/events answers 503, which is the point: nobody can
+# read the collected stats until there is a token to check against.
 
 name = "nine-to-nine"
 main = "worker.js"
@@ -20,3 +20,10 @@ command = "npm run build"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+
+# Where play events are stored. This belongs here rather than in the dashboard: a binding added by
+# hand there is wiped by the next deploy, because this file is what the deploy considers true.
+# The id is an identifier, not a credential — it is useless to anyone outside the account.
+[[kv_namespaces]]
+binding = "STATS"
+id = "fcedd20407994de39186d66eee360cb2"
