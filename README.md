@@ -10,6 +10,54 @@ The design idea it tests: in real IT work, the coding isn't the hard part. The i
 So the game isn't about typing speed. It's about deciding, fast and under pressure, what deserves
 to break your focus.
 
+## Hosting it
+
+`npm run build` assembles **dist/** — the 15 files the browser actually loads, about 360 KB. The
+server, the simulated players, the balance report and the tests stay out of it. The file list is not
+written twice: `sw.js` already has to name every file for offline caching, so the build reads that list
+and fails if it names something that is not there.
+
+Any static host works. On Cloudflare Pages, point a Git-connected project at the repo with build
+command `npm run build` and output directory `dist`.
+
+### The stats endpoint
+
+A static host has no `/api/event`, and the game is built to shrug that off — the post fails and play
+carries on. To keep the retention numbers, `functions/` holds the same endpoint as a Cloudflare Pages
+Function, storing events in KV instead of `data/events.jsonl`. Cloudflare picks that directory up from
+the repository root; it is deliberately not part of `dist/`.
+
+In the Pages project:
+
+1. **Workers & Pages → KV** → create a namespace, e.g. `nine-to-nine-stats`
+2. **Settings → Functions → KV namespace bindings** → variable `STATS`, bound to that namespace
+3. **Settings → Environment variables** → `STATS_TOKEN`, any long random string, kept secret
+
+Then read the log back the same way you always did:
+
+```
+npm run stats                                          # data/events.jsonl, from npm start
+npm run stats -- --from https://<site> --token <tok>    # the hosted log
+```
+
+Everything below that line is the same code, because it is the same events in the same shape: the
+playtest reads identically whether it ran on your laptop or on the internet.
+
+**Why the token.** The events are anonymous, but they are still the only record of what a playtest did,
+and an open endpoint is one that gets scraped and spammed. With no `STATS_TOKEN` configured the read
+endpoint refuses everything rather than defaulting to open, and the comparison does not short-circuit,
+so how long it takes says nothing about how much of the token was right.
+
+**Why the validation is duplicated.** A Worker has no `require()` and cannot load the game's UMD
+modules, so the endpoint carries its own copy of the role, level and rating lists. A copy that drifts
+is the whole risk and it would drift silently — the local server accepting something the hosted one
+rejects, or the reverse. `test/stats-endpoint.test.js` puts the same twenty-odd payloads through both
+and fails if they ever disagree, and separately checks the copied constants against `content.js`,
+`core.js` and `daily.js`.
+
+`?dev` only works on localhost. It unlocks every career level and exposes `nineDev.advance`, which is a
+tool here and a cheat on a hosted copy — and one that would quietly corrupt a playtest.
+
 ## Taking it to a phone
 
 It is already an installable app: a manifest, a maskable icon, and a service worker that caches every

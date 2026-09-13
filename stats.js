@@ -1,7 +1,12 @@
-// stats.js — do people come back, and do they pass the game on? Reads the anonymous events the server
-// records (data/events.jsonl) and prints, for each morning, how many players showed up, how many
-// finished it and how many came back the next morning, then the challenge funnel: links made, links
-// opened, challenges played. Usage: npm run stats
+// stats.js — do people come back, and do they pass the game on? Reads the anonymous events and prints,
+// for each morning, how many players showed up, how many finished it and how many came back the next
+// morning, then the challenge funnel: links made, links opened, challenges played.
+//
+//   npm run stats                                         the local server's data/events.jsonl
+//   npm run stats -- --from https://<site> --token <tok>   a hosted copy (functions/api/events.js)
+//
+// The two are the same events in the same shape, so everything below this line cannot tell which it
+// was given — the playtest reads the same whether it ran on your laptop or on the internet.
 const fs = require('fs');
 const path = require('path');
 const Daily = require('./daily');
@@ -92,12 +97,42 @@ function summarise(events, today) {
   };
 }
 
-function main() {
-  const events = readEvents(EVENTS_FILE);
+// Pull the whole log out of the hosted endpoint, a page at a time, following its cursor.
+async function fetchEvents(base, token) {
+  const all = [];
+  let cursor = null;
+  do {
+    const url = new URL('/api/events', base);
+    url.searchParams.set('token', token);
+    if (cursor) url.searchParams.set('cursor', cursor);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${url.origin} said ${response.status} ${response.statusText}`);
+    const page = await response.json();
+    all.push(...page.events);
+    cursor = page.cursor;
+  } while (cursor);
+  return all;
+}
+
+function argOf(name) {
+  const at = process.argv.indexOf(`--${name}`);
+  return at === -1 ? null : process.argv[at + 1];
+}
+
+async function main() {
+  const from = argOf('from');
+  const token = argOf('token');
+  if (from && !token) {
+    console.log('\n--from needs --token as well: the hosted endpoint will not hand the events to anyone else.\n');
+    return;
+  }
+  const events = from ? await fetchEvents(from, token) : readEvents(EVENTS_FILE);
   const today = Daily.morningNumber(Date.now());
   console.log(`\n9 to 9 — daily morning: do people come back?   (today is Morning #${today}, ${Daily.morningDate(today)})\n`);
   if (!events.length) {
-    console.log('No plays recorded yet. They land in data/events.jsonl when someone opens the game served by `npm start`.\n');
+    console.log(from
+      ? `No plays recorded yet at ${from}. They land in KV when someone opens the hosted game.\n`
+      : 'No plays recorded yet. They land in data/events.jsonl when someone opens the game served by `npm start`.\n');
     return;
   }
   const r = summarise(events, today);
@@ -128,6 +163,6 @@ function main() {
   console.log('');
 }
 
-if (require.main === module) main();
+if (require.main === module) main().catch((err) => { console.error(`\nCould not read the stats: ${err.message}\n`); process.exitCode = 1; });
 
-module.exports = { EVENTS_FILE, readEvents, summarise };
+module.exports = { EVENTS_FILE, readEvents, fetchEvents, summarise };
