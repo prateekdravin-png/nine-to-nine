@@ -27,10 +27,10 @@ supports both rather than depending on which button was pressed:
 
 | | reads | serves the game from |
 |---|---|---|
-| **Pages** |  by convention | the build output |
-| **Workers** |  →  | the  binding |
+| **Pages** | `functions/api/*.js` by convention | the build output |
+| **Workers** | `wrangler.toml` → `worker.js` | the `ASSETS` binding |
 
-The endpoints are written once.  imports the very same handlers the Pages build uses, so
+The endpoints are written once. `worker.js` imports the very same handlers the Pages build uses, so
 there is one copy of the validation and one copy of the storage whichever product is running, and a
 test fails if it ever stops importing them.
 
