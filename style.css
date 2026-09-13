@@ -45,7 +45,8 @@ kbd {
   height: 100vh;
   height: 100dvh;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* header, the goal bar, the stage, the controls */
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 12px;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   max-width: 1180px;
@@ -306,6 +307,20 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 .bank.spending { animation: bank-spend 0.45s ease; }
 @keyframes bank-spend { 0% { transform: scale(1.18); background: #f5b83d55; } 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .bank.spending { animation: none; } }
+
+/* What the morning is asking for, kept in front of you while you play it. */
+.goal-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 7px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.goal-bar .goal-lead { font: 700 10px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-right: 2px; }
+.goal-chip { display: inline-flex; align-items: center; gap: 5px; font: 600 12px var(--mono); padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); background: #ffffff08; color: #c3cede; white-space: nowrap; }
+.goal-chip.met { border-color: #35c98a66; background: #35c98a1f; color: #d9f7e8; }
+.goal-chip.close { border-color: #ffb45466; background: #ffb4541f; color: #ffd8a8; }
+.goal-chip.failed { border-color: #ff5d6c66; background: #ff5d6c1f; color: #ffc9ce; }
+.goal-chip.failed span { text-decoration: line-through; }
+@media (max-width: 760px) {
+  .goal-bar { padding: 5px 8px; gap: 4px 6px; }
+  .goal-chip { font-size: 11px; padding: 2px 6px; }
+  .goal-bar .goal-lead { display: none; }
+}
 
 /* ---- The campaign ---- */
 .daily.campaign { border-color: #35c98a55; background: linear-gradient(180deg, #35c98a16, #35c98a05); }

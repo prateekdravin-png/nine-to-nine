@@ -23,7 +23,7 @@
   const DEV = params.has('dev');
 
   const ui = {
-    clock: $('clock'), bank: $('bank'), progressMeter: $('progressMeter'), progressLabel: $('progressLabel'), progressFill: $('progressFill'), progressPct: $('progressPct'),
+    clock: $('clock'), bank: $('bank'), goalBar: $('goalBar'), progressMeter: $('progressMeter'), progressLabel: $('progressLabel'), progressFill: $('progressFill'), progressPct: $('progressPct'),
     repMeter: $('repMeter'), repFill: $('repFill'), repVal: $('repVal'), muteBtn: $('muteBtn'),
     stage: document.querySelector('.stage'), scene: $('scene'), dayChip: $('dayChip'), bossChip: $('bossChip'), eventBar: $('eventBar'),
     ide: $('ide'), workFile: $('workFile'), code: $('code'), tierLabel: $('tierLabel'),
@@ -264,6 +264,61 @@
     const selection = window.getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
+  }
+
+  // ---------- what this morning is asking for ----------
+  // Kept on screen while you play, because two of the three things that decide the result — how many
+  // traps you have taken, how many emergencies you have let go — are otherwise invisible until noon.
+  // Nothing here can leak: both counters only move once a message has already been decided, and the
+  // game has always said so out loud at that moment anyway.
+  //
+  // A cheap stand-in for Core.summary(), built once a frame without copying the stats arrays, so the
+  // campaign's goals can be read live against the same tests that judge them at the end.
+  function liveResult() {
+    const rules = game.rules;
+    const delivered = game.progress >= rules.target;
+    const slipped = Object.keys(rules.also || {}).filter((key) => game.stats[key] > rules.also[key]);
+    const key = game.rep <= 0 ? 'pip' : !delivered ? 'missed' : slipped.length ? 'dropped'
+      : game.rep >= rules.goldRep ? 'gold' : game.rep >= 40 ? 'silver' : 'bronze';
+    return {
+      shipped: delivered && !slipped.length, delivered, slipped, rating: { key },
+      endReason: game.over ? game.endReason : null,
+      progress: game.progress, rep: game.rep, target: rules.target, also: rules.also,
+      role: game.role, level: game.level, day: game.day, stats: game.stats
+    };
+  }
+
+  const chip = (state, text) => `<span class="goal-chip ${state}"><span>${escapeHtml(text)}</span></span>`;
+
+  function renderGoalBar() {
+    const s = game;
+    const live = liveResult();
+    const parts = [];
+    // The work itself.
+    const short = Math.max(0, Math.ceil(s.rules.target - s.progress));
+    parts.push(chip(live.delivered ? 'met' : '', live.delivered ? `${progressLabel()} done` : `${short}% to go of ${s.rules.target}%`));
+    // And the rest of the job, counted up as it happens.
+    for (const key of Object.keys(s.rules.also || {})) {
+      const cap = s.rules.also[key];
+      const used = s.stats[key];
+      const state = used > cap ? 'failed' : used === cap ? 'close' : 'met';
+      const word = key === 'trapsTaken' ? 'traps' : 'missed';
+      parts.push(chip(state, `${key === 'trapsTaken' ? '🪤' : '🚨'} ${used}/${cap} ${word}`));
+    }
+    // In the campaign, the level's own goals, ticked off live.
+    if (mode === 'campaign' && levelPlaying) {
+      for (const row of Campaign.check(levelPlaying, live)) {
+        // The delivery chip above already shows this one, and as a live number rather than a tick.
+        if (row.id === 'ship') continue;
+        parts.push(chip(row.done ? 'met' : '', `${row.done ? '✓' : '○'} ${row.label}`));
+      }
+    }
+    const html = '<span class="goal-lead">Goal</span>' + parts.join('');
+    if (ui.goalBar.dataset.html !== html) {
+      ui.goalBar.dataset.html = html;
+      ui.goalBar.innerHTML = html;
+    }
+    ui.goalBar.hidden = false;
   }
 
   // ---------- the campaign ----------
@@ -994,10 +1049,11 @@
     ui.bank.hidden = s.timeBank < 0.05;
     if (!ui.bank.hidden) ui.bank.textContent = `⏳ ${s.timeBank.toFixed(1)}s in hand`;
     if (ui.progressLabel.textContent !== progressLabel()) ui.progressLabel.textContent = progressLabel();
+    renderGoalBar();
     // The bar fills toward the day's target, which is not always 100%: a backlog morning asks for more
     // and an appraisal morning for less, and the meter has to mean the same thing on all of them.
     ui.progressFill.style.width = `${Math.min(100, (s.progress / s.rules.target) * 100)}%`;
-    ui.progressPct.textContent = `${Math.floor(s.progress)}%`;
+    ui.progressPct.textContent = `${Math.floor(s.progress)}% / ${s.rules.target}%`;
     ui.progressMeter.classList.toggle('done', s.progress >= s.rules.target);
     ui.repFill.style.width = `${s.rep}%`;
     ui.repFill.dataset.level = s.rep >= 70 ? 'high' : s.rep >= 40 ? 'mid' : 'low';
@@ -1395,6 +1451,7 @@
     ui.startScreen.hidden = true;
     ui.endScreen.hidden = true;
     ui.nightScreen.hidden = true;
+    ui.goalBar.dataset.html = ''; // rebuilt on the first frame of the new morning
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     render();
   }

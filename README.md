@@ -87,6 +87,12 @@ junior morning separated good play from bad as sharply as a lead one, there woul
 promoted *into*. `test/timebank.test.js` fails if that margin ever stops widening as you are promoted,
 and `test/days.test.js` fails if a level stops asking for less than the one above it.
 
+While you play, a **goal bar** under the header keeps all of it in front of you: how much of the work
+is left, and how many traps and missed emergencies you have spent out of your allowance, counting up as
+they happen. In the campaign the level's own goals sit there too, ticked off live. Neither counter can
+leak anything — both only move once a message has already been decided, which the game announces at
+that moment anyway.
+
 One day type had to be retuned for this: **working from home** used to ask for 95%, the gentlest number
 in the game. With a junior's share applied that fell to 76%, and answering every message blindly became
 a viable way to spend a quiet morning. It now asks for **105%** — more than an ordinary day, not less.
