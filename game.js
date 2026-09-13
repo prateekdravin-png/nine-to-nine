@@ -88,6 +88,12 @@
   const capitalise = (str) => str.charAt(0).toUpperCase() + str.slice(1);
   const currentRole = () => ROLES[game ? game.role : role];
   const currentDay = () => DAYS[game ? game.day : 'normal'] || DAYS.normal;
+  // "and drop no more than two traps" — the rest of the job, in the words the screens use for it.
+  const ALSO_WORDS = {
+    trapsTaken: (n) => `fall for no more than ${n} trap${n === 1 ? '' : 's'}`,
+    urgentMissed: (n) => (n === 0 ? 'miss nothing urgent' : `miss no more than ${n} urgent`)
+  };
+  const alsoText = (also) => Object.keys(also || {}).map((k) => (ALSO_WORDS[k] ? ALSO_WORDS[k](also[k]) : k)).join(', ');
   // What the deliverable is called: usually the role's, but a backlog morning isn't building a feature.
   const progressLabel = () => currentDay().progressLabel || currentRole().progressLabel;
   const eventName = (id) => `${EVENTS[id].emoji} ${EVENTS[id].title.replace(/!$/, '')}`;
@@ -192,7 +198,7 @@
     const plan = Core.planMorning(Daily.seedFor(n));
     const boss = BOSSES[plan.boss];
     const day = DAYS[plan.day];
-    const rules = Core.rulesFor(plan.day); // what today actually asks of you, so the card can say it
+    const rules = Core.rulesFor(plan.day, null, level); // what today asks of you at your level
     renderedMorning = n;
     if (rec) {
       // Sharing lives on the result screen only; the menu just confirms today's morning is done.
@@ -205,7 +211,7 @@
         `<p class="daily-sub"><b>${day.emoji} ${escapeHtml(day.label)}</b> — ${escapeHtml(day.summary)}<br>` +
         `Today's boss: <b>${boss.emoji} ${escapeHtml(boss.label)}</b> — ${escapeHtml(boss.summary)}<br>` +
         'Everyone gets the same morning today, whatever their role or level. Your first finished run is the one you share.</p>' +
-        `<p class="day-note">🎯 ${escapeHtml(day.goal)} You need <b>${rules.target}%</b> and a reputation of <b>${rules.goldRep}</b> for a 🥇.</p>` +
+        `<p class="day-note">🎯 ${escapeHtml(day.goal)} As a ${LEVELS[level].emoji} ${escapeHtml(LEVELS[level].label)} you need <b>${rules.target}%</b>${alsoText(rules.also) ? ` and to ${escapeHtml(alsoText(rules.also))}` : ''}, plus a reputation of <b>${rules.goldRep}</b> for a 🥇.</p>` +
         `<button class="primary" type="button" id="dailyBtn">Play Morning #${n}${pendingInvite() ? '' : ' <kbd>Enter</kbd>'}</button>`;
     }
     ui.practiceKbd.hidden = !rec || pendingInvite(); // once today's morning is done, Enter goes to practice
@@ -633,7 +639,8 @@
     }
     ui.roleDesc.textContent = `${r.emoji} ${r.label}: ${r.tagline}`;
     ui.startLede.textContent = `It's 10:00 AM. ${r.goal} Everyone else has other plans for your morning.`;
-    ui.startGoal.textContent = `Goal: get the ${r.deliverable.noun} ${r.deliverable.done} with your reputation intact. How much of it, and how much reputation, depends on the kind of morning — it's on the card below.`;
+    const demand = Core.rulesFor('normal', null, level);
+    ui.startGoal.textContent = `Goal: get the ${r.deliverable.noun} ${r.deliverable.done} with your reputation intact. As a ${LEVELS[level].label.toLowerCase()} that means about ${demand.target}% of it${alsoText(demand.also) ? `, and to ${alsoText(demand.also)}` : ''} — the bar rises with your career, and each kind of morning moves it again.`;
     document.querySelectorAll('[data-role-verb]').forEach((el) => { el.textContent = r.verb; });
     ui.progressLabel.textContent = r.progressLabel;
     ui.endProgressLabel.textContent = r.progressLabel;
@@ -1186,9 +1193,11 @@
     ui.endScore.textContent = result.score;
     ui.endProgressLabel.textContent = DAYS[result.day].progressLabel || r.progressLabel;
     ui.endProgress.textContent = `${Math.floor(result.progress)}% / ${result.target}%`;
+    ui.endProgress.title = `A ${LEVELS[result.level].label.toLowerCase()} is asked for ${result.target}% of this morning; a lead would be asked for ${Math.round(result.target / Core.TUNING.LEVEL_DEMAND[result.level].share)}%.`;
     ui.endRep.textContent = Math.round(result.rep);
     const rows = [
       ['🗓️ Kind of morning', `${DAYS[result.day].emoji} ${DAYS[result.day].label}`],
+      ['🎯 Asked of you', `${result.target}%${alsoText(result.also) ? `, ${alsoText(result.also)}` : ''}`],
       ['🧑‍💼 Boss of the day', `${boss.emoji} ${boss.label}`],
       ['🏢 Office events', result.events.map(eventName).join(', ') || 'none'],
       ['⚡ Time in Deep Work', `${st.deepWorkTime.toFixed(1)}s`],

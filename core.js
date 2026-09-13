@@ -80,6 +80,21 @@
     // wrecks your focus too, so the blanket strategy fails on its own without making one polite no
     // expensive. Both costs are identical for every type of message, so neither says what it was.
     DECLINE: { rep: -4, busy: 0.5 },
+    // What finishing means, by career level. Asking a junior for the same hundred per cent as a lead was
+    // never realistic — nobody delivers a whole feature in a morning full of interruptions, and at the
+    // start of a career nobody expects you to. What grows with the career is both halves of the job: the
+    // share of the work you are expected to land, and whether anything else is allowed to slip while you
+    // land it. A junior who gets most of it done has had a good morning. A lead is expected to get all of
+    // it done AND to have dropped nothing on the way, which is the actual difference between the two.
+    //
+    // `share` multiplies the day type's number, so a backlog day still asks for more than an ordinary one
+    // at every level. `also` is the rest of the job: limits that have to hold before the work counts as
+    // finished at all.
+    LEVEL_DEMAND: {
+      junior: { share: 0.85, also: { trapsTaken: 3 } },
+      senior: { share: 0.9,  also: { trapsTaken: 2, urgentMissed: 2 } },
+      lead:   { share: 1.0,  also: { trapsTaken: 1, urgentMissed: 0 } }
+    },
     // Day types. The rules never change; what changes is what the morning is FOR, and that turns out
     // to be enough to change how you play it. A normal morning rewards protecting your focus. On an
     // appraisal day nothing you build matters next to who saw you ignore them. On a backlog day there
@@ -99,7 +114,10 @@
       // rate, so the only thing that hurts is time spent not working.
       backlog:   { weight: 2, target: 105, goldRep: 70, tiers: [{ min: 0, mult: 1, name: 'Chipping away' }], progressPerS: 2.4 },
       // Half the office can't reach you, and it turns out the interruptions were never the hard part.
-      wfh:       { weight: 2, target: 95, goldRep: 70, spawnScale: 1.45, flowGain: 0.7, flowDecayIdle: 1.35 },
+      // It asks for MORE than an ordinary morning, not less: you have been given the quiet, so the day
+      // expects you to use it. At the old, gentler number, answering every message blindly was a viable
+      // way to spend a quiet morning, which is the one thing no day type is allowed to reward.
+      wfh:       { weight: 2, target: 105, goldRep: 70, spawnScale: 1.45, flowGain: 0.7, flowDecayIdle: 1.35 },
       // Ship day: most of what lands really is on fire.
       release:   { weight: 1, target: 95, goldRep: 70, weights: { urgent: 0.45, trivial: 0.2, trap: 0.35 }, respond: { urgent: { busy: 1.6, rep: 11 } }, ignore: { urgent: -20, trivial: 0, trap: 0 } }
     },
@@ -221,9 +239,10 @@
   // and act() read s.rules and never ask which day type they are on.
   // carry: what a run of mornings brings with it (week.js) — being tired changes how focus behaves and
   // nothing else, so a week can never quietly rewrite the rules of a morning.
-  function rulesFor(dayId, carry) {
+  function rulesFor(dayId, carry, career) {
     const day = TUNING.DAYS[dayId] || TUNING.DAYS[DEFAULT_DAY];
     const c = carry || {};
+    const demand = TUNING.LEVEL_DEMAND[career] || TUNING.LEVEL_DEMAND[DEFAULT_LEVEL];
     const perType = (base, over) => {
       const out = {};
       for (const type of Object.keys(base)) out[type] = Object.assign({}, base[type], (over || {})[type]);
@@ -231,7 +250,9 @@
     };
     return {
       day: TUNING.DAYS[dayId] ? dayId : DEFAULT_DAY,
-      target: day.target,
+      target: Math.round(day.target * demand.share),
+      fullTarget: day.target, // what the day asks of a lead, for the screens that compare the two
+      also: demand.also,
       goldRep: day.goldRep,
       // Being tired doesn't only slow the climb, it puts the top of the ladder out of reach: past a
       // point you cannot get into deep work at all, however long you hold the button. Slower gain
@@ -438,7 +459,7 @@
     const plan = planMorning(seed);
     // o.day pins the kind of morning instead of taking the seed's. Play never passes it: a daily morning
     // has to be the same for everyone. The tests and the balance report use it to hold one thing still.
-    const rules = rulesFor(o.day || plan.day, o.carry);
+    const rules = rulesFor(o.day || plan.day, o.carry, level);
     return {
       seed,
       role,
@@ -867,6 +888,7 @@
   const RATINGS = {
     pip: { key: 'pip', emoji: '📉' },
     missed: { key: 'missed', emoji: '⏰' },
+    dropped: { key: 'dropped', emoji: '🧩' },
     gold: { key: 'gold', emoji: '🥇' },
     silver: { key: 'silver', emoji: '🥈' },
     bronze: { key: 'bronze', emoji: '🥉' }
@@ -882,6 +904,7 @@
     const text = {
       pip: { title: 'Put on a PIP', blurb: 'Too many urgent messages went unanswered. HR would like a quick call.' },
       missed: { title: 'Missed the deadline', blurb: `The ${noun} didn't make it. There will be a meeting about this.` },
+      dropped: { title: 'Delivered, but things slipped', blurb: `The ${noun} is ${done}. Some of the rest of your job is not.` },
       gold: { title: `${capitalise(done)} & respected`, blurb: `${capitalise(noun)} ${done}, and the team still likes you.` },
       silver: { title: capitalise(done), blurb: `${capitalise(noun)} ${done}. A few people are slightly annoyed.` },
       bronze: { title: `${capitalise(done)}, but at what cost`, blurb: `It's ${done}. Your boss has "some feedback".` }
@@ -889,11 +912,20 @@
     return Object.assign({}, RATINGS[key], text);
   }
 
+  // Everything the career level asks for besides the work itself, and what fell short.
+  function slipped(s) {
+    const also = s.rules.also || {};
+    return Object.keys(also).filter((key) => s.stats[key] > also[key]);
+  }
+
   function summary(s) {
-    const shipped = s.progress >= s.rules.target;
+    const delivered = s.progress >= s.rules.target;
+    const missing = slipped(s);
+    const shipped = delivered && !missing.length;
     let key;
     if (s.endReason === 'pip') key = 'pip';
-    else if (!shipped) key = 'missed';
+    else if (!delivered) key = 'missed';
+    else if (missing.length) key = 'dropped'; // the work landed; something else did not
     else if (s.rep >= s.rules.goldRep) key = 'gold';
     else if (s.rep >= 40) key = 'silver';
     else key = 'bronze';
@@ -909,6 +941,9 @@
       boss: s.boss,
       events: s.events.map((e) => e.id),
       progress: s.progress,
+      delivered: s.progress >= s.rules.target,
+      slipped: slipped(s),
+      also: s.rules.also,
       rep: s.rep,
       timeBank: s.timeBank,
       endReason: s.endReason,

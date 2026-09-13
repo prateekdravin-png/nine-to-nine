@@ -202,6 +202,29 @@ console.log(`   A run of ${TUNING.TIME_BONUS.run} right calls in a row banks ${T
   verbRow2('answers absolutely everything', 'Respond to everything');
 }
 
+console.log('\n10) THE CAREER LADDER — is each level asking for the right amount?');
+console.log('   A junior is asked for most of the work and forgiven a few mistakes; a lead for all of it and');
+console.log('   almost nothing forgiven. The margin for reading well should WIDEN as the bar rises.\n');
+{
+  const ALSO = { trapsTaken: 'traps', urgentMissed: 'missed' };
+  console.log('level   asks for                      reading  answering-everyone  margin | a reader at 95% / 85%');
+  console.log('\u2500'.repeat(108));
+  for (const level of LEVEL_ORDER) {
+    const demand = TUNING.LEVEL_DEMAND[level];
+    const asks = `${Math.round(TUNING.DAYS.normal.target * demand.share)}%` +
+      Object.keys(demand.also).map((k) => `, \u2264${demand.also[k]} ${ALSO[k] || k}`).join('');
+    const reading = evaluate('Perfect reader', seeds, { day: PLAIN, level }).goldRate;
+    const answering = evaluate('Sociable reader: answers all but traps', seeds, { day: PLAIN, level }).goldRate;
+    const good = evaluateHuman('First-time player', seeds, { accuracy: 0.95, day: PLAIN, level }).goldRate;
+    const shaky = evaluateHuman('First-time player', seeds, { accuracy: 0.85, day: PLAIN, level }).goldRate;
+    console.log(
+      `${LEVELS[level].emoji} ${LEVELS[level].label}`.padEnd(12) + asks.padEnd(30) +
+        pct(reading) + pct(answering).padStart(20) + pct(reading - answering).padStart(8) + ' |' +
+        pct(good).padStart(12) + ' /' + pct(shaky)
+    );
+  }
+}
+
 console.log('\nWhat healthy looks like:');
 console.log('  1) both naive strategies fail, perfect play ships reliably, and every drop in accuracy costs something.');
 console.log('  2) in EVERY role, a first-time player loses almost nothing before they can read it (the frustrating kind');
@@ -210,6 +233,9 @@ console.log('  3) using favours scores higher than ignoring all small talk, but 
 console.log('     a worse reader with them: favours reward being a decent colleague, not replace reading messages well.');
 console.log('  4) understanding the messages works at every level, "quick means trap" works only at junior, and trusting');
 console.log('     alarm words fails at lead. How much harder levels feel to real people is for playtesting to show.');
+console.log('  10) every level is reachable by a reader good enough for it and out of reach of one who is not, and the');
+console.log('      margin for reading well widens as you are promoted. If a junior morning separated the two as');
+console.log('      sharply as a lead one, there would be nothing to be promoted INTO.');
 console.log('  9) the bonus goes to players who read well and stays out of reach of players who do not: a reader who');
 console.log('     falls for every trap should almost never collect it, because a trap taken ends the run. It must never');
 console.log('     narrow the margin between reading the messages and not reading them.');

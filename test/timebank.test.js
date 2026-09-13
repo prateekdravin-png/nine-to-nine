@@ -112,11 +112,23 @@ test('it does not reach a player who is falling for traps', () => {
   assert.ok(gold <= 0.1, `a reader who falls for every trap reached gold ${gold} of the time`);
 });
 
-test('reading the messages still beats answering everyone, by more than the bonus is worth', () => {
-  const reading = evaluate('Perfect reader', seeds, { day: 'normal' }).goldRate;
-  const answering = evaluate('Sociable reader: answers all but traps', seeds, { day: 'normal' }).goldRate;
-  assert.ok(reading - answering >= 0.4,
-    `the margin for reading well should stay wide (${reading} against ${answering})`);
+// The margin for reading well is a career ladder: a junior is asked for most of the work and forgiven a
+// few mistakes, so the two ways of playing sit closer together; a lead is asked for all of it and
+// forgiven almost nothing, so they come apart. What must never happen is the margin closing at the top,
+// or narrowing as you are promoted.
+test('reading the messages beats answering everyone, by more the further up you go', () => {
+  const margin = (level) => {
+    const reading = evaluate('Perfect reader', seeds, { day: 'normal', level }).goldRate;
+    const answering = evaluate('Sociable reader: answers all but traps', seeds, { day: 'normal', level }).goldRate;
+    return reading - answering;
+  };
+  const junior = margin('junior');
+  const senior = margin('senior');
+  const lead = margin('lead');
+  assert.ok(junior >= 0.2, `even a junior morning should reward reading (${junior.toFixed(2)})`);
+  assert.ok(senior > junior, `senior should separate them further (${senior.toFixed(2)} against ${junior.toFixed(2)})`);
+  assert.ok(lead > senior, `and lead further still (${lead.toFixed(2)} against ${senior.toFixed(2)})`);
+  assert.ok(lead >= 0.4, `at the top the margin should be wide (${lead.toFixed(2)})`);
 });
 
 test('the seconds are worth something to a player who earns them', () => {

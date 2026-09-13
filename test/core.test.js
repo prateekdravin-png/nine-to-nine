@@ -153,12 +153,23 @@ test('the session ends at the time limit', () => {
   assert.equal(s.endReason, 'time');
 });
 
-test('ratings follow finishing the work first, then reputation', () => {
-  const at = (progress, rep) => Object.assign(quiet(), { progress, rep, over: true, endReason: 'time' });
+test('ratings follow the work, then the rest of the job, then reputation', () => {
+  const at = (progress, rep, stats) => Object.assign(quiet(), { progress, rep, over: true, endReason: 'time' },
+    stats ? { stats: Object.assign(quiet().stats, stats) } : {});
   assert.equal(Core.summary(at(120, 80)).rating.key, 'gold');
   assert.equal(Core.summary(at(120, 50)).rating.key, 'silver');
   assert.equal(Core.summary(at(120, 20)).rating.key, 'bronze');
-  assert.equal(Core.summary(at(90, 95)).rating.key, 'missed');
+  assert.equal(Core.summary(at(50, 95)).rating.key, 'missed', 'not enough of the work is still a miss');
+  // A junior is asked for most of the work, not all of it.
+  const junior = Core.createGame({ seed: 1, day: 'normal', level: 'junior' });
+  assert.ok(junior.rules.target < 100, `a junior should not be asked for the whole feature (${junior.rules.target}%)`);
+  assert.equal(Core.rulesFor('normal', null, 'lead').target, 100, 'a lead is');
+  // Landing the work while dropping the rest of the job is its own result, not a silver.
+  const dropped = Core.summary(at(120, 80, { trapsTaken: 99 }));
+  assert.equal(dropped.rating.key, 'dropped');
+  assert.ok(dropped.delivered, 'the work itself did land');
+  assert.ok(!dropped.shipped, 'but the morning does not count as finished');
+  assert.deepEqual(dropped.slipped, ['trapsTaken'], 'and it should say what slipped');
 });
 
 test('arrivals stay calm through the opening and tighten toward the finish', () => {

@@ -42,10 +42,55 @@ It listens on your network too, so you can playtest on your phone at `http://<th
   family) and they owe you one, up to 3. Tap 🤝 on any message to pass it to them, even while you're
   stuck on a call. They'll handle a real emergency for you (no call, no lost focus, +5 rep); on anything
   else the favour is wasted, and a trap sends *them* into the "2-minute call".
-- Finish your deliverable (100%) by the end of the morning with your reputation intact.
+- Finish the work by the end of the morning with your reputation intact. How much of it counts as
+  finished depends on your career level: about 85% for a junior, all of it for a lead, plus limits on
+  what else may slip. Each kind of morning moves that number again.
 
 Keys: `1`–`5` pick a role (start screen) · `Space` hold to work · `R` respond · `N` say no · `X` ignore · `P` peek ·
 `D` pass to a colleague · `H` headphones · `M` sound. Keys act on the notification closest to expiring, which is outlined.
+
+## What finishing means, by career level
+
+Asking a junior for the same hundred per cent as a lead was never realistic. Nobody delivers a whole
+feature in a morning full of interruptions, and at the start of a career nobody expects you to. What
+grows with the career is **both halves of the job**: the share of the work you are expected to land, and
+whether anything else is allowed to slip while you land it.
+
+| | Deliver | And also | A reader at 95% / 85% reaches gold |
+|---|---|---|---|
+| 🌱 Junior | **85%** | fall for no more than 3 traps | 95% / 72% |
+| 🚀 Senior | **90%** | ≤2 traps, miss no more than 2 urgent | 91% / 68% |
+| 👑 Lead | **100%** | ≤1 trap, miss nothing urgent | 64% / 26% |
+
+The share multiplies the day type's own number, so a backlog day still asks for more than an ordinary
+one at every level — a junior's backlog day is 89%, a lead's is 105%. Landing the work while dropping
+the rest of the job has its own result, **🧩 Delivered, but things slipped**, rather than being filed as
+a silver: the feature shipped, some of your job did not.
+
+**Lowering the bar alone breaks the game, which is the interesting part.** The delivery target was doing
+the work of making interruptions expensive. Drop it to 80% with nothing in its place and *answering every
+message blindly* goes from 43% gold to 86% — the strategy the whole game argues against becomes viable,
+because its only weakness was running out of time. That is what the "and also" column is for, and why it
+exists at every level rather than only at the top.
+
+The result is a ladder that gets more discriminating as you climb (`npm run sim`, section 10):
+
+```
+level      asks for                 reading  answering-everyone  margin
+🌱 Junior   85%, ≤3 traps               99%                 76%     24%
+🚀 Senior   90%, ≤2 traps, ≤2 missed    99%                 67%     32%
+👑 Lead     100%, ≤1 trap, 0 missed     96%                 44%     52%
+```
+
+A junior morning forgives a lot and still rewards reading; a lead morning forgives almost nothing. If a
+junior morning separated good play from bad as sharply as a lead one, there would be nothing to be
+promoted *into*. `test/timebank.test.js` fails if that margin ever stops widening as you are promoted,
+and `test/days.test.js` fails if a level stops asking for less than the one above it.
+
+One day type had to be retuned for this: **working from home** used to ask for 95%, the gentlest number
+in the game. With a junior's share applied that fell to 76%, and answering every message blindly became
+a viable way to spend a quiet morning. It now asks for **105%** — more than an ordinary day, not less.
+Its card always did say *"all the quiet you wanted. Now use it."*
 
 ## The campaign: the game as a ladder
 
@@ -275,12 +320,15 @@ change how you play it. Which kind you get comes from the seed, like the boss, s
 on a daily morning — and it's named on the card before you play, because a day type you only discover
 afterwards is just bad luck.
 
-| | | What it asks | What it changes |
+Each number below is what the day asks of a **lead**; a junior is asked for 85% of it and a senior 90%
+(see the career ladder above).
+
+| | | Asks a lead for | What it changes |
 |---|---|---|---|
 | 🗓️ | **A normal morning** | 100%, 70 rep | The mix you already know |
 | 📋 | **Appraisal week** | 80%, **88 rep** | Everyone is watching: unanswered small talk now costs you too |
 | 🗃️ | **Backlog day** | **105%**, 70 rep | No deep end at all — flow multipliers gone, the work pays flat and fast |
-| 🏠 | **Working from home** | 95%, 70 rep | Half the interruptions, and focus builds slower and drains faster |
+| 🏠 | **Working from home** | **105%**, 70 rep | Half the interruptions, and focus builds slower and drains faster |
 | 🚀 | **Release day** | 95%, 70 rep | Mostly real emergencies, and they count double both ways |
 
 **The test that matters is whether the best way to play changes.** If one strategy won every kind of

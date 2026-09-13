@@ -49,6 +49,16 @@ test('over many mornings every kind turns up, and ordinary ones are the most com
 });
 
 // The claim the whole feature rests on.
+test('a day type asks a junior for less of it than a lead, in the same proportion', () => {
+  for (const day of Core.DAY_ORDER) {
+    const junior = Core.rulesFor(day, null, 'junior').target;
+    const senior = Core.rulesFor(day, null, 'senior').target;
+    const lead = Core.rulesFor(day, null, 'lead').target;
+    assert.ok(junior < senior && senior < lead, `${day}: the bar should rise with the career (${junior}/${senior}/${lead})`);
+    assert.strictEqual(lead, Core.TUNING.DAYS[day].target, `${day}: a lead is asked for the whole of it`);
+  }
+});
+
 test('the best way to play changes with the kind of morning', () => {
   const normalReading = gold(READING, 'normal');
   const normalSociable = gold(SOCIABLE, 'normal');
@@ -85,7 +95,7 @@ test('naive play fails on every kind of morning', () => {
 });
 
 test('a day type only ever changes the knobs, never adds a rule of its own', () => {
-  const allowed = ['day', 'target', 'goldRep', 'tiers', 'progressPerS', 'flowGain', 'flowDecayIdle', 'flowDecayBusy', 'spawnScale', 'weights', 'respond', 'ignore'];
+  const allowed = ['day', 'target', 'fullTarget', 'also', 'goldRep', 'tiers', 'progressPerS', 'flowGain', 'flowDecayIdle', 'flowDecayBusy', 'spawnScale', 'weights', 'respond', 'ignore'];
   for (const id of Core.DAY_ORDER) {
     assert.deepStrictEqual(Object.keys(Core.rulesFor(id)).sort(), allowed.slice().sort(),
       `${id} resolved to a different shape of rules`);
