@@ -6,3 +6,9 @@ data/
 
 # the deployable copy, assembled by npm run build
 dist/
+
+# anything holding a token or key stays on this machine
+secret_key.txt
+*.key
+.env
+.env.*
