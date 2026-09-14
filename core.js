@@ -155,6 +155,30 @@
     PERSONAL_BUSY: 1.8,
     PEEK_FLOW_COST: 18,        // variant B only: reading a collapsed message costs focus
     HEADPHONES: { charges: 1, duration: 10 },
+    // Perks: one small edge a campaign morning can be started with (rewards.js names them and says which
+    // level unlocks each). Every one is checked against the player who answers without reading, since
+    // anything that softens a mistake is a candidate for paying people to stop reading.
+    //   coffee      the first few emergencies you take yourself do not drain your focus while you are on them
+    //   headphones  one extra go with the headphones
+    //   cover       the first trap you take is over sooner and does not reset your focus. The one place a
+    //               trap is ever softened, and exactly once, so it forgives a slip and not a habit
+    //
+    // The rule, in test/rewards.test.js: a perk may narrow the gold-rate gap between a 90% reader and a
+    // player who answers everything unread by at most 12 points at any career level, must be worth at least
+    // 20 points to an 80% reader, and no campaign level may fall to its naive player carrying it. Where
+    // these numbers came from:
+    //   coffee      3 calls let "respond to everything" clear Release day; 2 does not, and is worth +43.
+    //   cover       over at the 1.1s floor it also cleared Release day for that player; keeping only your
+    //               focus was safe but worth +13. At 3s: gap -2, worth +35, nothing falls.
+    //   headphones  a second full pair narrowed the gap by 23 points at junior, and two back to back over
+    //               the finish cleared Appraisal for a player who ignores every colleague. A 6s spare that
+    //               cannot go on for 15s after the first comes off: worst case -6, worth +24, nothing falls
+    //               however the two are timed. A 10s spare with the same wait still narrowed it by 14.
+    PERKS: {
+      coffee: { urgentCalls: 2 },
+      headphones: { extraCharges: 1, spareDuration: 6, cooldown: 15 },
+      cover: { traps: 1, busy: 3 }
+    },
     // Colleague favours. Answering small talk from a colleague (a person, not a bot, a group chat or
     // family) banks a favour from them; passing a message on spends the oldest one. On something
     // genuinely urgent they handle it: no call, no lost focus, a little credit, and it works even while
@@ -460,6 +484,8 @@
     // o.day pins the kind of morning instead of taking the seed's. Play never passes it: a daily morning
     // has to be the same for everyone. The tests and the balance report use it to hold one thing still.
     const rules = rulesFor(o.day || plan.day, o.carry, level);
+    if (o.perk && !TUNING.PERKS[o.perk]) throw new Error(`Unknown perk: ${o.perk}`);
+    const perk = o.perk || null;
     return {
       seed,
       role,
@@ -490,7 +516,10 @@
       nextArrival: 0,
       pending: [],    // follow-ups and escalations on their way: { at, type, msg }
       followUpsSent: { trap: 0, urgent: 0 },
-      headphones: { charges: TUNING.HEADPHONES.charges, activeUntil: 0 },
+      headphones: { charges: TUNING.HEADPHONES.charges + (perk === 'headphones' ? TUNING.PERKS.headphones.extraCharges : 0), activeUntil: 0 },
+      perk,
+      perkLeft: perk === 'coffee' ? TUNING.PERKS.coffee.urgentCalls : perk === 'cover' ? TUNING.PERKS.cover.traps : 0,
+      flowHeldUntil: 0, // a perk can keep your focus from draining while you are on one particular call
       favours: [], // names of colleagues who owe you one, oldest first
       shipped: false,
       tierName: rules.tiers[0].name,
@@ -498,7 +527,7 @@
         urgentHandled: 0, urgentMissed: 0,
         trapsTaken: 0, trapsDodged: 0,
         trivialAnswered: 0, trivialIgnored: 0,
-        peeks: 0, cardsSeen: 0, headphonesUsed: 0,
+        peeks: 0, cardsSeen: 0, headphonesUsed: 0, perkUsed: 0,
         favoursBanked: 0, favoursUsed: 0, urgentDelegated: 0,
         followUps: 0, escalations: 0, walkbyPassed: 0, walkbyCaught: 0, rescues: 0,
         declined: 0, personalAnswered: 0, personalIgnored: 0, timeWon: 0, timeSaved: 0, bestRun: 0,
@@ -675,7 +704,8 @@
       const distracted = s.cards.length >= TUNING.DISTRACTED_AT;
       s.flow = Math.min(100, s.flow + s.rules.flowGain * dt * (distracted ? TUNING.DISTRACTED_FACTOR : 1));
     } else {
-      const decay = (busy ? s.rules.flowDecayBusy : s.rules.flowDecayIdle) * (drill ? TUNING.EVENTS.drill.focusDrain : 1);
+      const held = busy && s.t < s.flowHeldUntil;
+      const decay = held ? 0 : (busy ? s.rules.flowDecayBusy : s.rules.flowDecayIdle) * (drill ? TUNING.EVENTS.drill.focusDrain : 1);
       s.flow = Math.max(0, s.flow - decay * dt);
     }
     s.stats.peakFlow = Math.max(s.stats.peakFlow, s.flow);
@@ -847,12 +877,21 @@
     const saved = canSpend ? Math.min(s.timeBank, Math.max(0, wanted - TUNING.TIME_BONUS.minBusy)) : 0;
     s.timeBank -= saved;
     s.stats.timeSaved += saved;
-    const busy = wanted - saved;
+    let busy = wanted - saved;
+    // A perk, if one was taken into this morning and has uses left. See TUNING.PERKS.
+    let perkUsed = null;
+    if (s.perkLeft > 0 && ((s.perk === 'coffee' && card.type === 'urgent') || (s.perk === 'cover' && card.type === 'trap'))) {
+      s.perkLeft--;
+      s.stats.perkUsed++;
+      perkUsed = s.perk;
+      if (s.perk === 'cover' && TUNING.PERKS.cover.busy != null) busy = Math.min(busy, TUNING.PERKS.cover.busy);
+    }
     s.busyUntil = s.t + busy;
+    s.flowHeldUntil = perkUsed ? s.busyUntil : 0;
     s.busyDuration = busy;
     s.busyText = msg.busyText || Content.BUSY_TEXT[card.type];
     s.busyType = card.type;
-    if (eff.flowToZero) s.flow = 0;
+    if (eff.flowToZero && perkUsed !== 'cover') s.flow = 0;
     let favour = null;
     let favourFull = false;
     if (card.type === 'urgent') s.stats.urgentHandled++;
@@ -871,15 +910,19 @@
       }
     }
     decide(s, card, 'respond', events);
-    events.push({ type: 'respond', card, rep: eff.rep, busy, saved, favour, favourFull });
+    events.push({ type: 'respond', card, rep: eff.rep, busy, saved, favour, favourFull, perk: perkUsed });
     return events;
   }
 
   function useHeadphones(s) {
     const events = [];
     if (s.over || s.headphones.charges <= 0 || s.t < s.headphones.activeUntil) return events;
+    // The spare pair cannot go straight on after the first comes off.
+    if (s.perk === 'headphones' && s.headphones.activeUntil > 0 && s.t < s.headphones.activeUntil + TUNING.PERKS.headphones.cooldown) return events;
+    // With the spare pair, the last go is the spare, and it may be shorter than the real thing.
+    const spare = s.perk === 'headphones' && s.headphones.charges <= TUNING.PERKS.headphones.extraCharges;
     s.headphones.charges--;
-    s.headphones.activeUntil = s.t + TUNING.HEADPHONES.duration;
+    s.headphones.activeUntil = s.t + (spare ? TUNING.PERKS.headphones.spareDuration : TUNING.HEADPHONES.duration);
     s.stats.headphonesUsed++;
     events.push({ type: 'headphones', until: s.headphones.activeUntil });
     return events;
@@ -937,6 +980,7 @@
       role: s.role,
       level: s.level,
       day: s.day,
+      perk: s.perk,
       target: s.rules.target,
       boss: s.boss,
       events: s.events.map((e) => e.id),

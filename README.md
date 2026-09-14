@@ -238,6 +238,70 @@ every run:
   beat the same reader guessing instead of hedging, level 12 must beat trusting alarm words, and level 13
   must beat the player who delivers all five mornings by emptying themselves
 
+### What clearing a level gives back: stars and perks
+
+Clearing a level used to give you the next level and nothing else. Now it gives two things, deliberately
+unequal. Both live in `rewards.js`.
+
+**Stars, one to three per level, change nothing about how the game plays.** They are a reason to go back
+to a level you have already cleared, and a record of how well you know it. Each star needs the one before
+it, and a worse replay never takes one away.
+
+| | A morning (levels 1–12) | The week (level 13) |
+|---|---|---|
+| ★ | Clear the level | Clear the level |
+| ★★ | Finish on a gold | Deliver 4 of the 5 mornings |
+| ★★★ | On a gold, with no traps taken and nothing urgent missed | Deliver all 5, and finish on 60 energy |
+
+Chosen with the simulated players on every pinned morning: a perfect reader takes all three on every
+level (a test holds that), a 90% reader usually stops at two, and an 80% reader at one where it clears at
+all. On levels 8 and 12 a gold is already part of clearing, so the second star comes with the first. A
+level cleared before stars existed counts as one.
+
+**Perks change the rules, which is why there are three of them, and you carry one.** Clearing a level
+unlocks the perk that softens the thing that level taught. Before any campaign morning you pick one, or
+none. Perks never apply to the daily morning or a challenge, which have to be the same game for everyone,
+or to the week, which is five mornings taken as they come.
+
+| Perk | Unlocked by | What it does |
+|---|---|---|
+| ☕ Strong coffee | Level 2, Read the room | Your first 2 emergencies don't drain your focus while you are on them |
+| 🎧 Spare headphones | Level 5, Headphones on | A second go: a 6-second pair, once 15 seconds have passed since the first came off |
+| 🛡️ Manager's cover | Level 7, When you can't tell | The first trap you take costs 3s instead of 4.5s, and your focus survives it |
+
+**The first idea was more headphones as the levels went on, and the simulated players ruled it out.**
+Headphones block exactly the traps a player who doesn't read would fall into, so every extra pair protects
+not reading:
+
+| Answers everything without reading (junior, gold rate) | 1 pair | 2 pairs | 3 pairs | 4 pairs |
+|---|---|---|---|---|
+| | 6% | 18% | 51% | 80% |
+
+A reader who got every message right stayed at 98% throughout. The rewards would have been paying people
+to stop reading. So the rule came first, and each perk was tuned until it passed:
+
+- a perk may narrow the gold-rate gap between a 90% reader and a player who answers everything unread by
+  **at most 12 points**, at any career level
+- it must be worth **at least 20 points** to an 80% reader, or nobody would notice picking it
+- **no campaign level may fall** to its naive player while that player carries it, however they time
+  their headphones
+
+Every perk failed the first time. Three emergencies of coffee let "respond to everything" clear Release day,
+and two don't. The cover over at the 1.1s floor cleared it too, while keeping only your focus was safe but
+worth 13 points. A second full pair of headphones narrowed the gap by 23 points at junior. Two pairs
+back to back over the finish also cleared Appraisal for a player who ignores every colleague, because on
+that morning blocked chat can't cost you reputation. A 10-second spare with a wait still narrowed the gap
+by 14, so the spare is 6 seconds.
+
+| Perk (final) | Worst gap narrowing | Worth to an 80% reader | Levels that fall |
+|---|---|---|---|
+| ☕ coffee ×2 | 8 points | +43 | none |
+| 🎧 6s spare, 15s wait | 6 points | +24 | none |
+| 🛡️ cover at 3s | 2 points | +35 | none |
+
+`test/rewards.test.js` re-checks all three rules on every run, trying the spare pair at every sensible
+pair of times. The numbers behind each perk are written next to it in `TUNING.PERKS` in `core.js`.
+
 The week level is checked differently from the rest, because it has to be: a week is the player's own
 rather than a pinned seed, so it is played across eight of them and has to clear most and fail all when
 played badly.

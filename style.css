@@ -322,7 +322,7 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 @media (max-width: 760px) {
   .goal-bar { padding: 5px 8px; gap: 4px 6px; }
   /* The ladder is also the level picker, so its rungs need to be tappable, not just readable. */
-  .rung { width: 34px; height: 34px; }
+  .rung { width: 34px; height: 40px; }
   .goal-chip { font-size: 11px; padding: 2px 6px; }
   .goal-bar .goal-lead { display: none; }
 }
@@ -332,7 +332,7 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 #campaignCard { margin-bottom: 12px; }
 #endCampaign { margin-bottom: 14px; }
 .ladder { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 10px; }
-.rung { width: 30px; height: 30px; cursor: pointer; font-family: var(--mono); transition: transform 0.12s ease;
+.rung { width: 30px; height: 36px; flex-direction: column; gap: 1px; cursor: pointer; font-family: var(--mono); transition: transform 0.12s ease;
   padding: 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 9px; background: #ffffff06; font: 700 11px var(--mono); color: var(--dim); }
 .rung.done { border-color: #35c98a66; background: #35c98a1f; color: #d9f7e8; }
 .rung.now { border-color: #35c98a; background: #35c98a33; color: #eafff5; }
@@ -345,6 +345,25 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 .goals li.done { color: var(--green); }
 .goals li.miss { color: var(--muted); }
 .campaign-teaches { margin: 0 0 10px; font: 12px var(--mono); color: var(--dim); }
+
+/* ---- Stars and perks ---- */
+.rung-n { line-height: 1; }
+.rung-stars { font-size: 7px; line-height: 1; letter-spacing: -0.5px; color: #ffd166; }
+.stars-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 2px 0 6px; }
+.stars-line .campaign-teaches { margin: 0; }
+.stars { color: #ffd166; font-size: 18px; letter-spacing: 2px; }
+.goals.stars-goals li.done { color: #ffe29a; }
+.goals.stars-goals li.done b { color: #ffd166; }
+.perks { margin: 0 0 12px; }
+.perks-head { font: 700 10px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+.perk-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.perk { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--line);
+  background: #ffffff06; color: #c3cede; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.perk:not(:disabled):hover { border-color: #ffd16688; }
+.perk.on { border-color: #ffd166aa; background: #ffd16622; color: #fff2cc; }
+.perk:disabled { opacity: 0.5; cursor: not-allowed; }
+.perk-blurb { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); }
+.perk-unlocked { margin: 0 0 12px; padding: 8px 10px; border-radius: 10px; border: 1px solid #ffd16655; background: #ffd16614; font-size: 13px; color: #fff2cc; }
 
 /* ---- The work week ---- */
 .daily.week { border-color: #9b6bff55; background: linear-gradient(180deg, #9b6bff16, #9b6bff05); }

@@ -12,6 +12,7 @@
   const Challenge = window.NineChallenge;
   const Week = window.NineWeek;
   const Campaign = window.NineCampaign;
+  const Rewards = window.NineRewards;
   const Scene = window.NineScene;
   const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, DAYS, WEEKDAYS, METERS, BOSSES, EVENTS } = window.NineContent;
   const T = Core.TUNING;
@@ -61,7 +62,9 @@
     awards: 'nineToNine.awards',   // achievements unlocked so far
     progress: 'nineToNine.progress', // rounds played and roles finished, for the long-run achievements
     week: 'nineToNine.week',         // the work week in progress, so it survives a reload
-    campaign: 'nineToNine.campaign'  // which campaign levels have been cleared
+    campaign: 'nineToNine.campaign', // which campaign levels have been cleared
+    stars: 'nineToNine.stars',       // best stars per campaign level
+    perk: 'nineToNine.perk'          // the perk picked for campaign mornings
   };
 
   let game = null;
@@ -321,6 +324,12 @@
         parts.push(chip(row.done ? 'met' : '', `${row.done ? '✓' : '○'} ${row.label}`));
       }
     }
+    // The perk taken into this morning, and how much of it is left.
+    if (s.perk) {
+      const p = Rewards.byId[s.perk];
+      const left = s.perk === 'headphones' ? s.headphones.charges : s.perkLeft;
+      parts.push(chip('', `${p.emoji} ${left ? left + ' left' : 'used'}`));
+    }
     const html = '<span class="goal-lead">Goal</span>' + parts.join('');
     if (ui.goalBar.dataset.html !== html) {
       ui.goalBar.dataset.html = html;
@@ -351,6 +360,17 @@
   const loadCleared = () => Object.keys(loadClearedBy());
   const saveClearedBy = (map) => store(STORE.campaign, JSON.stringify(map));
 
+  // Best stars per level, never lowered by a worse replay. A level cleared before stars existed is worth one.
+  function loadStars() {
+    let saved = null;
+    try { saved = JSON.parse(read(STORE.stars) || 'null'); } catch (e) { saved = null; }
+    return Rewards.cleanStars(saved, Campaign.LEVELS.map((l) => l.id), loadCleared());
+  }
+  const saveStars = (map) => store(STORE.stars, JSON.stringify(map));
+  const starText = (n) => '★'.repeat(n) + '☆'.repeat(Rewards.MAX_STARS - n);
+  // The perk picked for campaign mornings. Kept as picked; Rewards.perkFor decides whether it still applies.
+  const loadPerk = () => read(STORE.perk) || null;
+
   // A week level is judged on the finished week, not on a morning. An unfinished (or absent) week reads
   // as nothing achieved, which is what the start screen wants to show before you have played one.
   function weekResult(w) {
@@ -370,6 +390,7 @@
   function ladderHtml(done, shown) {
     const next = Campaign.nextFor(done);
     const clearedBy = loadClearedBy();
+    const stars = loadStars();
     return '<div class="ladder">' + Campaign.LEVELS.map((l) => {
       const isDone = done.indexOf(l.id) !== -1;
       const open = Campaign.isOpen(l, done);
@@ -379,8 +400,57 @@
       const label = isDone ? `Level ${l.n}: ${l.title} — cleared${as ? ` as a ${as.label.toLowerCase()}` : ''}, play again`
         : open ? `Level ${l.n}: ${l.title}`
         : `Level ${l.n} — clear level ${l.n - 1} first`;
-      return `<button type="button" class="rung ${state}" data-rung="${l.n}"${open ? '' : ' disabled'} title="${escapeHtml(label)}">${l.n}</button>`;
+      const got = stars[l.id] || 0;
+      const starLabel = isDone ? ` · ${got} of ${Rewards.MAX_STARS} stars` : '';
+      return `<button type="button" class="rung ${state}" data-rung="${l.n}"${open ? '' : ' disabled'} title="${escapeHtml(label + starLabel)}">` +
+        `<span class="rung-n">${l.n}</span>${isDone ? `<span class="rung-stars" aria-hidden="true">${starText(got)}</span>` : ''}</button>`;
     }).join('') + '</div>';
+  }
+
+  // Stars already taken on a level, and what the next one asks, so a replay has something to aim at.
+  function bestStarsHtml(level) {
+    const got = loadStars()[level.id] || 0;
+    if (!got) return '';
+    const rows = Rewards.starsFor(level, null, false).rows; // for the labels only
+    const nextStar = got < Rewards.MAX_STARS ? rows[got].label : null;
+    return `<div class="stars-line"><span class="stars" aria-label="${got} of ${Rewards.MAX_STARS} stars">${starText(got)}</span>` +
+      `<span class="campaign-teaches">${nextStar ? 'Next star: ' + escapeHtml(nextStar) : 'All three stars'}</span></div>`;
+  }
+
+  // How an attempt did, star by star, on the result screen.
+  function resultStarsHtml(starCard, bestBefore) {
+    const note = starCard.stars > bestBefore && bestBefore ? 'a new best'
+      : bestBefore > starCard.stars ? `your best is still ${bestBefore}` : '';
+    return `<div class="stars-line"><span class="stars" aria-label="${starCard.stars} of ${Rewards.MAX_STARS} stars">${starText(starCard.stars)}</span>` +
+      `<span class="campaign-teaches">${note}</span></div>` +
+      '<ul class="goals stars-goals">' + starCard.rows.map((row) =>
+        `<li class="${row.done ? 'done' : 'miss'}"><b>${row.done ? '★' : '☆'}</b><span>${escapeHtml(row.label)}</span></li>`).join('') + '</ul>';
+  }
+
+  // One perk into a campaign morning. Locked perks are shown with the level that unlocks them, so what a
+  // level gives you is visible before you have earned it.
+  function perkPickerHtml(level) {
+    if (!Rewards.perkAllowed(level)) return '';
+    const done = loadCleared();
+    const have = Rewards.perksFrom(done);
+    const levelFor = (perk) => Campaign.LEVELS.find((l) => l.id === perk.unlockedBy);
+    if (!have.length) {
+      const first = Rewards.PERKS[0];
+      return `<p class="campaign-teaches">🎁 Clear level ${levelFor(first).n} to unlock your first perk: ${first.emoji} ${escapeHtml(first.title)}.</p>`;
+    }
+    const picked = Rewards.perkFor(level, loadPerk(), done);
+    const buttons = [`<button type="button" class="perk${picked ? '' : ' on'}" data-perk="none" aria-pressed="${!picked}">No perk</button>`]
+      .concat(Rewards.PERKS.map((p) => {
+        const owned = have.indexOf(p.id) !== -1;
+        const by = levelFor(p);
+        return `<button type="button" class="perk${picked === p.id ? ' on' : ''}" data-perk="${p.id}" aria-pressed="${picked === p.id}"` +
+          `${owned ? '' : ' disabled'} title="${escapeHtml(owned ? p.blurb : `Clear level ${by.n} to unlock`)}">` +
+          `${p.emoji} ${escapeHtml(p.title)}${owned ? '' : ` · L${by.n}`}</button>`;
+      }));
+    const chosen = picked ? Rewards.byId[picked] : null;
+    return '<div class="perks"><div class="perks-head">Take one perk into this morning</div>' +
+      `<div class="perk-row">${buttons.join('')}</div>` +
+      `<p class="perk-blurb">${chosen ? escapeHtml(chosen.blurb) : 'Play it as it comes. Stars count the same either way.'}</p></div>`;
   }
 
   // Which level the card is showing: one you picked from the ladder, or the next one to clear.
@@ -391,7 +461,7 @@
     const next = shownLevel();
     if (!next) {
       ui.campaignCard.innerHTML =
-        `<div class="daily-head"><b>🏅 Campaign complete</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length}</span></div>` +
+        `<div class="daily-head"><b>🏅 Campaign complete</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length} · ★ ${Rewards.totalStars(loadStars())}/${Campaign.LEVELS.length * Rewards.MAX_STARS}</span></div>` +
         ladderHtml(done) +
         '<p class="daily-sub">Every level cleared, and every role, level and kind of morning is open. Pick any level above to play it again; the daily morning and the work week are where it goes from here.</p>';
       return;
@@ -401,14 +471,15 @@
     const clearedAs = ROLES[clearedBy[next.id]];
     const upNext = Campaign.nextFor(done);
     const head = `<div class="daily-head"><b>${next.emoji} Level ${next.n} · ${escapeHtml(next.title)}${replaying ? ' ✓' : ''}</b>` +
-      `<span class="daily-next">${replaying && clearedAs ? `cleared as ${clearedAs.emoji} ${escapeHtml(clearedAs.label)}` : `${done.length} of ${Campaign.LEVELS.length} cleared`}</span></div>` +
+      `<span class="daily-next">${replaying && clearedAs ? `cleared as ${clearedAs.emoji} ${escapeHtml(clearedAs.label)}` : `${done.length} of ${Campaign.LEVELS.length} cleared`} · ★ ${Rewards.totalStars(loadStars())}</span></div>` +
       ladderHtml(done, next) +
       // Said out loud because the ladder sits directly under the role picker, which makes it look as
       // though it belongs to whichever role is selected. It does not: a level is the same morning in
       // every role, down to the arrival times, and only the wording of the messages changes.
       '<p class="campaign-teaches">Your career, whatever role you play. A level is the same morning in every role — only the words change — so clearing it counts once.</p>' +
       `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
-      goalList(Campaign.check(next, weekResult(loadWeek())));
+      goalList(Campaign.check(next, weekResult(loadWeek()))) +
+      bestStarsHtml(next);
     // The last level is a whole week, so the card becomes the week: the same strip, meters and button
     // the standalone card uses, rather than a second place that describes a week.
     if (Campaign.isWeek(next)) {
@@ -419,6 +490,7 @@
     const day = DAYS[next.setup.day];
     ui.campaignCard.innerHTML = head +
       `<p class="campaign-teaches">${day.emoji} ${escapeHtml(day.label)} · ${careerLevel.emoji} ${escapeHtml(careerLevel.label)}${next.unlocks ? ` · clears to ${LEVELS[next.unlocks].emoji} ${escapeHtml(LEVELS[next.unlocks].label)}` : ''}</p>` +
+      perkPickerHtml(next) +
       `<button class="primary" type="button" id="campaignBtn">${replaying ? 'Play level ' + next.n + ' again' : 'Play level ' + next.n} <kbd>Enter</kbd></button>` +
       (replaying && upNext ? `<button class="link week-quit" type="button" id="backToNextBtn">Back to level ${upNext.n}, ${escapeHtml(upNext.title)}</button>` : '');
   }
@@ -428,6 +500,8 @@
     level = level || levelPlaying;
     const card = Campaign.check(level, result);
     const won = Campaign.cleared(card);
+    const starCard = Rewards.starsFor(level, result, won);
+    const bestBefore = loadStars()[level.id] || 0;
     const done = loadCleared();
     const isNew = won && done.indexOf(level.id) === -1;
     if (isNew) {
@@ -440,11 +514,15 @@
       const earned = Campaign.careerFrom(done);
       if (LEVEL_ORDER.indexOf(earned) > Math.max(0, LEVEL_ORDER.indexOf(read(STORE.career)))) store(STORE.career, earned);
     }
+    if (won) saveStars(Rewards.withBest(loadStars(), level.id, starCard.stars));
+    const newPerks = isNew ? Rewards.unlockedBy(level.id).map((id) => Rewards.byId[id]) : [];
     const next = Campaign.nextFor(done);
     const again = Campaign.isWeek(level) ? 'weekBtn' : 'campaignBtn';
     ui.endCampaign.innerHTML =
       `<div class="daily-head"><b>${won ? '✅' : '↻'} Level ${level.n} · ${escapeHtml(level.title)}</b><span class="daily-next">${won ? 'cleared' : 'not this time'}</span></div>` +
       goalList(card) +
+      (won ? resultStarsHtml(starCard, bestBefore) : '') +
+      newPerks.map((p) => `<p class="perk-unlocked">🎁 Perk unlocked: <b>${p.emoji} ${escapeHtml(p.title)}</b>. ${escapeHtml(p.blurb)} Pick it before any campaign morning.</p>`).join('') +
       (won
         ? `<p class="daily-sub">${escapeHtml(level.teaches)}${next ? ` Next up: ${next.emoji} ${escapeHtml(next.title)}.` : ' That was the last one.'}</p>` +
           (next ? `<button class="primary" type="button" id="campaignBtn">Play level ${next.n} <kbd>Enter</kbd></button>` : '')
@@ -453,6 +531,7 @@
             : 'The morning is the same every time you try it, so you already know what is coming.'}</p>` +
           `<button class="primary" type="button" id="${again}">Try level ${level.n} again <kbd>Enter</kbd></button>`);
     ui.endCampaign.hidden = false;
+    if (newPerks.length) announce('Perk unlocked: ' + newPerks.map((p) => p.title).join(', '));
     if (isNew && level.unlocks) {
       const unlocked = LEVELS[level.unlocks];
       ui.endPromotion.hidden = false;
@@ -1081,6 +1160,8 @@
             ui.bank.classList.add('spending');
             popup(`⏳ −${ev.saved.toFixed(1)}s off this one`, 'flow', ui.clock);
           }
+          if (ev.perk === 'coffee') popup('☕ Still focused', 'flow', ui.clock);
+          else if (ev.perk === 'cover') popup('🛡️ Covered: your focus survived it', 'good', ui.clock);
           if (ev.card.type === 'urgent') { popup(`Saved the day +${ev.rep} rep`, 'good', anchor); sfx.click(); }
           else if (ev.card.type === 'trap') { popup(LEVELS[game.level].trapPop, 'bad', anchor); flash('trap'); sfx.buzz(); buzz([18, 40, 18]); }
           else if (ev.favour) { popup(`🤝 ${ev.favour} owes you one`, 'good', anchor); sfx.click(); }
@@ -1557,6 +1638,9 @@
       seed: daily ? Daily.seedFor(morning) : challenged ? invite.seed : inWeek ? Week.seedForMorning(week.seed, week.index) : inCampaign ? levelPlaying.setup.seed : undefined,
       day: inWeek ? weekDays(week)[week.index] : inCampaign ? levelPlaying.setup.day : undefined,
       carry: inWeek ? Week.carryFor(week) : undefined,
+      // One perk, and only on a campaign morning: the daily morning and a challenge are the same game for
+      // everyone, and a week is five mornings taken as they come.
+      perk: inCampaign ? Rewards.perkFor(levelPlaying, loadPerk(), loadCleared()) || undefined : undefined,
       // A week and a practice round both deal recently seen messages last, which matters most in a
       // week: five mornings back to back was the worst case for repeats. The daily morning and a
       // challenge pass none, so they stay identical for everyone who plays them.
@@ -1729,6 +1813,12 @@
       pickedLevel = Campaign.isOpen(level, loadCleared()) ? level : pickedLevel;
       renderCampaignCard();
       renderWeekCard();
+      return;
+    }
+    const perkBtn = e.target.closest('[data-perk]');
+    if (perkBtn && !perkBtn.disabled) {
+      store(STORE.perk, perkBtn.dataset.perk === 'none' ? '' : perkBtn.dataset.perk);
+      renderCampaignCard();
       return;
     }
     if (e.target.closest('#backToNextBtn')) { pickedLevel = null; renderCampaignCard(); renderWeekCard(); return; }

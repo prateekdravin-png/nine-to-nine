@@ -89,13 +89,18 @@ function playBot(seed, strategyName, opts) {
   if (!strategy) throw new Error(`Unknown strategy: ${strategyName}`);
   const reaction = o.reaction != null ? o.reaction : 0.8;
   const dt = 0.05;
-  const s = Core.createGame({ seed, role: o.role, level: o.level, day: o.day, carry: o.carry });
+  const s = Core.createGame({ seed, role: o.role, level: o.level, day: o.day, carry: o.carry, perk: o.perk });
   const rng = lcg(seed + 7919);
   const rolls = new Map(); // card id -> the bot's private random roll for that message
   const usesFavours = FAVOUR_STRATEGIES.has(strategyName);
+  const hpTimes = o.headphonesAt == null ? [] : [].concat(o.headphonesAt);
+  let hpNext = 0;
 
   while (!s.over) {
-    if (o.headphonesAt != null && s.t >= o.headphonesAt) Core.useHeadphones(s);
+    // headphonesAt: one time (put them on then, and again whenever they can be) or a list of times, one go each.
+    if (hpTimes.length === 1 ? s.t >= hpTimes[0] : hpNext < hpTimes.length && s.t >= hpTimes[hpNext]) {
+      if (Core.useHeadphones(s).length) hpNext++;
+    }
     const busy = Core.isBusy(s);
     // While on a call only passing a message on is possible, so only favour players look.
     if (Core.canAct(s, 'respond') || (usesFavours && Core.canAct(s, 'delegate'))) {
