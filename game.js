@@ -13,6 +13,7 @@
   const Week = window.NineWeek;
   const Campaign = window.NineCampaign;
   const Rewards = window.NineRewards;
+  const Review = window.NineReview;
   const Scene = window.NineScene;
   const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, DAYS, WEEKDAYS, METERS, BOSSES, EVENTS } = window.NineContent;
   const T = Core.TUNING;
@@ -43,7 +44,7 @@
     startGoal: $('startGoal'), awards: $('awards'), statsNote: $('statsNote'), startHistory: $('startHistory'),
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
-    endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endChallenge: $('endChallenge'), endStats: $('endStats'), endQuote: $('endQuote'),
+    endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endChallenge: $('endChallenge'), endStats: $('endStats'), endReview: $('endReview'), endQuote: $('endQuote'),
     againBtn: $('againBtn'), changeRoleBtn: $('changeRoleBtn'),
     endNote: $('endNote'), endHistory: $('endHistory'), live: $('live'),
     nightScreen: $('nightScreen'), nightDay: $('nightDay'), nightTitle: $('nightTitle'), nightBlurb: $('nightBlurb'),
@@ -1464,6 +1465,19 @@
     ];
     if (game.peekVariant) rows.push(['👁 Peeks', `${st.peeks}`]);
     ui.endStats.innerHTML = rows.map(([k, v]) => `<div class="stat"><span>${escapeHtml(k)}</span><b>${escapeHtml(v)}</b></div>`).join('');
+    // What you misread: the wrong calls with the tell in each, so a morning teaches something even when
+    // it goes badly. Nothing is shown when there was nothing to learn from.
+    const misread = Review.review(result);
+    ui.endReview.hidden = !misread.length;
+    ui.endReview.innerHTML = misread.length
+      ? `<h3 class="review-head">🔎 What you misread<span>${escapeHtml(Review.heading(misread, st.misreads.length))}</span></h3>` +
+        misread.map((m) => `<div class="misread ${m.kind === 'trap' ? 'trap' : 'urgent'}">` +
+          `<b>${m.emoji} ${escapeHtml(m.title)}</b>` +
+          `<blockquote><span>${escapeHtml(m.from)}</span>${escapeHtml(m.text)}</blockquote>` +
+          `<p class="misread-tell">${escapeHtml(m.tell)}</p>` +
+          `<p class="misread-better">${escapeHtml(m.better)}</p>` +
+        '</div>').join('')
+      : '';
     ui.endQuote.textContent = quoteFor(st);
 
     // Promotions come from the campaign now (renderCampaignResult), not from scoring a gold.

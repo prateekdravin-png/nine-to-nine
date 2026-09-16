@@ -707,6 +707,29 @@ a perfect reader and 4% more for a typical first-timer, but a 90% reader with fa
 below a perfect reader without them: favours reward being a decent colleague, they don't replace
 reading well. `test/favours.test.js` holds both sides of that.
 
+## What you misread
+
+A score tells you that you got it wrong. It does not tell you what you could have seen. Every round now
+ends with **up to three of your wrong calls, each quoting the message and naming the tell in it**:
+
+> 🪤 **You took one that shouted** — Legal: *"Priority: compliance sign-off needed today"*
+> It shouted "priority". At lead the loud ones are the traps, and the real emergencies are calm.
+> Leave it. It comes back once, and it is still not quick.
+
+Three rules keep it honest and keep it teaching:
+
+* **Only messages you got wrong are ever explained.** Naming the tell in one you read correctly would
+  spoil a message you had already earned.
+* **The word it quotes is found in the message**, not assumed from your career level — a senior trap
+  gives itself away by nothing being broken at all, so for those it quotes nothing and says that.
+* **A second lesson beats a third example of the first.** Four emergencies missed and one trap taken is
+  two lessons, so the trap is shown before a third missed emergency.
+
+Worst first: an emergency left to burn, then an hour lost to a trap, then a polite no to something real.
+The wrong calls are recorded separately from the share grid on purpose — `stats.decisions` carries
+verdicts only, so sharing a morning can never spoil its traps for whoever reads it, and a test holds
+that. The rules live in `review.js` and `test/review.test.js`.
+
 ## Work personalities
 
 Every round ends with a personality earned from how you played, shown on the result screen with the
@@ -807,6 +830,7 @@ playtesting for real.
 | `challenge.js` | Challenge links: packing a morning and a score into a URL fragment, and reading it back |
 | `week.js` | The work week: what a morning costs you, what the night gives back, and how a week is judged |
 | `campaign.js` | The seventeen levels, what each one asks for, and which of them promote you |
+| `review.js` | "What you misread": the wrong calls from a morning, each with the tell that gave the message away |
 | `persona.js` | Work personalities: which one a round earns, and why |
 | `awards.js` | Achievements and the desk objects they unlock |
 | `scene.js` | The illustrated office scene and the portraits of the people who message you |

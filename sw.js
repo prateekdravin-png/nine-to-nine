@@ -14,7 +14,7 @@
 //
 // The one thing that must NEVER be cached is /api/event: the anonymous play stats are fire-and-forget,
 // and a cached response would either swallow them or replay them.
-const VERSION = 'nine-to-nine-v3';
+const VERSION = 'nine-to-nine-v4';
 const TIMEOUT_MS = 2500; // how long a slow network gets before the cache answers instead
 
 const SHELL = [
@@ -30,6 +30,7 @@ const SHELL = [
   'week.js',
   'campaign.js',
   'rewards.js',
+  'review.js',
   'scene.js',
   'game.js',
   'manifest.webmanifest',

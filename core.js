@@ -533,7 +533,12 @@
         declined: 0, personalAnswered: 0, personalIgnored: 0, timeWon: 0, timeSaved: 0, bestRun: 0,
         busyTime: 0, deepWorkTime: 0, codingTime: 0, peakFlow: 0,
         aftermaths: [],
-        decisions: [] // { at: when the message arrived, outcome: 'good' | 'meh' | 'bad' }
+        decisions: [], // { at: when the message arrived, outcome: 'good' | 'meh' | 'bad' }
+        // The wrong calls, kept with enough of the message to explain themselves afterwards (review.js
+        // turns these into "what you misread" on the result screen). Deliberately NOT part of
+        // decisions above: that list is what a shared grid is built from, and it must never carry
+        // message text, or sharing a morning would spoil its traps for everyone who reads it.
+        misreads: [] // { at, type, action: 'respond' | 'ignore' | 'expired' | 'decline', from, text }
       }
     };
   }
@@ -595,6 +600,17 @@
     // handed the bonus to the strategy of answering everything — that player never makes a bad call, so
     // they cruised to it as easily as someone actually reading. Hedging with a polite no, or stopping to
     // answer small talk, is a fine thing to do and is simply not what this rewards.
+    // A wrong call, and the two kinds are not the same mistake: 'bad' is a trap taken or an emergency
+    // left, while a polite no to a real emergency is only 'meh' by the rules and still worth showing.
+    if (outcome === 'bad' || (outcome === 'meh' && card.type === 'urgent')) {
+      s.stats.misreads.push({
+        at: Math.round(card.spawnedAt * 100) / 100,
+        type: card.type,
+        action: passive ? 'expired' : action,
+        from: card.from,
+        text: card.text
+      });
+    }
     if (outcome !== 'good') s.run = 0;
     if (outcome === 'good' && !passive) {
       s.run++;
@@ -994,7 +1010,8 @@
       seed: s.seed,
       stats: Object.assign({}, s.stats, {
         aftermaths: s.stats.aftermaths.slice(),
-        decisions: s.stats.decisions.map(d => Object.assign({}, d))
+        decisions: s.stats.decisions.map(d => Object.assign({}, d)),
+        misreads: s.stats.misreads.map(m => Object.assign({}, m))
       })
     };
   }

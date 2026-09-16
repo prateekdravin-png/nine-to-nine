@@ -433,6 +433,19 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
 .secondary.wide { width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; }
 .stats-note { font-size: 11.5px; color: var(--dim); text-align: center; margin: 10px 0 0; }
 
+/* ---- What you misread (result screen) ---- */
+.review { margin: 0 0 14px; }
+.review-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 8px; font-size: 14px; }
+.review-head span { font: 600 11px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.misread { margin: 0 0 8px; padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--red); border-radius: 0 12px 12px 0; background: #ff5d6c10; }
+.misread.trap { border-left-color: var(--gold); background: #f5b83d10; }
+.misread b { display: block; font-size: 13.5px; color: var(--text); }
+.misread blockquote { margin: 6px 0; padding: 6px 10px; border-radius: 8px; background: #0006; font-size: 13px; color: #c7d3e3; overflow-wrap: break-word; }
+.misread blockquote span { display: block; font: 600 11px var(--mono); color: var(--dim); }
+.misread p { margin: 4px 0 0; font-size: 12.5px; }
+.misread-tell { color: var(--text); }
+.misread-better { color: var(--muted); }
+
 /* ---- Work personality (result screen) ---- */
 .persona { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; margin: 0 0 14px; padding: 12px 14px; border: 1px solid #9b6bff55; border-radius: 14px; background: linear-gradient(180deg, #9b6bff1c, #9b6bff08); }
 .persona-emoji { font-size: 40px; line-height: 1; }
