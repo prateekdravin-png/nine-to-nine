@@ -43,7 +43,7 @@
     campaignCard: $('campaignCard'), endCampaign: $('endCampaign'), challengeCard: $('challengeCard'), weekCard: $('weekCard'), dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
     startGoal: $('startGoal'), awards: $('awards'), statsNote: $('statsNote'), startHistory: $('startHistory'),
     tourSteps: $('tourSteps'), tourCount: $('tourCount'), tourBack: $('tourBack'), tourNext: $('tourNext'),
-    awardsSummary: $('awardsSummary'),
+    awardsSummary: $('awardsSummary'), startScene: $('startScene'),
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
     endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endChallenge: $('endChallenge'), endStats: $('endStats'), endReview: $('endReview'), endQuote: $('endQuote'),
@@ -55,6 +55,7 @@
   };
 
   const office = Scene.create(ui.scene); // the illustrated office at the top of the work panel
+  const startOffice = Scene.create(ui.startScene); // the same desk, still, on the start screen
 
   const STORE = {
     runs: 'nineToNine.runs', muted: 'nineToNine.muted', variant: 'nineToNine.variant', role: 'nineToNine.role',
@@ -930,6 +931,7 @@
     ui.workFile.textContent = r.work.file;
     ui.codeBtnLabel.textContent = `HOLD TO ${r.verb.toUpperCase()}`;
     office.setRole(role);
+    startOffice.setRole(role); // the shirt on the start screen changes with the picker above it
     applyLevelText(); // the history line depends on both role and level
   }
 
@@ -1502,6 +1504,7 @@
     ui.awardsSummary.innerHTML = `<span class="award-count">${have.length} of ${Awards.AWARDS.length} unlocked</span>` +
       (got ? ` <span class="fold-emoji" aria-hidden="true">${got}</span>` : ' <span>· each one adds something to your office</span>');
     ui.awards.innerHTML = items;
+    startOffice.setProps(Awards.propsFor(have)); // the desk you can see, not just the list of it
   }
 
   function quoteFor(stats) {

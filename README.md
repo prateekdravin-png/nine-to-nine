@@ -638,6 +638,11 @@ the eye on the middle. All of it is still reactive: the wall warms and the shaft
 runs to noon, the monitor glow turns gold in deep work and red in an outage, and the daylight fades out
 altogether during a fire drill when everyone has left the floor. Still no image files.
 
+**The start screen opens on the same desk, sitting still.** It wears the colour of the role in the
+picker below it, so tapping through the five roles changes the person in the chair, and it holds exactly
+the objects you have unlocked — the "Your desk" fold underneath is the same list in words. A new player's
+desk is bare, and fills up as they earn it. It costs one more `Scene.create`: no new art, no new file.
+
 The work panel opens on a little office scene (`scene.js`) that reacts to how you play:
 
 - You type while you hold the button, glow gold in DEEP WORK, take a call (with a speech bubble) when you
