@@ -144,6 +144,9 @@ body.deep .cursor { background: var(--gold); }
 .inbox { display: flex; flex-direction: column; min-height: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .inbox-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); font: 600 12px var(--sans); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .inbox-head .count { font: 700 12px var(--mono); background: #ffffff12; color: var(--text); border-radius: 99px; padding: 0 7px; }
+.help-btn { margin: -7px 0 -7px auto; width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-2); color: var(--muted); font: 700 14px var(--sans); }
+.help-btn:hover { border-color: #3a4a66; color: var(--text); }
+.help-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .distracted { margin-left: auto; color: var(--red); text-transform: none; letter-spacing: 0; font-weight: 700; }
 /* overflow-x must be explicit: with only overflow-y set, the other axis computes to auto, and the
    cards' sideways slide-in/slide-out transforms count as overflow — so a horizontal scrollbar

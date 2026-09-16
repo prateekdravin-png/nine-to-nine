@@ -31,7 +31,6 @@
       <div class="meter-label"><span>Reputation</span><b id="repVal">60</b></div>
       <div class="meter-track"><i id="repFill" data-level="mid"></i></div>
     </div>
-    <button class="icon-btn" id="helpBtn" title="How to clear this morning (?)" aria-label="How to clear this morning">?</button>
     <button class="icon-btn" id="pauseBtn" title="Pause (Esc)" aria-label="Pause">⏸</button>
     <button class="icon-btn" id="muteBtn" title="Sound (M)" aria-label="Toggle sound">🔊</button>
   </header>
@@ -66,6 +65,9 @@
         <span>Notifications</span>
         <span class="count" id="cardCount">0</span>
         <span class="favours" id="favours" hidden>🤝 0</span>
+        <!-- Here rather than in the header: on a phone the header had no room for it and gave it a row
+             of its own, which cost 40px of a screen the game has to fit inside. -->
+        <button class="help-btn" id="helpBtn" title="How to clear this morning (?)" aria-label="How to clear this morning">?</button>
         <span class="distracted" id="distracted" hidden title="3 or more unread notifications halve how fast your focus builds">📛 distracted</span>
       </div>
       <div class="cards" id="cards">

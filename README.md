@@ -152,8 +152,8 @@ two-up desk, the screen went from **3850px tall to about 2200** on a 375px phone
 
 ## The help button
 
-A **?** in the header, next to pause. It holds the morning — clock, arrivals and expiry timers all stop,
-because the loop simply stops advancing — and covers the screen with four short sections:
+A **?** at the right of the Notifications bar. It holds the morning — clock, arrivals and expiry timers
+all stop, because the loop simply stops advancing — and covers the screen with four short sections:
 
 1. **What this level asks**, with its goals ticked off as they stand right now.
 2. **What to do about it**: the level's `hint`, which is the tactic rather than the lesson. Level 11's says
@@ -161,6 +161,11 @@ because the loop simply stops advancing — and covers the screen with four shor
 3. **How traps hide at your title**, the same tell the start screen shows.
 4. **The run**, with what builds it, what ends it, and what counts for neither — and your own numbers in
    the heading.
+
+It sits in the Notifications bar rather than the header because the header had no room: on a phone the
+header is a three-row grid, and a fifth control took a fourth row for itself — 40px of a screen the game
+has to fit inside. In the inbox bar it costs nothing at all, the row is the height it always was, and the
+office band got the 40px back.
 
 It covers the inbox for the same reason the pause panel does: help you can read your inbox through is a
 way to study every message at leisure, which is the one skill the game is about. `?` opens it, `Esc` or
