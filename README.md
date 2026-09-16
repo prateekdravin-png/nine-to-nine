@@ -114,8 +114,12 @@ It listens on your network too, so you can playtest on your phone at `http://<th
   gone — but ignoring something genuinely urgent costs **Reputation**.
 - Some messages are traps. Anything *quick*, *small* or *just 2 mins* never is.
 - ⏳ **A run of right calls buys time.** Twelve decisions right in a row banks **5 seconds**, spent
-  automatically on your next interruptions — on top of your inbox, you get off calls faster. Falling
-  for a trap ends the run, and the bank never pays for a trap.
+  automatically on your next interruptions — on top of your inbox, you get off calls faster. A run is
+  made of calls you actually make: **Respond** to an urgent, **Ignore** a trap or small talk, or pass an
+  emergency to a colleague. A trap taken, an emergency missed, a polite no or a reply to small talk all
+  end it; a message you simply let run out counts for nothing either way, unless it was urgent. The goal
+  bar counts the run while you play — `⏳ 4/12 in a row · best 7` — because a streak you cannot see is a
+  streak you cannot aim at, and the number that teaches is the one that shows what emptied it.
 - 🙅 **Say no** when you genuinely can't tell. It costs a few points of Reputation every time, whatever
   the message turns out to be — far less than ignoring a real emergency, far more than reading it
   properly. It's for the messages you can't read in time, not for all of them.

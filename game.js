@@ -326,9 +326,20 @@
     if (mode === 'campaign' && levelPlaying) {
       for (const row of Campaign.check(levelPlaying, live)) {
         // The delivery chip above already shows this one, and as a live number rather than a tick.
-        if (row.id === 'ship') continue;
+        if (row.id === 'ship' || row.id === 'run') continue; // the run has a chip of its own, below
         parts.push(chip(row.done ? 'met' : '', `${row.done ? '✓' : '○'} ${row.label}`));
       }
+    }
+    // The run, counted where you can see it. A goal about a streak that shows only a tick is a goal you
+    // cannot aim at: you cannot see it building, and — the part that actually teaches — you cannot see
+    // what emptied it. It appears from three in a row, and always on a level whose goal is one.
+    const runGoal = mode === 'campaign' && levelPlaying && levelPlaying.goals.some((go) => go.id === 'run');
+    if (runGoal || s.run >= 3) {
+      const need = Core.TUNING.TIME_BONUS.run;
+      const best = s.stats.bestRun;
+      parts.push(best >= need
+        ? chip('met', `✓ ${need} in a row`)
+        : chip(s.run >= need - 3 ? 'close' : '', `⏳ ${s.run}/${need} in a row${best > s.run ? ` · best ${best}` : ''}`));
     }
     // The perk taken into this morning, and how much of it is left.
     if (s.perk) {
