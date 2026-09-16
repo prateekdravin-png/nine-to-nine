@@ -130,6 +130,17 @@ test('a level is only open once the one before it is done', () => {
   assert.ok(Campaign.isOpen(third, [first.id, second.id]));
 });
 
+test('every level says what to actually do about it', () => {
+  // The help button shows this mid-morning, when the question has already come up, so it has to be the
+  // tactic rather than the theme: what to press, and what not to. `teaches` is the lesson; `hint` is how.
+  for (const level of Campaign.LEVELS) {
+    assert.ok(level.hint, `level ${level.n} needs a hint`);
+    assert.ok(level.hint.length >= 80, `level ${level.n}'s hint is too thin to help`);
+    assert.ok(level.hint.endsWith('.'), `level ${level.n}'s hint should read as sentences`);
+    assert.notStrictEqual(level.hint, level.teaches, `level ${level.n} repeats its lesson instead of saying how`);
+  }
+});
+
 test('the next level is the first one not yet done', () => {
   assert.strictEqual(Campaign.nextFor([]).n, 1);
   assert.strictEqual(Campaign.nextFor(['first']).n, 2);

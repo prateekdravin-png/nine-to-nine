@@ -30,6 +30,7 @@
 
   const ui = {
     clock: $('clock'), bank: $('bank'), goalBar: $('goalBar'), pauseBtn: $('pauseBtn'),
+    helpBtn: $('helpBtn'), helpScreen: $('helpScreen'), helpBody: $('helpBody'), helpBackBtn: $('helpBackBtn'),
     pauseScreen: $('pauseScreen'), pauseNote: $('pauseNote'), resumeBtn: $('resumeBtn'), restartBtn: $('restartBtn'), quitBtn: $('quitBtn'), progressMeter: $('progressMeter'), progressLabel: $('progressLabel'), progressFill: $('progressFill'), progressPct: $('progressPct'),
     repMeter: $('repMeter'), repFill: $('repFill'), repVal: $('repVal'), muteBtn: $('muteBtn'),
     stage: document.querySelector('.stage'), scene: $('scene'), dayChip: $('dayChip'), bossChip: $('bossChip'), eventBar: $('eventBar'),
@@ -1529,6 +1530,7 @@
     endShown = true;
     paused = false;
     ui.pauseScreen.hidden = true;
+    ui.helpScreen.hidden = true;
     keepAwake(false);
     const result = Core.summary(game);
     const r = ROLES[result.role];
@@ -1687,6 +1689,57 @@
   }
 
   // ---------- pausing ----------
+  // ---------- how to clear this ----------
+  // What the morning is asking, how the traps hide at this level, and what to actually do about it —
+  // read mid-morning, when the question comes up, rather than on a start screen you scrolled past. It
+  // holds the morning while it is up (and hides the inbox with it, like the pause panel) because a help
+  // page you can read your inbox through is a way to study every message at leisure.
+  function helpHtml() {
+    const s = game;
+    const level = LEVELS[s.level];
+    const section = (title, body) => `<section class="help-part"><h3>${title}</h3>${body}</section>`;
+    const parts = [];
+
+    if (mode === 'campaign' && levelPlaying) {
+      const rows = Campaign.check(levelPlaying, liveResult());
+      parts.push(section(`${levelPlaying.emoji} Level ${levelPlaying.n} · ${escapeHtml(levelPlaying.title)}`,
+        `<p>${escapeHtml(levelPlaying.brief)}</p>` +
+        '<ul class="goals">' + rows.map((row) =>
+          `<li class="${row.done ? 'done' : 'miss'}"><b>${row.done ? '✓' : '○'}</b><span>${escapeHtml(row.label)}</span></li>`).join('') + '</ul>'));
+      parts.push(section('What to do about it', `<p>${escapeHtml(levelPlaying.hint)}</p>`));
+    } else {
+      const also = alsoText(s.rules.also);
+      parts.push(section('What this morning asks', `<p>Get the ${escapeHtml(progressLabel().toLowerCase())} to <b>${s.rules.target}%</b>${also ? ` and ${escapeHtml(also)}` : ''}, with your reputation above zero. A 🥇 needs <b>${s.rules.goldRep}</b> reputation as well.</p>`));
+    }
+
+    parts.push(section(`${level.emoji} How traps hide at ${escapeHtml(titleFor(s.role, s.level).title)}`, `<p>${level.tell}</p>`));
+
+    const need = Core.TUNING.TIME_BONUS.run;
+    parts.push(section(`⏳ The run (${s.stats.bestRun >= need ? 'done' : `${s.run} now, best ${s.stats.bestRun}`} of ${need})`,
+      `<p><b>Builds it:</b> Respond to something urgent · Ignore a trap or small talk · 🤝 pass an emergency to a colleague.</p>` +
+      `<p><b>Ends it:</b> answering a trap or small talk · missing something urgent · saying no.</p>` +
+      `<p><b>Neither:</b> a trap or a chat you simply let run out. It never builds the run, which is what makes ${need} in a row hard.</p>`));
+
+    parts.push(section('The controls', '<p><b>Respond</b> takes the call and costs you the time it takes. <b>Say no</b> costs a few points of reputation whatever it was. <b>Ignore</b> is free unless it was real. 🎧 <b>Headphones</b>, once a morning, hold off everything that is not an emergency for ten seconds. 🤝 passes a message to a colleague who owes you.</p>'));
+
+    return parts.join('');
+  }
+
+  function setHelp(on) {
+    if (!game || game.over) return;
+    if (on && paused) return; // already held for another reason; the pause panel is up
+    if (on) {
+      ui.helpBody.innerHTML = helpHtml(); // trusted markup: level tells carry <i>, everything else escaped
+      setPaused(true);
+      ui.pauseScreen.hidden = true; // the help panel stands in for it
+      ui.helpScreen.hidden = false;
+      announce('How to clear this');
+    } else {
+      ui.helpScreen.hidden = true;
+      setPaused(false);
+    }
+  }
+
   // A phone rings, a real one. You can stop the morning, and the clock, the arrivals and the expiry
   // timers all stop with it because the loop simply stops advancing — no special case in the rules.
   function setPaused(on) {
@@ -1708,6 +1761,7 @@
   }
 
   function leaveRound() {
+    ui.helpScreen.hidden = true;
     setPaused(false);
     game = null;
     keepAwake(false);
@@ -1798,6 +1852,7 @@
     startedAs = kind;
     paused = false;
     ui.pauseScreen.hidden = true;
+    ui.helpScreen.hidden = true;
     ui.pauseBtn.textContent = '⏸';
     ui.startScreen.hidden = true;
     ui.endScreen.hidden = true;
@@ -1946,6 +2001,8 @@
     handle(Core.useHeadphones(game));
     render();
   });
+  ui.helpBtn.addEventListener('click', () => setHelp(ui.helpScreen.hidden));
+  ui.helpBackBtn.addEventListener('click', () => setHelp(false));
   ui.pauseBtn.addEventListener('click', () => setPaused(!paused));
   ui.resumeBtn.addEventListener('click', () => setPaused(false));
   // Guarded as well as hidden: today's morning is the same one for everybody and you get one go at it,
@@ -1966,7 +2023,12 @@
   const ARROWS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && game && !game.over) { e.preventDefault(); setPaused(!paused); return; }
+    if (e.key === '?' && game && !game.over && !paused) { e.preventDefault(); setHelp(true); return; }
+    if (e.key === 'Escape' && game && !game.over) {
+      e.preventDefault();
+      if (!ui.helpScreen.hidden) setHelp(false); else setPaused(!paused);
+      return;
+    }
     const overlayOpen = !ui.startScreen.hidden || !ui.endScreen.hidden || !ui.nightScreen.hidden || paused;
     if (e.code === 'Space') {
       e.preventDefault(); // never scroll the page or click a focused button
@@ -1989,6 +2051,8 @@
       // that do something else — Change role, sharing, links — keep their own Enter.
       const el = document.activeElement;
       if (el && el.closest && el.closest('#homeBtn, .tour-btn, summary, [data-share]')) return;
+      // A held morning is still your morning: Enter goes back to it rather than starting another round.
+      if (paused) { e.preventDefault(); if (!ui.helpScreen.hidden) setHelp(false); else setPaused(false); return; }
       e.preventDefault();
       // From the start screen Enter plays what the screen is offering, topmost first: an unanswered
       // challenge, then today's morning, then a practice round.

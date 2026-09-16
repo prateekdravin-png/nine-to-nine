@@ -150,6 +150,26 @@ perk row — which perk you take is a decision you make before every campaign mo
 behind a summary line is one you forget you have. Between the folds, the one-rule-at-a-time box and the
 two-up desk, the screen went from **3850px tall to about 2200** on a 375px phone.
 
+## The help button
+
+A **?** in the header, next to pause. It holds the morning — clock, arrivals and expiry timers all stop,
+because the loop simply stops advancing — and covers the screen with four short sections:
+
+1. **What this level asks**, with its goals ticked off as they stand right now.
+2. **What to do about it**: the level's `hint`, which is the tactic rather than the lesson. Level 11's says
+   the run counts calls you make, and that a message you let run out never builds it.
+3. **How traps hide at your title**, the same tell the start screen shows.
+4. **The run**, with what builds it, what ends it, and what counts for neither — and your own numbers in
+   the heading.
+
+It covers the inbox for the same reason the pause panel does: help you can read your inbox through is a
+way to study every message at leisure, which is the one skill the game is about. `?` opens it, `Esc` or
+`Enter` goes back to the morning — and while a morning is held, `Enter` now means "back to it" rather
+than abandoning it for a practice round, which is what it used to do.
+
+Every level has to have a hint, and `test/campaign.test.js` holds it to being more than a restatement of
+the lesson.
+
 ## What finishing means, by career level
 
 Asking a junior for the same hundred per cent as a lead was never realistic. Nobody delivers a whole

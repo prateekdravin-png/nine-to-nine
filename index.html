@@ -31,6 +31,7 @@
       <div class="meter-label"><span>Reputation</span><b id="repVal">60</b></div>
       <div class="meter-track"><i id="repFill" data-level="mid"></i></div>
     </div>
+    <button class="icon-btn" id="helpBtn" title="How to clear this morning (?)" aria-label="How to clear this morning">?</button>
     <button class="icon-btn" id="pauseBtn" title="Pause (Esc)" aria-label="Pause">⏸</button>
     <button class="icon-btn" id="muteBtn" title="Sound (M)" aria-label="Toggle sound">🔊</button>
   </header>
@@ -181,6 +182,18 @@
     </div>
     <p class="playtest" id="endNote"></p>
     <div class="history" id="endHistory"></div>
+  </div>
+</div>
+
+<!-- How to clear this morning. It holds the morning while it is up, for the same reason the pause panel
+     covers the screen: reading it must not be a way to study the inbox at leisure. -->
+<div class="overlay" id="helpScreen" hidden>
+  <div class="panel help">
+    <h1>How to clear this</h1>
+    <div id="helpBody"></div>
+    <div class="end-actions">
+      <button class="primary" id="helpBackBtn">Back to it <kbd>Esc</kbd></button>
+    </div>
   </div>
 </div>
 
