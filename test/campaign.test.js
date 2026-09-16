@@ -154,6 +154,24 @@ test('career levels are campaign rewards, and arrive in order', () => {
   }
 });
 
+test('each role walks its own ladder', () => {
+  const asDeveloper = {};
+  for (const l of Campaign.LEVELS) asDeveloper[l.id] = ['developer'];
+  assert.strictEqual(Campaign.clearedFor(asDeveloper, 'developer').length, Campaign.LEVELS.length);
+  assert.deepStrictEqual(Campaign.clearedFor(asDeveloper, 'tester'), [], 'a tester has cleared nothing yet');
+  // Which is the whole point: the tester is offered level 1, not the developer's next one.
+  assert.strictEqual(Campaign.nextFor(Campaign.clearedFor(asDeveloper, 'tester')).n, 1);
+  assert.strictEqual(Campaign.nextFor(Campaign.clearedFor(asDeveloper, 'developer')), null);
+  // Two roles, two positions on the ladder, from one store.
+  const mixed = { first: ['developer', 'tester'], read: ['developer'], 'never-quick': ['developer'] };
+  assert.strictEqual(Campaign.nextFor(Campaign.clearedFor(mixed, 'tester')).n, 2);
+  assert.strictEqual(Campaign.nextFor(Campaign.clearedFor(mixed, 'developer')).n, 4);
+  // A level saved before roles were recorded counts for everyone: nobody is sent back down a ladder.
+  const legacy = { first: [], read: [] };
+  for (const roleId of Content.ROLE_ORDER) assert.strictEqual(Campaign.clearedFor(legacy, roleId).length, 2);
+  assert.deepStrictEqual(Campaign.clearedFor(null, 'developer'), []);
+});
+
 test('a promotion belongs to the role that earned it', () => {
   const unlockers = Campaign.LEVELS.filter((l) => l.unlocks);
   // Cleared by a developer all the way down the ladder: the developer is a lead, everyone else a junior.

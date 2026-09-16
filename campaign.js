@@ -211,6 +211,14 @@
     return highest;
   }
 
+  // Which levels one ROLE has cleared, which is the ladder that role is walking. A level recorded with no
+  // role at all was saved before roles were recorded; it counts for everyone, because there is no way to
+  // know who played it and nobody should be sent back down a ladder they have already climbed.
+  function clearedFor(clearedBy, roleId) {
+    const by = clearedBy || {};
+    return Object.keys(by).filter((id) => !by[id] || !by[id].length || by[id].indexOf(roleId) !== -1);
+  }
+
   // What one ROLE has earned. A level is the same morning whoever plays it, but the tells are written in
   // that role's own words, so learning to read them as a developer is not the same as learning to read
   // them as a tester: each role climbs its own career. clearedBy maps a level id to the roles that have
@@ -225,5 +233,5 @@
     return highest;
   }
 
-  return { LEVELS, LAST, byNumber, check, cleared, isWeek, nextFor, isOpen, careerFrom, careerForRole };
+  return { LEVELS, LAST, byNumber, check, cleared, isWeek, nextFor, isOpen, careerFrom, careerForRole, clearedFor };
 });

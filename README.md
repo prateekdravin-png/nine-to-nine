@@ -219,14 +219,23 @@ description of a week, in one place, in one renderer.
 for a good morning rather than for learning anything. Clearing the level that teaches senior traps is
 what makes you a senior. One ladder instead of two.
 
-**The ladder is shared; the career is not.** A level is the same morning in every role — the same
-arrival times, the same types, the same boss, the same target, with only the wording of the messages
-changed — so clearing it counts once rather than five times, and its stars and perks are yours whatever
-you played it as. Making everyone reclear seventeen levels five times would be the same seventeen
-lessons over again. Junior, senior and lead are the exception: a promotion is earned in the role that
-did the reading, so clearing the ladder as a developer leaves a tester starting at junior, and playing
-those levels again as a tester earns the tester its own promotions. Each cleared level records every
-role that has cleared it, so "I did that one as a developer" is visible and true.
+**Every role climbs the ladder itself.** A level is the same morning whoever plays it — the same arrival
+times, the same types, the same boss, the same target — but the only thing it teaches is how a trap hides
+in *that role's* words, and a developer who can spot "quick PR review?" has learned nothing about "can
+you just re-run the regression pack?". So the ladder is walked per role: clearing it as a developer
+leaves a tester at level 1, and the career it hands out (junior → senior → lead) belongs to the role that
+did the reading. The first cut shared the ladder and kept only the career per role, which meant picking
+tester dropped you straight onto level 12.
+
+What does **not** reset is anything the player earned rather than the role: stars stay at their best per
+level, and a perk unlocked once is yours in every role from then on. The star count beside the ladder
+counts only the rungs on the ladder in front of you, so the number always matches what you can see. Each
+cleared level records every role that has cleared it, so "I did that one as a developer" is visible and
+true, and a level saved before roles were recorded counts for everyone — there is no way to know who
+played it, and nobody should be sent back down a ladder they have already climbed. Those saves hand out no
+promotions, though: the first role to clear level 7 or 12 again earns the career for itself.
+`test/campaign.test.js` holds both halves — two roles at two different rungs out of one store, and a
+role-less save still counting for all five.
 
 **The ladder is also the level picker.** Anything you have cleared stays open to play again, and stays
 green whatever happens in the replay — clearing a level is a fact about you, not a score you can lose.
@@ -691,8 +700,7 @@ hides, and so which reading skill each level tests.
   learning anything. Pick your level on the start screen; locked ones say how to unlock. (`?dev` unlocks
   everything.)
 - **A promotion is the role's, not the account's.** Clearing level 7 as a developer makes you a senior
-  developer; a tester still starts at 🌱 Junior until a tester clears it. The campaign level itself stays
-  cleared for everyone, so it is one morning to replay, not a locked door.
+  developer; a tester starts at 🌱 Junior, on level 1 of its own ladder, until a tester clears it.
 - **Each role names the rungs itself.** The ladder is the same three steps, but the jobs are not
   interchangeable: a promoted manager is a 👑 **Director**, not a "lead manager", a tester becomes the
   **QA Lead** and a support engineer the **Support Lead**. `TITLES` in `content.js` holds a short `rank`

@@ -368,6 +368,14 @@
 
   // The career this role has climbed, which is what the start screen unlocks against.
   const careerOf = (roleId) => Campaign.careerForRole(loadClearedBy(), roleId);
+  // The ladder is walked per role. Clearing it as a developer says nothing about whether you can read a
+  // tester's morning — the traps are written in each role's own words — so a tester who has never played
+  // starts at level 1 with the developer's stars and perks still in hand. A level saved before roles were
+  // recorded at all counts for everyone: there is no way to know who played it, and nobody should be sent
+  // back down a ladder they have already climbed.
+  const clearedFor = (roleId) => Campaign.clearedFor(loadClearedBy(), roleId);
+  const myCleared = () => clearedFor(role);
+  // Cleared by anyone: what stars and perks are kept against, since those are the player's, not the role's.
   const loadCleared = () => Object.keys(loadClearedBy());
   const saveClearedBy = (map) => store(STORE.campaign, JSON.stringify(map));
 
@@ -387,7 +395,10 @@
   function weekResult(w) {
     if (!w || !w.over) return null;
     const v = Week.verdict(w);
-    return { shipped: v.shipped, energy: w.energy, home: w.home, golds: v.golds, played: v.played };
+    // The role is carried out with the rest of it: the week is level 17, and a cleared level belongs to
+    // whoever cleared it. Without this the week counted for every role at once.
+    const last = w.mornings[w.mornings.length - 1];
+    return { shipped: v.shipped, energy: w.energy, home: w.home, golds: v.golds, played: v.played, role: last && last.role };
   }
 
   function goalList(card) {
@@ -464,15 +475,23 @@
       `<p class="perk-blurb">${chosen ? escapeHtml(chosen.blurb) : 'Play it as it comes. Stars count the same either way.'}</p></div>`;
   }
 
+  // The star count beside the ladder adds up the stars ON that ladder, so it matches the rungs in front
+  // of you: a role that has cleared nothing shows none, even though the best stars themselves are kept
+  // for the player and come back the moment that role clears the level.
+  function starsOn(done) {
+    const all = loadStars();
+    return Rewards.totalStars(done.reduce((mine, id) => { if (all[id]) mine[id] = all[id]; return mine; }, {}));
+  }
+
   // Which level the card is showing: one you picked from the ladder, or the next one to clear.
-  const shownLevel = () => pickedLevel || Campaign.nextFor(loadCleared());
+  const shownLevel = () => pickedLevel || Campaign.nextFor(myCleared());
 
   function renderCampaignCard() {
-    const done = loadCleared();
+    const done = myCleared();
     const next = shownLevel();
     if (!next) {
       ui.campaignCard.innerHTML =
-        `<div class="daily-head"><b>🏅 Campaign complete</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length} · ★ ${Rewards.totalStars(loadStars())}/${Campaign.LEVELS.length * Rewards.MAX_STARS}</span></div>` +
+        `<div class="daily-head"><b>🏅 Campaign complete</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length} · ★ ${starsOn(done)}/${Campaign.LEVELS.length * Rewards.MAX_STARS}</span></div>` +
         ladderHtml(done) +
         '<p class="daily-sub">Every level cleared, and every role, level and kind of morning is open. Pick any level above to play it again; the daily morning and the work week are where it goes from here.</p>';
       return;
@@ -482,12 +501,12 @@
     const clearedAs = rolesOf(clearedBy[next.id]);
     const upNext = Campaign.nextFor(done);
     const head = `<div class="daily-head"><b>${next.emoji} Level ${next.n} · ${escapeHtml(next.title)}${replaying ? ' ✓' : ''}</b>` +
-      `<span class="daily-next">${replaying && clearedAs.length ? `cleared as ${clearedAs.map((r) => `${r.emoji} ${escapeHtml(r.label)}`).join(', ')}` : `${done.length} of ${Campaign.LEVELS.length} cleared`} · ★ ${Rewards.totalStars(loadStars())}</span></div>` +
+      `<span class="daily-next">${replaying && clearedAs.length ? `cleared as ${clearedAs.map((r) => `${r.emoji} ${escapeHtml(r.label)}`).join(', ')}` : `${done.length} of ${Campaign.LEVELS.length} cleared`} · ★ ${starsOn(done)}</span></div>` +
       ladderHtml(done, next) +
-      // Said out loud because the ladder sits directly under the role picker, which makes it look as
-      // though it belongs to whichever role is selected. It does not: a level is the same morning in
-      // every role, down to the arrival times, and only the wording of the messages changes.
-      '<p class="campaign-teaches">A level is the same morning in every role — only the words change — so clearing it counts once. The career it promotes is the role you cleared it as: a new role starts at junior again.</p>' +
+      // Said out loud because the ladder sits directly under the role picker, and it does belong to it:
+      // the morning is the same in every role, down to the arrival times, but the words the traps hide
+      // behind are not, so each role climbs the ladder itself. Stars and perks are the player's and stay.
+      '<p class="campaign-teaches">This ladder is your ' + escapeHtml(ROLES[role].label.toLowerCase()) + ' one. Every role climbs it in its own words, and the stars and perks you have already earned come with you.</p>' +
       `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
       goalList(Campaign.check(next, weekResult(loadWeek()))) +
       bestStarsHtml(next);
@@ -513,8 +532,9 @@
     const won = Campaign.cleared(card);
     const starCard = Rewards.starsFor(level, result, won);
     const bestBefore = loadStars()[level.id] || 0;
-    const done = loadCleared();
-    const isNew = won && done.indexOf(level.id) === -1;
+    const done = clearedFor(result.role);
+    const isNew = won && done.indexOf(level.id) === -1; // new for this role: the ladder moves on
+    const firstEver = won && loadCleared().indexOf(level.id) === -1; // new for the player: a perk is due
     if (isNew) {
       done.push(level.id);
       pickedLevel = null; // a newly cleared level hands the card to the next one
@@ -524,13 +544,13 @@
     if (won) {
       const by = loadClearedBy();
       const roles = by[level.id] || [];
-      if (roles.indexOf(result.role) === -1) {
+      if (result.role && roles.indexOf(result.role) === -1) {
         by[level.id] = roles.concat(result.role);
         saveClearedBy(by);
       }
     }
     if (won) saveStars(Rewards.withBest(loadStars(), level.id, starCard.stars));
-    const newPerks = isNew ? Rewards.unlockedBy(level.id).map((id) => Rewards.byId[id]) : [];
+    const newPerks = firstEver ? Rewards.unlockedBy(level.id).map((id) => Rewards.byId[id]) : [];
     const next = Campaign.nextFor(done);
     const again = Campaign.isWeek(level) ? 'weekBtn' : 'campaignBtn';
     ui.endCampaign.innerHTML =
@@ -624,7 +644,7 @@
     // the first version of this and it put the two runs of mornings back on screen side by side, which is
     // the whole thing the week became level 13 to avoid. Nothing is lost — a half-played week is still in
     // storage, and it is waiting on the level 13 card (with "start the week over") when you get there.
-    const show = !Campaign.nextFor(loadCleared()) && !Campaign.isWeek(shownLevel());
+    const show = !Campaign.nextFor(myCleared()) && !Campaign.isWeek(shownLevel());
     ui.weekCard.hidden = !show;
     if (show) ui.weekCard.innerHTML = weekBody(loadWeek());
   }
@@ -649,7 +669,7 @@
       : (tired.note || 'Rested enough. Tomorrow is a fresh start.');
     // A finished week is the moment the campaign's last level is decided.
     if (last) {
-      const level = Campaign.nextFor(loadCleared());
+      const level = Campaign.nextFor(myCleared());
       if (Campaign.isWeek(level)) {
         renderCampaignResult(weekResult(week), level);
         renderCampaignCard();
@@ -916,6 +936,8 @@
   function setRole(id, focus) {
     if (!ROLES[id]) return;
     role = id;
+    // A level picked off the ladder belongs to the role that picked it: this one may not have reached it.
+    pickedLevel = null;
     store(STORE.role, id);
     applyRoleText();
     renderStartCards();
@@ -1854,7 +1876,7 @@
     const rung = e.target.closest('[data-rung]');
     if (rung) {
       const level = Campaign.byNumber[Number(rung.dataset.rung)];
-      pickedLevel = Campaign.isOpen(level, loadCleared()) ? level : pickedLevel;
+      pickedLevel = Campaign.isOpen(level, myCleared()) ? level : pickedLevel;
       renderCampaignCard();
       renderWeekCard();
       return;
