@@ -47,7 +47,7 @@
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
     endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endChallenge: $('endChallenge'), endStats: $('endStats'), endReview: $('endReview'), endQuote: $('endQuote'),
-    againBtn: $('againBtn'), changeRoleBtn: $('changeRoleBtn'),
+    againBtn: $('againBtn'), homeBtn: $('homeBtn'),
     endNote: $('endNote'), endHistory: $('endHistory'), live: $('live'),
     nightScreen: $('nightScreen'), nightDay: $('nightDay'), nightTitle: $('nightTitle'), nightBlurb: $('nightBlurb'),
     nightMeters: $('nightMeters'), nightLedger: $('nightLedger'), nightNote: $('nightNote'),
@@ -1944,7 +1944,7 @@
   ui.muteBtn.addEventListener('click', () => setMuted(!muted));
   ui.practiceBtn.addEventListener('click', () => startGame('practice'));
   ui.againBtn.addEventListener('click', () => startGame('practice'));
-  ui.changeRoleBtn.addEventListener('click', showStart);
+  ui.homeBtn.addEventListener('click', showStart);
   ui.nextMorningBtn.addEventListener('click', () => {
     ui.nightScreen.hidden = true;
     if (week && week.over) { ui.endScreen.hidden = false; return; } // the week is done: the result screen waits
@@ -1977,7 +1977,7 @@
       // round. It works even with a role or level card focused (clicking a card focuses it). Buttons
       // that do something else — Change role, sharing, links — keep their own Enter.
       const el = document.activeElement;
-      if (el && el.closest && el.closest('#changeRoleBtn, .tour-btn, summary, [data-share]')) return;
+      if (el && el.closest && el.closest('#homeBtn, .tour-btn, summary, [data-share]')) return;
       e.preventDefault();
       // From the start screen Enter plays what the screen is offering, topmost first: an unanswered
       // challenge, then today's morning, then a practice round.
