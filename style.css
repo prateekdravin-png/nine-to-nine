@@ -565,7 +565,7 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
 /* On a phone the office takes the code text's place, so the inbox keeps its room for three messages */
 @media (max-width: 760px) {
   .code { display: none; }
-  .scene { flex: 1 1 auto; height: auto; min-height: 0; }
+  .scene { flex: 1 1 auto; height: auto; min-height: 92px; }
   .avatar, .avatar-tile { width: 22px; height: 22px; flex-basis: 22px; }
   .avatar-tile { font-size: 13px; }
 }
@@ -585,7 +585,10 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
   #pauseBtn { grid-area: pause; }
   #progressMeter { grid-area: feat; }
   #repMeter { grid-area: rep; }
-  .stage { grid-template-columns: 1fr; grid-template-rows: minmax(150px, 36%) minmax(0, 1fr); gap: 8px; }
+  .stage { grid-template-columns: 1fr; grid-template-rows: minmax(172px, 38%) minmax(0, 1fr); gap: 8px; }
+  .ide-bar { padding: 6px 10px; }
+  .flow { padding: 7px 12px 8px; }
+  .flow-label { margin-bottom: 4px; }
   .code { font-size: 11.5px; padding: 8px 10px; }
   /* The call bar sits over the flow meter (which drains during a call anyway), not over the office
      scene, so you can still see yourself on the phone. */

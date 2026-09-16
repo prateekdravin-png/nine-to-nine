@@ -656,6 +656,12 @@ The work panel opens on a little office scene (`scene.js`) that reacts to how yo
 - Every person who messages you has a drawn portrait, the same face every time (keyed on their first
   name). Bots, teams and apps keep an icon, so people and systems are easy to tell apart.
 
+The scene is a band whose height the layout decides, and the art is drawn to **cover** it, so something is
+cropped whenever the band is wider than 10:3. It crops **from the middle**: the first version anchored the
+art to the bottom, which kept the floor and cut your head off on a short phone at level 11, where five
+goal chips and an event bar left the band 53px tall. `.scene` also has a floor under it (92px on phones),
+and the panel's own toolbar and flow meter give up the room rather than the inbox.
+
 It's all inline SVG and CSS: no image files, sharp on any screen, works offline. It only reads the game
 state, so the rules and balance are untouched. Animations switch off for players whose device asks to
 reduce motion. On phones the scene takes the code text's place, so the inbox keeps its space.

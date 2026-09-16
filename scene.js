@@ -90,8 +90,11 @@
   const PLAYER = { skin: '#E0AC84', hair: '#3B2A20', style: 'short', shirt: '#5B7FD6', backdrop: 'none', glasses: false, beard: false };
   const ROLE_SHIRT = { developer: '#5B7FD6', tester: '#3D9A7A', analyst: '#9B6BFF', support: '#E07A5F', manager: '#E0A12E' };
 
+  // The scene is a band whose height the layout decides, so it is drawn to COVER that band and cropped
+  // from the middle. Anchoring it to the bottom (xMidYMax) kept the floor and cut the top, which on a
+  // short phone with a busy goal bar meant cutting your own head off.
   function officeSvg() {
-    return '<svg class="office" viewBox="0 0 600 180" preserveAspectRatio="xMidYMax slice" data-state="idle" data-hp="0" data-stress="0" aria-hidden="true" focusable="false">' +
+    return '<svg class="office" viewBox="0 0 600 180" preserveAspectRatio="xMidYMid slice" data-state="idle" data-hp="0" data-stress="0" aria-hidden="true" focusable="false">' +
       '<defs>' +
         '<clipPath id="nine-window"><rect x="76" y="22" width="138" height="84" rx="3"/></clipPath>' +
         // The wall is lit from the window, so it is brightest on the left and falls away to the right.

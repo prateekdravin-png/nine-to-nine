@@ -4,6 +4,8 @@
 // browser; its pure helpers are checked here.)
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const Scene = require('../scene');
 const { ROLES, ROLE_ORDER, LEVEL_ORDER } = require('../content');
 
@@ -18,6 +20,17 @@ const everySender = () => {
   }
   return [...senders.values()];
 };
+
+test('the office is cropped from the middle, so a short band never cuts your head off', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'scene.js'), 'utf8');
+  // The scene is a band whose height the layout decides: on a short phone, with level 11's five goal
+  // chips and an event bar above it, that came to 53px of a 339px-wide band. The art is drawn to COVER
+  // the band, so something is always cropped — from the middle keeps the person in the chair, while the
+  // first version anchored it to the bottom, kept the floor, and cut her head off. style.css also puts a
+  // floor under the band (.scene min-height) so it can never be a strip.
+  assert.match(src, /preserveAspectRatio="xMidYMid slice"/);
+  assert.doesNotMatch(src, /preserveAspectRatio="xMid(YMax|YMin)/);
+});
 
 test('people get a drawn portrait; bots, teams and apps keep an icon tile', () => {
   assert.match(Scene.avatar('Priya · Tech Lead', '👩‍💻'), /class="portrait"/);
