@@ -138,6 +138,13 @@ level you have picked. Seven rules and a goal on screen together were most of th
 the ladder and today's morning all began below the fold. Anyone who has read them through once lands on
 the goal card, with "↺ Read it again" beside it.
 
+**The start screen is kept short on purpose.** Its one job is to get you into a morning, so anything you
+read once and then scroll past for ever is folded behind a summary line that carries the useful part: the
+desk, the keys and privacy note, your record ("📈 7 runs · best 1449"), and the perk picker on a campaign
+card ("🎁 Perk: ☕ Strong coffee"). The perk fold survives the redraw that picking a perk causes, or it
+would shut in your face mid-choice. Between the folds, the one-rule-at-a-time box and the two-up desk,
+the screen went from **3850px tall to about 1900** on a 375px phone.
+
 ## What finishing means, by career level
 
 Asking a junior for the same hundred per cent as a lead was never realistic. Nobody delivers a whole
@@ -617,9 +624,10 @@ so a long-time player and a first-timer face exactly the same morning. The start
 section showing what's unlocked and the hint for what isn't, and the result screen says what a round just
 earned. `awards.js` holds the conditions, `test/awards.test.js` checks each one.
 
-Ten of them go **two to a row** on a phone: the emoji and the name share the top line, and what it
-unlocked runs underneath across the whole card. One per row was ten rows of scrolling to see a list that
-is mostly three words per line.
+The desk is **folded away** behind one line — "4 of 10 unlocked 🗒️ 🪴 🏆 🎧" — and opens to the full
+list, **two to a row** on a phone: emoji and name on the top line, what it unlocked underneath across the
+whole card. Ten cards one per row was a page of scrolling between you and the button that starts a
+morning.
 
 ## Graphics: the illustrated office
 

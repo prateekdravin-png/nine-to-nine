@@ -43,6 +43,7 @@
     campaignCard: $('campaignCard'), endCampaign: $('endCampaign'), challengeCard: $('challengeCard'), weekCard: $('weekCard'), dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
     startGoal: $('startGoal'), awards: $('awards'), statsNote: $('statsNote'), startHistory: $('startHistory'),
     tourSteps: $('tourSteps'), tourCount: $('tourCount'), tourBack: $('tourBack'), tourNext: $('tourNext'),
+    awardsSummary: $('awardsSummary'),
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
     endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endChallenge: $('endChallenge'), endStats: $('endStats'), endReview: $('endReview'), endQuote: $('endQuote'),
@@ -225,7 +226,7 @@
         `<div class="daily-head"><b>☀️ Morning #${n}</b>${streak ? `<span class="streak">🔥 ${streak}-day streak</span>` : ''}</div>` +
         `<p class="daily-sub"><b>${day.emoji} ${escapeHtml(day.label)}</b> — ${escapeHtml(day.summary)}<br>` +
         `Today's boss: <b>${boss.emoji} ${escapeHtml(boss.label)}</b> — ${escapeHtml(boss.summary)}<br>` +
-        'Everyone gets the same morning today, whatever their role or level. Your first finished run is the one you share.</p>' +
+        '<span class="daily-fine">Same morning for everyone today · your first finished run is the one you share</span></p>' +
         `<p class="day-note">🎯 ${escapeHtml(day.goal)} As a ${LEVELS[level].emoji} ${escapeHtml(rankOf(level))} you need <b>${rules.target}%</b>${alsoText(rules.also) ? ` and to ${escapeHtml(alsoText(rules.also))}` : ''}, plus a reputation of <b>${rules.goldRep}</b> for a 🥇.</p>` +
         `<button class="primary" type="button" id="dailyBtn">Play Morning #${n}${pendingInvite() ? '' : ' <kbd>Enter</kbd>'}</button>`;
     }
@@ -451,6 +452,7 @@
         `<li class="${row.done ? 'done' : 'miss'}"><b>${row.done ? '★' : '☆'}</b><span>${escapeHtml(row.label)}</span></li>`).join('') + '</ul>';
   }
 
+  let perksOpen = false; // the perk fold survives the redraw a perk click causes
   // One perk into a campaign morning. Locked perks are shown with the level that unlocks them, so what a
   // level gives you is visible before you have earned it.
   function perkPickerHtml(level) {
@@ -472,9 +474,9 @@
           `${p.emoji} ${escapeHtml(p.title)}${owned ? '' : ` · L${by.n}`}</button>`;
       }));
     const chosen = picked ? Rewards.byId[picked] : null;
-    return '<div class="perks"><div class="perks-head">Take one perk into this morning</div>' +
-      `<div class="perk-row">${buttons.join('')}</div>` +
-      `<p class="perk-blurb">${chosen ? escapeHtml(chosen.blurb) : 'Play it as it comes. Stars count the same either way.'}</p></div>`;
+    return `<details class="fold perks"${perksOpen ? ' open' : ''}><summary>🎁 Perk: ${chosen ? `${chosen.emoji} ${escapeHtml(chosen.title)}` : 'none'}</summary>` +
+      `<div class="fold-body"><div class="perk-row">${buttons.join('')}</div>` +
+      `<p class="perk-blurb">${chosen ? escapeHtml(chosen.blurb) : 'Play it as it comes. Stars count the same either way.'}</p></div></details>`;
   }
 
   // The star count beside the ladder adds up the stars ON that ladder, so it matches the rungs in front
@@ -508,7 +510,7 @@
       // Said out loud because the ladder sits directly under the role picker, and it does belong to it:
       // the morning is the same in every role, down to the arrival times, but the words the traps hide
       // behind are not, so each role climbs the ladder itself. Stars and perks are the player's and stay.
-      '<p class="campaign-teaches">This ladder is your ' + escapeHtml(ROLES[role].label.toLowerCase()) + ' one. Every role climbs it in its own words, and the stars and perks you have already earned come with you.</p>' +
+      '<p class="campaign-teaches">Your ' + escapeHtml(ROLES[role].label.toLowerCase()) + ' ladder · stars and perks carry across roles</p>' +
       `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
       goalList(Campaign.check(next, weekResult(loadWeek()))) +
       bestStarsHtml(next);
@@ -1443,7 +1445,8 @@
     }
     const found = loadPersonas().length;
     const personas = found ? `<div>Personalities found: <b>${found}</b> of ${Persona.PERSONAS.length}</div>` : '';
-    return `<div>Runs played: <b>${runs.length}</b> · Best score: <b>${best}</b>${roleBest}</div>${compare}${personas}<div class="chips">${chips}</div>`;
+    return `<details class="fold"><summary>📈 ${runs.length} run${runs.length === 1 ? '' : 's'} · best <b>${best}</b></summary>` +
+      `<div class="fold-body">${roleBest ? `<div>${roleBest.replace(/^ · /, '')}</div>` : ''}${compare}${personas}<div class="chips">${chips}</div></div></details>`;
   }
 
   // Messages seen in recent rounds, oldest first. Practice rounds and the work week deal these last
@@ -1494,7 +1497,11 @@
       return `<div class="award-item${got ? ' got' : ''}"><span class="award-emoji" aria-hidden="true">${got ? a.emoji : '🔒'}</span>` +
         `<b>${escapeHtml(a.name)}</b><span class="award-hint">${escapeHtml(got ? a.unlocks : a.hint)}</span></div>`;
     }).join('');
-    ui.awards.innerHTML = `<p class="award-count">${have.length} of ${Awards.AWARDS.length} unlocked · each one adds something to your office</p>` + items;
+    // The summary is what you see folded: the count, and the things themselves.
+    const got = Awards.AWARDS.filter((a) => have.indexOf(a.id) !== -1).map((a) => a.emoji).join(' ');
+    ui.awardsSummary.innerHTML = `<span class="award-count">${have.length} of ${Awards.AWARDS.length} unlocked</span>` +
+      (got ? ` <span class="fold-emoji" aria-hidden="true">${got}</span>` : ' <span>· each one adds something to your office</span>');
+    ui.awards.innerHTML = items;
   }
 
   function quoteFor(stats) {
@@ -1908,6 +1915,7 @@
       renderWeekCard();
       return;
     }
+    if (e.target.closest('.perks > summary')) { perksOpen = !perksOpen; return; }
     const perkBtn = e.target.closest('[data-perk]');
     if (perkBtn && !perkBtn.disabled) {
       store(STORE.perk, perkBtn.dataset.perk === 'none' ? '' : perkBtn.dataset.perk);
@@ -1968,7 +1976,7 @@
       // round. It works even with a role or level card focused (clicking a card focuses it). Buttons
       // that do something else — Change role, sharing, links — keep their own Enter.
       const el = document.activeElement;
-      if (el && el.closest && el.closest('#changeRoleBtn, .tour-btn, [data-share]')) return;
+      if (el && el.closest && el.closest('#changeRoleBtn, .tour-btn, summary, [data-share]')) return;
       e.preventDefault();
       // From the start screen Enter plays what the screen is offering, topmost first: an unanswered
       // challenge, then today's morning, then a practice round.

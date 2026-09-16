@@ -131,10 +131,20 @@
       <label class="variant"><input type="checkbox" id="variantToggle"> <span><b>Variant B</b> (practice only): messages arrive collapsed, and peeking at one costs focus</span></label>
     </div>
     <h2 class="section-title">4 · Your desk</h2>
-    <div class="awards" id="awards"></div>
+    <!-- Folded: ten things you have or have not unlocked is a page of scrolling between you and the
+         button that starts a morning. The summary says how many, and which ones, at a glance. -->
+    <details class="fold" id="awardsFold">
+      <summary id="awardsSummary">Your desk</summary>
+      <div class="fold-body"><div class="awards" id="awards"></div></div>
+    </details>
 
-    <p class="keys"><kbd>1</kbd>–<kbd>5</kbd> role · <kbd>Space</kbd> hold to <span data-role-verb>code</span> · <kbd>R</kbd> respond · <kbd>N</kbd> say no · <kbd>X</kbd> ignore · <kbd>P</kbd> peek · <kbd>D</kbd> pass to a colleague · <kbd>H</kbd> headphones · <kbd>M</kbd> sound<br><span>Keys act on the notification closest to expiring. It's outlined in blue.</span></p>
-    <p class="stats-note" id="statsNote">To test whether people come back, this prototype records anonymous play stats: a random ID, the morning, your role and score. No names.</p>
+    <details class="fold">
+      <summary>⌨️ Keys, and what this prototype records</summary>
+      <div class="fold-body">
+        <p class="keys"><kbd>1</kbd>–<kbd>5</kbd> role · <kbd>Space</kbd> hold to <span data-role-verb>code</span> · <kbd>R</kbd> respond · <kbd>N</kbd> say no · <kbd>X</kbd> ignore · <kbd>P</kbd> peek · <kbd>D</kbd> pass to a colleague · <kbd>H</kbd> headphones · <kbd>M</kbd> sound<br><span>Keys act on the notification closest to expiring. It's outlined in blue.</span></p>
+        <p class="stats-note" id="statsNote">To test whether people come back, this prototype records anonymous play stats: a random ID, the morning, your role and score. No names.</p>
+      </div>
+    </details>
     <div class="history" id="startHistory"></div>
   </div>
 </div>
