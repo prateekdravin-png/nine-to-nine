@@ -1613,7 +1613,7 @@
       ui.endDaily.hidden = !!loadDaily()[n];
       ui.endDaily.innerHTML = ui.endDaily.hidden ? '' :
         `<div class="daily-cta">☀️ Today's Morning #${n} is still waiting. <button class="link" type="button" id="endDailyBtn">Play it</button></div>`;
-      ui.againBtn.innerHTML = 'Play again <kbd>Enter</kbd>';
+      ui.againBtn.innerHTML = mode === 'practice' ? 'Play again <kbd>Enter</kbd>' : 'Practice round <kbd>Enter</kbd>';
       ui.endNote.textContent = mode === 'challenge'
         ? 'A challenge is one morning between two people. The daily morning is the one everybody plays.'
         : 'The real test: do you want another round? Note your answer after 10 runs, and again after 30.';
