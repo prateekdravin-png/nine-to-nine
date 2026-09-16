@@ -174,6 +174,7 @@
       '<ellipse class="screenglow" cx="330" cy="96" rx="96" ry="46" fill="url(#nine-screenglow)"/>' +
       '<rect x="316" y="42" width="108" height="64" rx="5" fill="#2E3A4F"/><rect class="screen" x="322" y="48" width="96" height="52" rx="2" fill="#1B2233"/>' +
       '<g class="lines"><rect x="328" y="54" width="36" height="4" rx="2" fill="#FF7AB2"/><rect x="332" y="62" width="58" height="4" rx="2" fill="#8FE0A5"/><rect x="332" y="70" width="44" height="4" rx="2" fill="#C7D3E3"/><rect x="336" y="78" width="62" height="4" rx="2" fill="#9B6BFF"/><rect x="332" y="86" width="30" height="4" rx="2" fill="#5F6F86"/><rect x="328" y="94" width="20" height="4" rx="2" fill="#8FE0A5"/></g>' +
+      '<rect class="caret" x="333" y="93.5" width="3" height="5" rx="1" fill="#8FE0A5"/>' +
       '<rect x="212" y="111" width="52" height="6" rx="2" fill="#DDE2EA"/>' +
       '<g class="pizza"><rect x="276" y="106" width="36" height="10" rx="2" fill="#E0A44E"/><rect x="276" y="101" width="36" height="6" rx="2" fill="#C98B3A"/><path d="M288 101 L300 101 L294 96 Z" fill="#E8C07A"/></g>' +
       '<rect x="436" y="100" width="16" height="16" rx="3" fill="#F7F1E8"/><path d="M452 104 Q459 104 459 109 Q459 113 452 113" fill="none" stroke="#F7F1E8" stroke-width="2.5"/>' +

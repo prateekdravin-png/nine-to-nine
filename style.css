@@ -513,8 +513,15 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
 .office[data-state="typing"] .arm-left, .office[data-state="deep"] .arm-left { animation: tap 0.24s ease-in-out infinite alternate; }
 .office[data-state="typing"] .arm-right, .office[data-state="deep"] .arm-right { animation: tap 0.24s ease-in-out 0.12s infinite alternate; }
 .office[data-state="deep"] .arm { animation-duration: 0.14s; }
+/* Something is always being written on that screen, even when nobody is holding the button: the bottom
+   line types itself out a few characters at a time and the caret follows it, then the line starts again.
+   Once you ARE working, the rule below takes over with the whole screen flickering instead. */
+.office .lines rect:last-child { transform-box: fill-box; transform-origin: left center; animation: typeline 4.2s steps(1, end) infinite; }
+.office .caret { transform-box: fill-box; animation: caret-step 4.2s steps(1, end) infinite, caret-blink 1.1s steps(2, jump-none) infinite; }
 .office[data-state="typing"] .lines rect, .office[data-state="deep"] .lines rect { animation: code 0.5s steps(2, jump-none) infinite; }
 .office .lines rect:nth-child(2n) { animation-delay: 0.25s; }
+/* Wi-Fi down: nothing is being written, so the line and the caret stop with the rest of the screen. */
+.office[data-event="wifi"] .lines rect:last-child, .office[data-event="wifi"] .caret { animation: none; opacity: 0.25; }
 .office .steam { opacity: var(--steam, 0.3); animation: steam 2.6s ease-in-out infinite; }
 .office .steam-2 { animation-delay: 1.3s; }
 .office .cloud { animation: drift 38s linear infinite; }
@@ -558,6 +565,9 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
 @keyframes blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
 @keyframes tap { to { transform: translateY(3px); } }
 @keyframes code { from { opacity: 1; } to { opacity: 0.45; } }
+@keyframes typeline { 0% { transform: scaleX(0.2); } 25% { transform: scaleX(0.5); } 50% { transform: scaleX(0.75); } 75% { transform: scaleX(1); } 100% { transform: scaleX(0.2); } }
+@keyframes caret-step { 0% { transform: translateX(0); } 25% { transform: translateX(6px); } 50% { transform: translateX(12px); } 75% { transform: translateX(16px); } 100% { transform: translateX(0); } }
+@keyframes caret-blink { 50% { opacity: 0.15; } }
 @keyframes steam { 0%, 100% { transform: translateY(4px); } 50% { transform: translateY(-3px); } }
 @keyframes motes { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-6px, -14px); } }
 @keyframes drift { from { transform: translateX(-60px); } to { transform: translateX(160px); } }

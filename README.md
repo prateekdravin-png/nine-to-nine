@@ -646,6 +646,10 @@ desk is bare, and fills up as they earn it. It costs one more `Scene.create`: no
 
 The work panel opens on a little office scene (`scene.js`) that reacts to how you play:
 
+- **The screen always has something being written on it.** The bottom line of code types itself out a few
+  characters at a time with the caret keeping pace, then starts again, so the monitor is never a picture
+  of some code sitting still — it is code being written. Once you are actually holding the button the
+  whole screen flickers instead, and when the Wi-Fi goes down both stop dead with the rest of it.
 - You type while you hold the button, glow gold in DEEP WORK, take a call (with a speech bubble) when you
   respond, and go dizzy when you fall for a trap. Headphones appear when they're on; sweat when three or
   more messages pile up. Your shirt is your role's colour.
