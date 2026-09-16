@@ -632,14 +632,14 @@
     senior: {
       id: 'senior', label: 'Senior', emoji: '🚀',
       summary: 'Traps stop saying "quick". Is anything actually wrong?',
-      unlockText: "Clear campaign level 7, When you can't tell, to unlock.",
+      unlockText: "Clear campaign level 7, When you can't tell, as a {role} to unlock.",
       tell: 'Senior traps never say <i>quick</i>. They are polite, open-ended asks with nothing actually wrong: <i>"whenever you get a moment"</i>, <i>"thoughts?"</i>',
       trapPop: 'Nothing was actually wrong.'
     },
     lead: {
       id: 'lead', label: 'Lead', emoji: '👑',
       summary: 'Traps shout URGENT. Real emergencies stay calm.',
-      unlockText: 'Clear campaign level 12, Lead, to unlock.',
+      unlockText: 'Clear campaign level 12, Lead, as a {role} to unlock.',
       tell: 'Lead traps shout <i>URGENT</i> and <i>ASAP</i>, while real emergencies are often calm. Ask what is actually broken, and who is waiting.',
       trapPop: 'The only emergency was their deadline.'
     }

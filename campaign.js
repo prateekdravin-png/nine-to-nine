@@ -201,8 +201,9 @@
     return level.n === 1 || done.has(level.id) || LEVELS.some((l) => l.n === level.n - 1 && done.has(l.id));
   };
 
-  // Career levels are campaign rewards now: clearing the level that teaches senior traps is what makes
-  // you a senior. Anything already unlocked the old way (by scoring a gold) is kept.
+  // Career levels are campaign rewards: clearing the level that teaches senior traps is what makes you a
+  // senior. careerFrom answers that for the ladder as a whole; careerForRole answers it for one role, and
+  // that is what the start screen gates on.
   function careerFrom(clearedIds) {
     const done = new Set(clearedIds || []);
     let highest = 'junior';
@@ -210,5 +211,19 @@
     return highest;
   }
 
-  return { LEVELS, LAST, byNumber, check, cleared, isWeek, nextFor, isOpen, careerFrom };
+  // What one ROLE has earned. A level is the same morning whoever plays it, but the tells are written in
+  // that role's own words, so learning to read them as a developer is not the same as learning to read
+  // them as a tester: each role climbs its own career. clearedBy maps a level id to the roles that have
+  // cleared it.
+  function careerForRole(clearedBy, roleId) {
+    const by = clearedBy || {};
+    let highest = 'junior';
+    for (const level of LEVELS) {
+      const roles = by[level.id];
+      if (level.unlocks && Array.isArray(roles) && roles.indexOf(roleId) !== -1) highest = level.unlocks;
+    }
+    return highest;
+  }
+
+  return { LEVELS, LAST, byNumber, check, cleared, isWeek, nextFor, isOpen, careerFrom, careerForRole };
 });

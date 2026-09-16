@@ -154,6 +154,26 @@ test('career levels are campaign rewards, and arrive in order', () => {
   }
 });
 
+test('a promotion belongs to the role that earned it', () => {
+  const unlockers = Campaign.LEVELS.filter((l) => l.unlocks);
+  // Cleared by a developer all the way down the ladder: the developer is a lead, everyone else a junior.
+  const asDeveloper = {};
+  for (const l of Campaign.LEVELS) asDeveloper[l.id] = ['developer'];
+  assert.strictEqual(Campaign.careerForRole(asDeveloper, 'developer'), 'lead');
+  for (const role of Content.ROLE_ORDER.filter((r) => r !== 'developer')) {
+    assert.strictEqual(Campaign.careerForRole(asDeveloper, role), 'junior',
+      `a ${role} should not inherit the developer's promotions`);
+  }
+  // Playing the same levels again as a tester earns the tester its own, without taking the developer's away.
+  const both = {};
+  for (const l of Campaign.LEVELS) both[l.id] = l.n <= unlockers[0].n ? ['developer', 'tester'] : ['developer'];
+  assert.strictEqual(Campaign.careerForRole(both, 'tester'), 'senior', 'the tester has cleared as far as senior');
+  assert.strictEqual(Campaign.careerForRole(both, 'developer'), 'lead');
+  // Nothing cleared, or cleared before roles were recorded, still starts at junior.
+  assert.strictEqual(Campaign.careerForRole({}, 'developer'), 'junior');
+  assert.strictEqual(Campaign.careerForRole({ [Campaign.LAST.id]: [] }, 'developer'), 'junior');
+});
+
 test('a goal only ever asks for something the rules already measure', () => {
   const summary = Core.summary(Core.createGame({ seed: 1, day: 'normal' }));
   for (const level of Campaign.LEVELS) {

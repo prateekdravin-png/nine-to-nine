@@ -58,7 +58,6 @@
     runs: 'nineToNine.runs', muted: 'nineToNine.muted', variant: 'nineToNine.variant', role: 'nineToNine.role',
     daily: 'nineToNine.daily', player: 'nineToNine.player', visit: 'nineToNine.lastVisit', personas: 'nineToNine.personas',
     level: 'nineToNine.level',   // the career level picked on the start screen
-    career: 'nineToNine.career', // the highest level unlocked so far
     recent: 'nineToNine.recent',   // message texts seen in the last few rounds
     awards: 'nineToNine.awards',   // achievements unlocked so far
     progress: 'nineToNine.progress', // rounds played and roles finished, for the long-run achievements
@@ -342,22 +341,31 @@
   // ---------- the campaign ----------
   // The ladder: one morning per level, each asking for something the level before it taught. All the
   // rules of it live in campaign.js; this stores what has been cleared and draws it.
-  // What has been cleared, and as which role: { levelId: roleId }. The first version stored a plain array
-  // of ids, so an array is still read and simply has no role attached to it.
+  // What has been cleared, and as which roles: { levelId: [roleId, ...] }. Every earlier shape is still
+  // read: the very first version stored a plain array of ids with no role at all, and the one after it a
+  // single role per level. A career is earned per role now, so the list matters: a level cleared again as
+  // a tester adds the tester without taking the developer's promotion away.
   function loadClearedBy() {
     try {
       const saved = JSON.parse(read(STORE.campaign) || '{}');
       const known = (id) => Campaign.LEVELS.some((l) => l.id === id);
+      const roles = (value) => (Array.isArray(value) ? value : [value]).filter((r) => ROLES[r]);
       const out = {};
       if (Array.isArray(saved)) {
-        saved.filter(known).forEach((id) => { out[id] = null; });
+        saved.filter(known).forEach((id) => { out[id] = []; });
         return out;
       }
       if (!saved || typeof saved !== 'object') return {};
-      for (const id of Object.keys(saved)) if (known(id)) out[id] = ROLES[saved[id]] ? saved[id] : null;
+      for (const id of Object.keys(saved)) if (known(id)) out[id] = roles(saved[id]);
       return out;
     } catch (e) { return {}; }
   }
+
+  // The roles a level has been cleared as, in picker order, for the ladder's "cleared as" line.
+  const rolesOf = (ids) => ROLE_ORDER.map((r) => ROLES[r]).filter((r) => (ids || []).indexOf(r.id) !== -1);
+
+  // The career this role has climbed, which is what the start screen unlocks against.
+  const careerOf = (roleId) => Campaign.careerForRole(loadClearedBy(), roleId);
   const loadCleared = () => Object.keys(loadClearedBy());
   const saveClearedBy = (map) => store(STORE.campaign, JSON.stringify(map));
 
@@ -397,8 +405,8 @@
       const open = Campaign.isOpen(l, done);
       const state = [isDone ? 'done' : '', (next || {}).id === l.id ? 'now' : '', (shown || {}).id === l.id ? 'picked' : '']
         .filter(Boolean).join(' ');
-      const as = ROLES[clearedBy[l.id]];
-      const label = isDone ? `Level ${l.n}: ${l.title} — cleared${as ? ` as a ${as.label.toLowerCase()}` : ''}, play again`
+      const as = rolesOf(clearedBy[l.id]);
+      const label = isDone ? `Level ${l.n}: ${l.title} — cleared${as.length ? ` as a ${as.map((r) => r.label.toLowerCase()).join(', a ')}` : ''}, play again`
         : open ? `Level ${l.n}: ${l.title}`
         : `Level ${l.n} — clear level ${l.n - 1} first`;
       const got = stars[l.id] || 0;
@@ -469,15 +477,15 @@
     }
     const clearedBy = loadClearedBy();
     const replaying = done.indexOf(next.id) !== -1;
-    const clearedAs = ROLES[clearedBy[next.id]];
+    const clearedAs = rolesOf(clearedBy[next.id]);
     const upNext = Campaign.nextFor(done);
     const head = `<div class="daily-head"><b>${next.emoji} Level ${next.n} · ${escapeHtml(next.title)}${replaying ? ' ✓' : ''}</b>` +
-      `<span class="daily-next">${replaying && clearedAs ? `cleared as ${clearedAs.emoji} ${escapeHtml(clearedAs.label)}` : `${done.length} of ${Campaign.LEVELS.length} cleared`} · ★ ${Rewards.totalStars(loadStars())}</span></div>` +
+      `<span class="daily-next">${replaying && clearedAs.length ? `cleared as ${clearedAs.map((r) => `${r.emoji} ${escapeHtml(r.label)}`).join(', ')}` : `${done.length} of ${Campaign.LEVELS.length} cleared`} · ★ ${Rewards.totalStars(loadStars())}</span></div>` +
       ladderHtml(done, next) +
       // Said out loud because the ladder sits directly under the role picker, which makes it look as
       // though it belongs to whichever role is selected. It does not: a level is the same morning in
       // every role, down to the arrival times, and only the wording of the messages changes.
-      '<p class="campaign-teaches">Your career, whatever role you play. A level is the same morning in every role — only the words change — so clearing it counts once.</p>' +
+      '<p class="campaign-teaches">A level is the same morning in every role — only the words change — so clearing it counts once. The career it promotes is the role you cleared it as: a new role starts at junior again.</p>' +
       `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
       goalList(Campaign.check(next, weekResult(loadWeek()))) +
       bestStarsHtml(next);
@@ -507,13 +515,17 @@
     const isNew = won && done.indexOf(level.id) === -1;
     if (isNew) {
       done.push(level.id);
-      const by = loadClearedBy();
-      by[level.id] = result.role; // the role you were actually playing when it fell
-      saveClearedBy(by);
       pickedLevel = null; // a newly cleared level hands the card to the next one
-      // Career levels are campaign rewards now. Anything unlocked before this existed is left alone.
-      const earned = Campaign.careerFrom(done);
-      if (LEVEL_ORDER.indexOf(earned) > Math.max(0, LEVEL_ORDER.indexOf(read(STORE.career)))) store(STORE.career, earned);
+    }
+    // The role that cleared it is recorded every time, not only the first, because clearing a level again
+    // as another role is how that role earns the same promotion.
+    if (won) {
+      const by = loadClearedBy();
+      const roles = by[level.id] || [];
+      if (roles.indexOf(result.role) === -1) {
+        by[level.id] = roles.concat(result.role);
+        saveClearedBy(by);
+      }
     }
     if (won) saveStars(Rewards.withBest(loadStars(), level.id, starCard.stars));
     const newPerks = isNew ? Rewards.unlockedBy(level.id).map((id) => Rewards.byId[id]) : [];
@@ -905,11 +917,13 @@
   }
 
   // ---------- career level ----------
-  // Levels unlock in order: a 🥇 at your highest level, in any role, promotes you to the next. Only how
-  // well traps hide changes (content.js); the rules stay the same. Dev mode (?dev) unlocks everything.
+  // Levels unlock in order, and each ROLE climbs its own career: clearing the level that teaches senior
+  // traps as a developer makes that developer a senior, while a tester still starts at junior, because the
+  // tells are written in each role's own words. Only how well traps hide changes (content.js); the rules
+  // stay the same. Dev mode (?dev) unlocks everything.
   function unlockedLevels() {
     if (DEV) return LEVEL_ORDER.slice();
-    const highest = Math.max(0, LEVEL_ORDER.indexOf(read(STORE.career)));
+    const highest = Math.max(0, LEVEL_ORDER.indexOf(careerOf(role)));
     return LEVEL_ORDER.slice(0, highest + 1);
   }
 
@@ -934,7 +948,7 @@
     }
     const shown = LEVELS[tried || level];
     ui.levelDesc.textContent = tried
-      ? `🔒 ${shown.label}: ${shown.unlockText}`
+      ? `🔒 ${shown.label}: ${shown.unlockText.replace('{role}', currentRole().label.toLowerCase())}`
       : `${shown.emoji} ${shown.label}: ${shown.summary}`;
     ui.trapTell.innerHTML = LEVELS[level].tell; // trusted markup from content.js
     ui.startHistory.innerHTML = historyHtml(loadRuns(), role, level);

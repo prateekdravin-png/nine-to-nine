@@ -219,11 +219,14 @@ description of a week, in one place, in one renderer.
 for a good morning rather than for learning anything. Clearing the level that teaches senior traps is
 what makes you a senior. One ladder instead of two.
 
-**Progress is your career, not the role's.** A level is the same morning in every role — the same
+**The ladder is shared; the career is not.** A level is the same morning in every role — the same
 arrival times, the same types, the same boss, the same target, with only the wording of the messages
-changed — so clearing it counts once rather than five times. Per-role progress would be seventeen levels
-times five roles of the same seventeen lessons. The card says so, and each cleared level records which
-role you actually played it as, so "I did that one as a developer" is visible and true.
+changed — so clearing it counts once rather than five times, and its stars and perks are yours whatever
+you played it as. Making everyone reclear seventeen levels five times would be the same seventeen
+lessons over again. Junior, senior and lead are the exception: a promotion is earned in the role that
+did the reading, so clearing the ladder as a developer leaves a tester starting at junior, and playing
+those levels again as a tester earns the tester its own promotions. Each cleared level records every
+role that has cleared it, so "I did that one as a developer" is visible and true.
 
 **The ladder is also the level picker.** Anything you have cleared stays open to play again, and stays
 green whatever happens in the replay — clearing a level is a fact about you, not a score you can lose.
@@ -687,6 +690,9 @@ hides, and so which reading skill each level tests.
   👑 Lead. They used to unlock by scoring a 🥇, which promoted you for a good morning rather than for
   learning anything. Pick your level on the start screen; locked ones say how to unlock. (`?dev` unlocks
   everything.)
+- **A promotion is the role's, not the account's.** Clearing level 7 as a developer makes you a senior
+  developer; a tester still starts at 🌱 Junior until a tester clears it. The campaign level itself stays
+  cleared for everyone, so it is one morning to replay, not a locked door.
 - The daily morning has the same rhythm at every level; the share text says who played it
   ("🧪 Senior Tester").
 - All career wording is plain English with no local references.

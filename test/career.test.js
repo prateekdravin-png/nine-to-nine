@@ -19,6 +19,8 @@ test('levels run junior → senior → lead, and each explains itself', () => {
     const l = LEVELS[id];
     for (const key of ['label', 'emoji', 'summary', 'tell', 'trapPop']) assert.ok(l[key], `${id} needs ${key}`);
     if (i > 0) assert.ok(l.unlockText, `${id} needs to say how it unlocks`);
+    // The career is climbed per role, so the lock has to name the role you are picking, not just the level.
+    if (i > 0) assert.match(l.unlockText, /{role}/, `${id} should say which role has to clear it`);
   }
 });
 
