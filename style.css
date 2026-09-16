@@ -190,6 +190,7 @@ body.is-busy .code-btn { background: #2a3244; color: var(--muted); box-shadow: 0
 .panel { width: min(620px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 26px 26px 20px; box-shadow: 0 30px 80px #000a; max-height: 100%; overflow: auto; }
 .panel-logo { font-size: 40px; }
 .panel h1 { margin: 2px 0 6px; font-size: 26px; }
+#startScreen h1 { color: var(--gold); } /* the game's name, in the same gold the HUD gives it */
 .lede { color: #c3cede; margin: 0 0 14px; }
 /* How it plays, one step at a time. The numbers come from the counter in the footer, not from list
    markers: with the other steps hidden, every step would be numbered "1." */
