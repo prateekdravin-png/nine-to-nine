@@ -392,8 +392,6 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 .goals.stars-goals li.done { color: #ffe29a; }
 .goals.stars-goals li.done b { color: #ffd166; }
 .perks { margin: 0 0 12px; }
-details.perks { background: transparent; }
-details.perks > summary { padding: 8px 10px; }
 .perks-head { font: 700 10px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
 .perk-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .perk { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--line);

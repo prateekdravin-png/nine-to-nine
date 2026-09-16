@@ -140,10 +140,11 @@ the goal card, with "↺ Read it again" beside it.
 
 **The start screen is kept short on purpose.** Its one job is to get you into a morning, so anything you
 read once and then scroll past for ever is folded behind a summary line that carries the useful part: the
-desk, the keys and privacy note, your record ("📈 7 runs · best 1449"), and the perk picker on a campaign
-card ("🎁 Perk: ☕ Strong coffee"). The perk fold survives the redraw that picking a perk causes, or it
-would shut in your face mid-choice. Between the folds, the one-rule-at-a-time box and the two-up desk,
-the screen went from **3850px tall to about 1900** on a 375px phone.
+desk ("4 of 10 unlocked 🗒️ 🪴 🏆 🎧"), the keys and privacy note, and your record ("📈 7 runs · best
+1449"). What is **not** folded is anything you act on: the pickers, the campaign and daily cards, and the
+perk row — which perk you take is a decision you make before every campaign morning, and one hidden
+behind a summary line is one you forget you have. Between the folds, the one-rule-at-a-time box and the
+two-up desk, the screen went from **3850px tall to about 2200** on a 375px phone.
 
 ## What finishing means, by career level
 

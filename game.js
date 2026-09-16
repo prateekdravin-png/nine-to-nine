@@ -453,7 +453,6 @@
         `<li class="${row.done ? 'done' : 'miss'}"><b>${row.done ? '★' : '☆'}</b><span>${escapeHtml(row.label)}</span></li>`).join('') + '</ul>';
   }
 
-  let perksOpen = false; // the perk fold survives the redraw a perk click causes
   // One perk into a campaign morning. Locked perks are shown with the level that unlocks them, so what a
   // level gives you is visible before you have earned it.
   function perkPickerHtml(level) {
@@ -475,9 +474,9 @@
           `${p.emoji} ${escapeHtml(p.title)}${owned ? '' : ` · L${by.n}`}</button>`;
       }));
     const chosen = picked ? Rewards.byId[picked] : null;
-    return `<details class="fold perks"${perksOpen ? ' open' : ''}><summary>🎁 Perk: ${chosen ? `${chosen.emoji} ${escapeHtml(chosen.title)}` : 'none'}</summary>` +
-      `<div class="fold-body"><div class="perk-row">${buttons.join('')}</div>` +
-      `<p class="perk-blurb">${chosen ? escapeHtml(chosen.blurb) : 'Play it as it comes. Stars count the same either way.'}</p></div></details>`;
+    return '<div class="perks"><div class="perks-head">Take one perk into this morning</div>' +
+      `<div class="perk-row">${buttons.join('')}</div>` +
+      `<p class="perk-blurb">${chosen ? escapeHtml(chosen.blurb) : 'Play it as it comes. Stars count the same either way.'}</p></div>`;
   }
 
   // The star count beside the ladder adds up the stars ON that ladder, so it matches the rungs in front
@@ -1918,7 +1917,6 @@
       renderWeekCard();
       return;
     }
-    if (e.target.closest('.perks > summary')) { perksOpen = !perksOpen; return; }
     const perkBtn = e.target.closest('[data-perk]');
     if (perkBtn && !perkBtn.disabled) {
       store(STORE.perk, perkBtn.dataset.perk === 'none' ? '' : perkBtn.dataset.perk);
