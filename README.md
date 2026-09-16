@@ -185,8 +185,8 @@ Its card always did say *"all the quiet you wanted. Now use it."*
 ## The campaign: the game as a ladder
 
 Everything this prototype can do used to arrive at once — flow, traps, headphones, favours, saying no,
-day types, career levels, bought time. The campaign is the curriculum: **twelve levels, one morning
-each, every one asking for something the level before it taught.**
+day types, career levels, bought time. The campaign is the curriculum: **sixteen levels, one morning
+each, every one asking for something the level before it taught, and a whole week at the end.**
 
 | # | Level | What it asks | What it teaches |
 |---|---|---|---|
@@ -202,12 +202,16 @@ each, every one asking for something the level before it taught.**
 | 10 | 🚀 Release day | Miss nothing urgent | No slack on the days that matter |
 | 11 | ⏳ On a roll | A run of 12 right calls | Reading well is worth time, not just calm |
 | 12 | 👑 Lead | Finish on a gold | Alarm words mislead → **👑 Lead** |
-| 13 | 🗓️ A week that holds | 3 of 5 mornings, 40 energy, 40 at home | Everything above, five times running |
+| 13 | 🏠 Working from home | Clear it, 35s in Deep Work | A quiet morning is not an easy one |
+| 14 | 🔍 The micromanager | Miss nothing urgent, handle 3 | When the alarms are real, they cost time, not judgement |
+| 15 | 🙂 All so polite | Clear it, no traps at all | Politeness is not safety |
+| 16 | ⌛ It all lands at noon | Miss nothing urgent, 40s in Deep Work | Spend the quiet building a lead |
+| 17 | 🗓️ A week that holds | 3 of 5 mornings, 40 energy, 40 at home | Everything above, five times running |
 
-**The work week is the last level, not a mode beside it.** Levels 1–12 each teach a piece of a single
-morning; level 13 asks whether you can do it five times running without emptying yourself, which is the
+**The work week is the last level, not a mode beside it.** Levels 1–16 each teach a piece of a single
+morning; level 17 asks whether you can do it five times running without emptying yourself, which is the
 question the whole game is about. Before you reach it the week has no separate card at all, so the start
-screen never offers two unrelated runs of mornings at once; at level 13 the campaign card *becomes* the
+screen never offers two unrelated runs of mornings at once; at level 17 the campaign card *becomes* the
 week, and once the ladder is finished the week returns as a standalone card you can replay. One
 description of a week, in one place, in one renderer.
 
@@ -217,8 +221,8 @@ what makes you a senior. One ladder instead of two.
 
 **Progress is your career, not the role's.** A level is the same morning in every role — the same
 arrival times, the same types, the same boss, the same target, with only the wording of the messages
-changed — so clearing it counts once rather than five times. Per-role progress would be thirteen levels
-times five roles of the same thirteen lessons. The card says so, and each cleared level records which
+changed — so clearing it counts once rather than five times. Per-role progress would be seventeen levels
+times five roles of the same seventeen lessons. The card says so, and each cleared level records which
 role you actually played it as, so "I did that one as a developer" is visible and true.
 
 **The ladder is also the level picker.** Anything you have cleared stays open to play again, and stays
@@ -247,7 +251,7 @@ unequal. Both live in `rewards.js`.
 to a level you have already cleared, and a record of how well you know it. Each star needs the one before
 it, and a worse replay never takes one away.
 
-| | A morning (levels 1–12) | The week (level 13) |
+| | A morning (levels 1–16) | The week (level 17) |
 |---|---|---|
 | ★ | Clear the level | Clear the level |
 | ★★ | Finish on a gold | Deliver 4 of the 5 mornings |
@@ -802,7 +806,7 @@ playtesting for real.
 | `test/days.test.js` | Day types: that the best way to play really does change with the morning |
 | `challenge.js` | Challenge links: packing a morning and a score into a URL fragment, and reading it back |
 | `week.js` | The work week: what a morning costs you, what the night gives back, and how a week is judged |
-| `campaign.js` | The twelve levels, what each one asks for, and which of them promote you |
+| `campaign.js` | The seventeen levels, what each one asks for, and which of them promote you |
 | `persona.js` | Work personalities: which one a round earns, and why |
 | `awards.js` | Achievements and the desk objects they unlock |
 | `scene.js` | The illustrated office scene and the portraits of the people who message you |

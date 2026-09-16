@@ -109,7 +109,11 @@
       n: 11, id: 'on-a-roll', title: 'On a roll', emoji: '⏳',
       brief: 'Twelve right calls in a row and the morning gives you five seconds back.',
       teaches: 'Reading well is worth time, not just the absence of trouble.',
-      setup: { day: 'normal', level: 'senior', seed: 1110 },
+      // Seed 1110 asked for perfection: a flawless reader hit exactly twelve and a 90% reader only four,
+      // so a single misread anywhere in the morning failed the level. This morning carries more messages,
+      // and a strong reader who slips once still strings twelve together; someone answering without
+      // reading still tops out at three.
+      setup: { day: 'normal', level: 'senior', seed: 1119 },
       goals: [SHIP, atLeast('run', 'A run of 12 right calls', st('bestRun'), 12)]
     },
     {
@@ -121,10 +125,43 @@
       unlocks: 'lead'
     },
     {
+      // Levels 13 to 16 are the lead's own mornings. Everything up to here taught a piece of the job on an
+      // ordinary day with an ordinary boss; these four change the weather instead of the rules — a day type
+      // and the three bosses the daily morning can deal you — so nothing new has to be explained and the
+      // difficulty comes from the morning itself. Each seed was searched for the same way as the rest: a
+      // player who has learned the level clears it in all five roles, and one who has not never does.
+      n: 13, id: 'quiet-house', title: 'Working from home', emoji: '🏠',
+      brief: 'Half as many interruptions, and focus twice as hard to hold.',
+      teaches: 'A quiet morning is not an easy one. Nothing is protecting your attention but you.',
+      setup: { day: 'wfh', level: 'lead', seed: 1304 },
+      goals: [SHIP, atLeast('deep', '35 seconds in Deep Work', st('deepWorkTime'), 35)]
+    },
+    {
+      n: 14, id: 'micromanager', title: 'The micromanager', emoji: '🔍',
+      brief: 'Your boss checks in all morning, and today most of it really is on fire.',
+      teaches: 'When the alarms are real, what they cost you is time, not judgement.',
+      setup: { day: 'normal', level: 'lead', seed: 1313 },
+      goals: [SHIP, atMost('missed', 'Miss nothing urgent', st('urgentMissed'), 0), atLeast('handled', 'Handle at least 3 real emergencies', st('urgentHandled'), 3)]
+    },
+    {
+      n: 15, id: 'all-polite', title: 'All so polite', emoji: '🙂',
+      brief: 'Nobody shouts today. The traps say please, and thank you, and “whenever you get a minute”.',
+      teaches: 'Politeness is not safety. Read what is being asked, not how nicely it is asked.',
+      setup: { day: 'normal', level: 'lead', seed: 1305 },
+      goals: [SHIP, atMost('traps', 'Take no traps at all', st('trapsTaken'), 0)]
+    },
+    {
+      n: 16, id: 'noon', title: 'It all lands at noon', emoji: '⌛',
+      brief: 'A quiet start, and then the whole morning arrives at once, right at the end.',
+      teaches: 'Spend the quiet building a lead. The end of the morning will not give you one.',
+      setup: { day: 'normal', level: 'lead', seed: 1327 },
+      goals: [SHIP, atMost('missed', 'Miss nothing urgent', st('urgentMissed'), 0), atLeast('deep', '40 seconds in Deep Work', st('deepWorkTime'), 40)]
+    },
+    {
       // The only level that is not one morning. Everything before it teaches a piece of a morning; this
       // asks whether you can do it five times running without emptying yourself, which is the actual
       // question the game is about. It is the destination of the ladder rather than a mode beside it.
-      n: 13, id: 'the-week', title: 'A week that holds', emoji: '🗓️',
+      n: 17, id: 'the-week', title: 'A week that holds', emoji: '🗓️',
       kind: 'week',
       brief: 'Five mornings on one set of meters. Monday to Friday, and still a person on Friday.',
       teaches: 'A morning you win by emptying yourself is a morning Tuesday pays for.',

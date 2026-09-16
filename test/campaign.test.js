@@ -24,6 +24,11 @@ const APPROACH = {
   release: { strategy: 'Perfect reader' },
   'on-a-roll': { strategy: 'Perfect reader' },
   lead: { strategy: 'Perfect reader' },
+  // The lead's own mornings: the weather changes, so the way through each is still to read them.
+  'quiet-house': { strategy: 'Perfect reader' },
+  micromanager: { strategy: 'Perfect reader' },
+  'all-polite': { strategy: 'Perfect reader' },
+  noon: { strategy: 'Perfect reader' },
   // The last level is a whole week, so its approach is a habit rather than a strategy for one morning:
   // pace yourself and answer the people outside work.
   'the-week': { strategy: 'Perfect reader + answers home', pace: true }
@@ -42,6 +47,10 @@ const NAIVE = {
   release: 'Respond to everything',
   'on-a-roll': '80% accurate reader',
   lead: 'Keyword reader: alarm words mean urgent',
+  'quiet-house': 'Respond to everything',                    // the quiet is the point, and this one answers through all of it
+  micromanager: 'Say no to everything',                      // hedging works when you cannot tell; today the alarms are real
+  'all-polite': 'Respond to everything',                     // nothing sounds like a trap, so this one takes them all
+  noon: 'Ignore everything',                                 // survives the quiet start and drowns at noon
   'the-week': 'Perfect reader'   // delivers every morning by emptying itself, which is the whole lesson
 };
 
