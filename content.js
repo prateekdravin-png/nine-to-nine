@@ -633,17 +633,58 @@
       id: 'senior', label: 'Senior', emoji: '🚀',
       summary: 'Traps stop saying "quick". Is anything actually wrong?',
       unlockText: "Clear campaign level 7, When you can't tell, as a {role} to unlock.",
-      tell: 'Senior traps never say <i>quick</i>. They are polite, open-ended asks with nothing actually wrong: <i>"whenever you get a moment"</i>, <i>"thoughts?"</i>',
+      tell: 'Traps at this level never say <i>quick</i>. They are polite, open-ended asks with nothing actually wrong: <i>"whenever you get a moment"</i>, <i>"thoughts?"</i>',
       trapPop: 'Nothing was actually wrong.'
     },
     lead: {
       id: 'lead', label: 'Lead', emoji: '👑',
       summary: 'Traps shout URGENT. Real emergencies stay calm.',
       unlockText: 'Clear campaign level 12, Lead, as a {role} to unlock.',
-      tell: 'Lead traps shout <i>URGENT</i> and <i>ASAP</i>, while real emergencies are often calm. Ask what is actually broken, and who is waiting.',
+      tell: 'Traps at this level shout <i>URGENT</i> and <i>ASAP</i>, while real emergencies are often calm. Ask what is actually broken, and who is waiting.',
       trapPop: 'The only emergency was their deadline.'
     }
   };
+
+  // What the three rungs are CALLED, by role. The ladder itself is the same everywhere — what changes as
+  // you climb is only how well a trap hides — but the job titles are not interchangeable: a manager who is
+  // promoted does not become a "lead manager", they become a director, and a support engineer becomes the
+  // support lead. `rank` is the short word, for the level picker and for sentences about the bar you are
+  // held to; `title` is what you would actually call yourself, for share text, promotions and personal
+  // bests. The rank stays one short word because three of them sit side by side on a phone.
+  const TITLES = {
+    developer: {
+      junior: { rank: 'Junior', title: 'Junior Developer' },
+      senior: { rank: 'Senior', title: 'Senior Developer' },
+      lead: { rank: 'Lead', title: 'Lead Developer' }
+    },
+    tester: {
+      junior: { rank: 'Junior', title: 'Junior Tester' },
+      senior: { rank: 'Senior', title: 'Senior Tester' },
+      lead: { rank: 'Lead', title: 'QA Lead' }
+    },
+    analyst: {
+      junior: { rank: 'Junior', title: 'Junior Analyst' },
+      senior: { rank: 'Senior', title: 'Senior Analyst' },
+      lead: { rank: 'Lead', title: 'Lead Analyst' }
+    },
+    support: {
+      junior: { rank: 'Junior', title: 'Junior Support Engineer' },
+      senior: { rank: 'Senior', title: 'Senior Support Engineer' },
+      lead: { rank: 'Lead', title: 'Support Lead' }
+    },
+    manager: {
+      junior: { rank: 'Manager', title: 'Manager' },
+      senior: { rank: 'Senior', title: 'Senior Manager' },
+      lead: { rank: 'Director', title: 'Director' }
+    }
+  };
+
+  // The title this role has at this career level. Anything unknown — an old saved run from before roles or
+  // levels existed — reads as a junior developer, which is where everyone starts.
+  function titleFor(roleId, levelId) {
+    const byRole = TITLES[roleId] || TITLES.developer;
+    return byRole[levelId] || byRole.junior;
+  }
 
   // Per role: senior traps, and lead urgent messages and traps. Every level shares the role's small talk.
   const CAREER = {
@@ -1067,5 +1108,5 @@
     }
   };
 
-  return { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS, SHARED_TRIVIAL, SHARED_URGENT, SHARED_LEAD_URGENT, SHARED_TRAP, BUSY_TEXT, DAYS, WEEKDAYS, METERS, VERDICTS, BOSSES, EVENTS, FOLLOW_UPS };
+  return { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TITLES, titleFor, TELLS, SHARED_TRIVIAL, SHARED_URGENT, SHARED_LEAD_URGENT, SHARED_TRAP, BUSY_TEXT, DAYS, WEEKDAYS, METERS, VERDICTS, BOSSES, EVENTS, FOLLOW_UPS };
 });

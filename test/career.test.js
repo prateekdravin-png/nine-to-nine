@@ -5,7 +5,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const Core = require('../core');
-const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS } = require('../content');
+const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, TELLS, TITLES, titleFor } = require('../content');
 const { evaluate, evaluateHuman } = require('../bots');
 // Levels are about how well traps hide, so these hold the kind of morning still and vary only the level.
 const DAY = 'normal';
@@ -22,6 +22,38 @@ test('levels run junior → senior → lead, and each explains itself', () => {
     // The career is climbed per role, so the lock has to name the role you are picking, not just the level.
     if (i > 0) assert.match(l.unlockText, /{role}/, `${id} should say which role has to clear it`);
   }
+});
+
+test('every role has its own name for each rung, and a promotion really renames you', () => {
+  assert.deepEqual(Object.keys(TITLES).sort(), ROLE_ORDER.slice().sort(), 'every role needs its own titles');
+  for (const roleId of ROLE_ORDER) {
+    const seen = new Set();
+    for (const levelId of LEVEL_ORDER) {
+      const { rank, title } = titleFor(roleId, levelId);
+      assert.ok(rank && title, `${roleId}/${levelId} needs a rank and a title`);
+      // The picker shows the rank and everything else the title, so the short word has to be part of the
+      // long one — otherwise a promotion reads as two different jobs. It also has to stay short: three of
+      // them sit side by side on a phone.
+      assert.ok(title.includes(rank), `${roleId}/${levelId}: "${title}" should contain "${rank}"`);
+      assert.ok(rank.length <= 8 && !rank.includes(' '), `${roleId}/${levelId}: "${rank}" is too long for a chip`);
+      seen.add(title);
+    }
+    assert.equal(seen.size, LEVEL_ORDER.length, `${roleId} reuses a title, so a promotion would not show`);
+  }
+  // Ranks are dropped into sentences ("as a director that means…"), so lower-casing one has to be safe.
+  for (const roleId of ROLE_ORDER) {
+    for (const levelId of LEVEL_ORDER) {
+      assert.doesNotMatch(titleFor(roleId, levelId).rank, /[A-Z]{2}/, 'an acronym would read as "as a qa lead"');
+    }
+  }
+  // The point of having them at all: a manager is not promoted to "lead manager".
+  assert.equal(titleFor('manager', 'lead').title, 'Director');
+  assert.equal(titleFor('manager', 'junior').title, 'Manager');
+  assert.equal(titleFor('support', 'lead').title, 'Support Lead');
+  assert.equal(titleFor('tester', 'lead').title, 'QA Lead');
+  assert.equal(titleFor('developer', 'senior').title, 'Senior Developer');
+  // Anything unknown — a run saved before roles or levels existed — reads as where everyone starts.
+  assert.equal(titleFor('intern', 'principal').title, 'Junior Developer');
 });
 
 test('a game defaults to junior and refuses a level that does not exist', () => {

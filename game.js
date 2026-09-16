@@ -15,7 +15,7 @@
   const Rewards = window.NineRewards;
   const Review = window.NineReview;
   const Scene = window.NineScene;
-  const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, DAYS, WEEKDAYS, METERS, BOSSES, EVENTS } = window.NineContent;
+  const { ROLES, ROLE_ORDER, LEVELS, LEVEL_ORDER, DAYS, WEEKDAYS, METERS, BOSSES, EVENTS, titleFor } = window.NineContent;
   const T = Core.TUNING;
   // The top tier of the morning being played: an ordinary day tops out at DEEP WORK, a backlog day
   // has only the one gear.
@@ -108,12 +108,14 @@
   // What the deliverable is called: usually the role's, but a backlog morning isn't building a feature.
   const progressLabel = () => currentDay().progressLabel || currentRole().progressLabel;
   const eventName = (id) => `${EVENTS[id].emoji} ${EVENTS[id].title.replace(/!$/, '')}`;
-  // "🧪 Senior Tester". Runs saved before roles or levels existed were junior developers.
+  // "🧪 Senior Tester", "🧭 Director". Runs saved before roles or levels existed were junior developers.
   const whoPlayed = (roleId, levelId) => {
     const r = ROLES[roleId] || ROLES[Core.DEFAULT_ROLE];
-    const l = LEVELS[levelId] || LEVELS[Core.DEFAULT_LEVEL];
-    return `${r.emoji} ${l.label} ${r.label}`;
+    return `${r.emoji} ${titleFor(r.id, levelId).title}`;
   };
+
+  // What this role calls the career level it is playing at: a promoted manager is a director, not a lead.
+  const rankOf = (levelId, roleId) => titleFor(roleId || (game ? game.role : role), levelId).rank;
 
   // The 60-second session is shown as a three-hour morning.
   function clockText(t) {
@@ -222,7 +224,7 @@
         `<p class="daily-sub"><b>${day.emoji} ${escapeHtml(day.label)}</b> — ${escapeHtml(day.summary)}<br>` +
         `Today's boss: <b>${boss.emoji} ${escapeHtml(boss.label)}</b> — ${escapeHtml(boss.summary)}<br>` +
         'Everyone gets the same morning today, whatever their role or level. Your first finished run is the one you share.</p>' +
-        `<p class="day-note">🎯 ${escapeHtml(day.goal)} As a ${LEVELS[level].emoji} ${escapeHtml(LEVELS[level].label)} you need <b>${rules.target}%</b>${alsoText(rules.also) ? ` and to ${escapeHtml(alsoText(rules.also))}` : ''}, plus a reputation of <b>${rules.goldRep}</b> for a 🥇.</p>` +
+        `<p class="day-note">🎯 ${escapeHtml(day.goal)} As a ${LEVELS[level].emoji} ${escapeHtml(rankOf(level))} you need <b>${rules.target}%</b>${alsoText(rules.also) ? ` and to ${escapeHtml(alsoText(rules.also))}` : ''}, plus a reputation of <b>${rules.goldRep}</b> for a 🥇.</p>` +
         `<button class="primary" type="button" id="dailyBtn">Play Morning #${n}${pendingInvite() ? '' : ' <kbd>Enter</kbd>'}</button>`;
     }
     ui.practiceKbd.hidden = !rec || pendingInvite(); // once today's morning is done, Enter goes to practice
@@ -498,7 +500,7 @@
     const careerLevel = LEVELS[next.setup.level];
     const day = DAYS[next.setup.day];
     ui.campaignCard.innerHTML = head +
-      `<p class="campaign-teaches">${day.emoji} ${escapeHtml(day.label)} · ${careerLevel.emoji} ${escapeHtml(careerLevel.label)}${next.unlocks ? ` · clears to ${LEVELS[next.unlocks].emoji} ${escapeHtml(LEVELS[next.unlocks].label)}` : ''}</p>` +
+      `<p class="campaign-teaches">${day.emoji} ${escapeHtml(day.label)} · ${careerLevel.emoji} ${escapeHtml(rankOf(next.setup.level, role))}${!next.unlocks ? '' : next.unlocks === next.setup.level ? ' · clearing it promotes you' : ` · clears to ${LEVELS[next.unlocks].emoji} ${escapeHtml(titleFor(role, next.unlocks).title)}`}</p>` +
       perkPickerHtml(next) +
       `<button class="primary" type="button" id="campaignBtn">${replaying ? 'Play level ' + next.n + ' again' : 'Play level ' + next.n} <kbd>Enter</kbd></button>` +
       (replaying && upNext ? `<button class="link week-quit" type="button" id="backToNextBtn">Back to level ${upNext.n}, ${escapeHtml(upNext.title)}</button>` : '');
@@ -547,9 +549,10 @@
     if (newPerks.length) announce('Perk unlocked: ' + newPerks.map((p) => p.title).join(', '));
     if (isNew && level.unlocks) {
       const unlocked = LEVELS[level.unlocks];
+      const to = titleFor(result.role, level.unlocks).title; // the title this role is promoted to
       ui.endPromotion.hidden = false;
-      ui.endPromotion.textContent = `🎉 Promoted! ${unlocked.emoji} ${unlocked.label} unlocked: ${unlocked.summary}`;
-      announce(`Promoted to ${unlocked.label}`);
+      ui.endPromotion.textContent = `🎉 Promoted! ${unlocked.emoji} ${to} unlocked: ${unlocked.summary}`;
+      announce(`Promoted to ${to}`);
     }
   }
 
@@ -897,8 +900,6 @@
     }
     ui.roleDesc.textContent = `${r.emoji} ${r.label}: ${r.tagline}`;
     ui.startLede.textContent = `It's 10:00 AM. ${r.goal} Everyone else has other plans for your morning.`;
-    const demand = Core.rulesFor('normal', null, level);
-    ui.startGoal.textContent = `Goal: get the ${r.deliverable.noun} ${r.deliverable.done} with your reputation intact. As a ${LEVELS[level].label.toLowerCase()} that means about ${demand.target}% of it${alsoText(demand.also) ? `, and to ${alsoText(demand.also)}` : ''} — the bar rises with your career, and each kind of morning moves it again.`;
     document.querySelectorAll('[data-role-verb]').forEach((el) => { el.textContent = r.verb; });
     ui.progressLabel.textContent = r.progressLabel;
     ui.endProgressLabel.textContent = r.progressLabel;
@@ -908,11 +909,16 @@
     applyLevelText(); // the history line depends on both role and level
   }
 
+  // The cards below the pickers quote your rank and what today asks of it, and both of those move when
+  // you change role or level — so they are redrawn with the rest of the start screen.
+  const renderStartCards = () => { renderCampaignCard(); renderDailyCard(); };
+
   function setRole(id, focus) {
     if (!ROLES[id]) return;
     role = id;
     store(STORE.role, id);
     applyRoleText();
+    renderStartCards();
     if (focus) ui.rolePicker.querySelector(`[data-role="${id}"]`).focus();
   }
 
@@ -927,12 +933,12 @@
     return LEVEL_ORDER.slice(0, highest + 1);
   }
 
+  // The names are left empty here and filled in by applyLevelText: what a rung is called depends on the
+  // role picked above it, and that changes without the picker being rebuilt.
   function renderLevelPicker() {
-    ui.levelPicker.innerHTML = LEVEL_ORDER.map((id) => {
-      const l = LEVELS[id];
-      return `<button type="button" class="level-card" role="radio" data-level="${id}">` +
-        `<span class="level-name">${l.emoji} ${escapeHtml(l.label)}</span><span class="level-note"></span></button>`;
-    }).join('');
+    ui.levelPicker.innerHTML = LEVEL_ORDER.map((id) =>
+      `<button type="button" class="level-card" role="radio" data-level="${id}">` +
+      '<span class="level-name"></span><span class="level-note"></span></button>').join('');
   }
 
   // `tried` is a locked level the player just clicked: say how to unlock it instead of selecting it.
@@ -944,12 +950,19 @@
       card.setAttribute('aria-checked', String(selected));
       card.setAttribute('aria-disabled', String(!open.includes(id)));
       card.tabIndex = selected ? 0 : -1;
+      card.querySelector('.level-name').textContent = `${LEVELS[id].emoji} ${rankOf(id, role)}`;
       card.querySelector('.level-note').textContent = open.includes(id) ? '' : '🔒 locked';
     }
     const shown = LEVELS[tried || level];
+    const title = titleFor(role, shown.id).title; // room for the whole job here, unlike the chips
     ui.levelDesc.textContent = tried
-      ? `🔒 ${shown.label}: ${shown.unlockText.replace('{role}', currentRole().label.toLowerCase())}`
-      : `${shown.emoji} ${shown.label}: ${shown.summary}`;
+      ? `🔒 ${title}: ${shown.unlockText.replace('{role}', currentRole().label.toLowerCase())}`
+      : `${shown.emoji} ${title}: ${shown.summary}`;
+    // The goal names the role's deliverable and the share the level is held to, so it is redrawn here:
+    // picking a different rung used to leave the old percentage on screen.
+    const r = ROLES[role];
+    const demand = Core.rulesFor('normal', null, level);
+    ui.startGoal.textContent = `Goal: get the ${r.deliverable.noun} ${r.deliverable.done} with your reputation intact. As a ${rankOf(level, role).toLowerCase()} that means about ${demand.target}% of it${alsoText(demand.also) ? `, and to ${alsoText(demand.also)}` : ''} — the bar rises with your career, and each kind of morning moves it again.`;
     ui.trapTell.innerHTML = LEVELS[level].tell; // trusted markup from content.js
     ui.startHistory.innerHTML = historyHtml(loadRuns(), role, level);
   }
@@ -960,6 +973,7 @@
     level = id;
     store(STORE.level, id);
     applyLevelText();
+    renderStartCards();
   }
 
   ui.levelPicker.addEventListener('click', (e) => {
@@ -1369,7 +1383,7 @@
       .join('');
     const mine = runs.filter((r) => roleOf(r) === roleId && levelOf(r) === levelId);
     const roleBest = ROLES[roleId] && LEVELS[levelId] && mine.length
-      ? ` · Best as ${escapeHtml(`${LEVELS[levelId].label} ${ROLES[roleId].label}`)}: <b>${Math.max(...mine.map((r) => r.score))}</b>`
+      ? ` · Best as ${escapeHtml(titleFor(roleId, levelId).title)}: <b>${Math.max(...mine.map((r) => r.score))}</b>`
       : '';
     let compare = '';
     const a = runs.filter((r) => r.variant !== 'B');
@@ -1459,7 +1473,9 @@
     ui.endScore.textContent = result.score;
     ui.endProgressLabel.textContent = DAYS[result.day].progressLabel || r.progressLabel;
     ui.endProgress.textContent = `${Math.floor(result.progress)}% / ${result.target}%`;
-    ui.endProgress.title = `A ${LEVELS[result.level].label.toLowerCase()} is asked for ${result.target}% of this morning; a lead would be asked for ${Math.round(result.target / Core.TUNING.LEVEL_DEMAND[result.level].share)}%.`;
+    const asked = `A ${rankOf(result.level, result.role).toLowerCase()} is asked for ${result.target}% of this morning`;
+    ui.endProgress.title = result.level === 'lead' ? `${asked}, which is the whole of it.`
+      : `${asked}; a ${rankOf('lead', result.role).toLowerCase()} would be asked for ${Math.round(result.target / Core.TUNING.LEVEL_DEMAND[result.level].share)}%.`;
     ui.endRep.textContent = Math.round(result.rep);
     const rows = [
       ['🗓️ Kind of morning', `${DAYS[result.day].emoji} ${DAYS[result.day].label}`],

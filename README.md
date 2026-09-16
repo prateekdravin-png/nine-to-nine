@@ -693,8 +693,13 @@ hides, and so which reading skill each level tests.
 - **A promotion is the role's, not the account's.** Clearing level 7 as a developer makes you a senior
   developer; a tester still starts at 🌱 Junior until a tester clears it. The campaign level itself stays
   cleared for everyone, so it is one morning to replay, not a locked door.
+- **Each role names the rungs itself.** The ladder is the same three steps, but the jobs are not
+  interchangeable: a promoted manager is a 👑 **Director**, not a "lead manager", a tester becomes the
+  **QA Lead** and a support engineer the **Support Lead**. `TITLES` in `content.js` holds a short `rank`
+  for the picker chips — three of them sit side by side on a phone — and the full `title` for share text,
+  promotions and personal bests.
 - The daily morning has the same rhythm at every level; the share text says who played it
-  ("🧪 Senior Tester").
+  ("🧪 Senior Tester", "🧭 Director").
 - All career wording is plain English with no local references.
 
 `test/career.test.js` holds every level to its tell and checks it with keyword-only readers: "quick
