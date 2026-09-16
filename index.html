@@ -94,21 +94,32 @@
     <p class="role-desc" id="levelDesc"></p>
 
     <h2 class="section-title">2 · How it plays</h2>
-    <ol class="rules">
-      <li><b>Hold Space</b> (or the big button) to <span data-role-verb>code</span>. The longer you go uninterrupted, the more Flow you build. At <b>DEEP WORK</b> you work 3× faster.</li>
-      <li>Notifications keep arriving. <b>Respond</b> and you're pulled away for a while. <b>Ignore</b> and it's gone, but ignoring something genuinely urgent costs <b>Reputation</b>.</li>
-      <li>Some messages are traps. <span id="trapTell">Anything <i>quick</i>, <i>small</i> or <i>just 2 mins</i> never is.</span></li>
-      <li>⏳ <b>A run of right calls buys time.</b> Get 12 decisions right in a row — respond to what's
+    <!-- One rule at a time. All seven at once, plus the goal, were most of the start screen: the role
+         picker, the ladder and today's morning all started below the fold. -->
+    <div class="tour" id="tour" role="group" aria-label="How it plays">
+      <ol class="rules" id="tourSteps" aria-live="polite">
+        <li><b>Hold Space</b> (or the big button) to <span data-role-verb>code</span>. The longer you go uninterrupted, the more Flow you build. At <b>DEEP WORK</b> you work 3× faster.</li>
+        <li>Notifications keep arriving. <b>Respond</b> and you're pulled away for a while. <b>Ignore</b> and it's gone, but ignoring something genuinely urgent costs <b>Reputation</b>.</li>
+        <li>Some messages are traps. <span id="trapTell">Anything <i>quick</i>, <i>small</i> or <i>just 2 mins</i> never is.</span></li>
+        <li>⏳ <b>A run of right calls buys time.</b> Get 12 decisions right in a row — respond to what's
         urgent, ignore what isn't — and you bank <b>5 seconds</b>. They come off your next interruptions
         automatically: when you're on top of your inbox you get off calls faster. Falling for a trap ends
         the run, and the bank never pays for a trap.</li>
-      <li>🙅 <b>Say no</b> when you genuinely can't tell. It costs a few points of Reputation every time,
+        <li>🙅 <b>Say no</b> when you genuinely can't tell. It costs a few points of Reputation every time,
         whatever the message turns out to be — far less than ignoring a real emergency, and far more than
         reading it properly. It's for the messages you can't read in time, not for all of them.</li>
-      <li>🎧 <b>Headphones</b>, once per round: 10 seconds with no non-urgent pings.</li>
-      <li>🤝 <b>Colleague favours</b>: reply to small talk from a colleague (a person, not a bot, group chat or family) and they owe you one, up to 3. Tap <b>🤝</b> on any message to pass it to them, even while you're stuck on a call. They'll handle a real emergency for you; on anything else the favour is wasted.</li>
-    </ol>
-    <p class="goal" id="startGoal">Goal: get the feature shipped (100%) with your reputation intact.</p>
+        <li>🎧 <b>Headphones</b>, once per round: 10 seconds with no non-urgent pings.</li>
+        <li>🤝 <b>Colleague favours</b>: reply to small talk from a colleague (a person, not a bot, group chat or family) and they owe you one, up to 3. Tap <b>🤝</b> on any message to pass it to them, even while you're stuck on a call. They'll handle a real emergency for you; on anything else the favour is wasted.</li>
+      </ol>
+      <p class="goal" id="startGoal" hidden>Goal: get the feature shipped (100%) with your reputation intact.</p>
+      <div class="tour-foot">
+        <span class="tour-count" id="tourCount">1 of 8</span>
+        <span class="tour-btns">
+          <button type="button" class="secondary tour-btn" id="tourBack" hidden>Back</button>
+          <button type="button" class="secondary tour-btn" id="tourNext">Next</button>
+        </span>
+      </div>
+    </div>
 
     <h2 class="section-title">3 · Play</h2>
     <section class="daily campaign" id="campaignCard"></section>

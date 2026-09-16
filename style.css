@@ -183,7 +183,15 @@ body.is-busy .code-btn { background: #2a3244; color: var(--muted); box-shadow: 0
 .panel-logo { font-size: 40px; }
 .panel h1 { margin: 2px 0 6px; font-size: 26px; }
 .lede { color: #c3cede; margin: 0 0 14px; }
-.rules { margin: 0 0 12px; padding-left: 20px; color: #c3cede; display: grid; gap: 8px; }
+/* How it plays, one step at a time. The numbers come from the counter in the footer, not from list
+   markers: with the other steps hidden, every step would be numbered "1." */
+.tour { margin: 0 0 14px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); }
+.rules { margin: 0; padding: 0; list-style: none; color: #c3cede; }
+.tour .rules li, .tour .goal { margin: 0; min-height: 6.5em; }
+.tour-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 10px; }
+.tour-count { flex: none; white-space: nowrap; font: 600 12px var(--mono); color: var(--dim); }
+.tour-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.tour-btn { padding: 8px 14px; font-size: 13px; border-radius: 12px; }
 .goal { font-weight: 700; margin: 0 0 14px; }
 .variant { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: 13px; margin-bottom: 14px; cursor: pointer; }
 .variant input { margin-top: 3px; accent-color: var(--violet); }
@@ -294,14 +302,16 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 @keyframes walkby { from { transform: translateX(-170px); } to { transform: translateX(430px); } }
 
 /* ---- Achievements and the desk objects they unlock ---- */
-.awards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.awards { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
 .award-count { grid-column: 1 / -1; margin: 0 0 2px; font: 600 12px var(--mono); color: var(--muted); }
-.award-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; }
+/* Two to a row on a phone, so ten of these are five rows instead of ten. The emoji and the name share
+   the top line; what it unlocked runs under both, where it has the whole card to wrap in. */
+.award-item { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px 8px; padding: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; }
 .award-item.got { border-color: #35c98a55; background: #35c98a12; }
-.award-emoji { font-size: 22px; line-height: 1; filter: grayscale(1); opacity: 0.5; }
+.award-emoji { flex: none; font-size: 19px; line-height: 1; filter: grayscale(1); opacity: 0.5; }
 .award-item.got .award-emoji { filter: none; opacity: 1; }
-.award-item b { display: block; font-size: 13px; }
-.award-item span:last-child { font-size: 12px; color: var(--muted); }
+.award-item b { min-width: 0; font-size: 12.5px; overflow-wrap: break-word; }
+.award-hint { grid-column: 1 / -1; font-size: 11.5px; line-height: 1.35; color: var(--muted); overflow-wrap: break-word; }
 .award { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: #35c98a1f; border: 1px solid #35c98a66; color: #d9f7e8; font-size: 13.5px; text-align: center; }
 
 /* The kind of morning, in the window bar next to the boss. */

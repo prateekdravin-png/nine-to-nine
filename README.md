@@ -133,6 +133,11 @@ It listens on your network too, so you can playtest on your phone at `http://<th
 Keys: `1`–`5` pick a role (start screen) · `Space` hold to work · `R` respond · `N` say no · `X` ignore · `P` peek ·
 `D` pass to a colleague · `H` headphones · `M` sound. Keys act on the notification closest to expiring, which is outlined.
 
+In the game these rules are **one card at a time**, with Next, ending on the goal for the role and career
+level you have picked. Seven rules and a goal on screen together were most of the start screen: the role,
+the ladder and today's morning all began below the fold. Anyone who has read them through once lands on
+the goal card, with "↺ Read it again" beside it.
+
 ## What finishing means, by career level
 
 Asking a junior for the same hundred per cent as a lead was never realistic. Nobody delivers a whole
@@ -611,6 +616,10 @@ Unlocks are **cosmetic by design**: they change what your office looks like and 
 so a long-time player and a first-timer face exactly the same morning. The start screen has a "Your desk"
 section showing what's unlocked and the hint for what isn't, and the result screen says what a round just
 earned. `awards.js` holds the conditions, `test/awards.test.js` checks each one.
+
+Ten of them go **two to a row** on a phone: the emoji and the name share the top line, and what it
+unlocked runs underneath across the whole card. One per row was ten rows of scrolling to see a list that
+is mostly three words per line.
 
 ## Graphics: the illustrated office
 

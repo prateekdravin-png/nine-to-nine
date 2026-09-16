@@ -42,6 +42,7 @@
     levelPicker: $('levelPicker'), levelDesc: $('levelDesc'), trapTell: $('trapTell'),
     campaignCard: $('campaignCard'), endCampaign: $('endCampaign'), challengeCard: $('challengeCard'), weekCard: $('weekCard'), dailyCard: $('dailyCard'), practiceBtn: $('practiceBtn'), practiceKbd: $('practiceKbd'), variantToggle: $('variantToggle'),
     startGoal: $('startGoal'), awards: $('awards'), statsNote: $('statsNote'), startHistory: $('startHistory'),
+    tourSteps: $('tourSteps'), tourCount: $('tourCount'), tourBack: $('tourBack'), tourNext: $('tourNext'),
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
     endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endChallenge: $('endChallenge'), endStats: $('endStats'), endReview: $('endReview'), endQuote: $('endQuote'),
@@ -58,6 +59,7 @@
     runs: 'nineToNine.runs', muted: 'nineToNine.muted', variant: 'nineToNine.variant', role: 'nineToNine.role',
     daily: 'nineToNine.daily', player: 'nineToNine.player', visit: 'nineToNine.lastVisit', personas: 'nineToNine.personas',
     level: 'nineToNine.level',   // the career level picked on the start screen
+    tour: 'nineToNine.tour',     // whether the rules have been read to the end at least once
     recent: 'nineToNine.recent',   // message texts seen in the last few rounds
     awards: 'nineToNine.awards',   // achievements unlocked so far
     progress: 'nineToNine.progress', // rounds played and roles finished, for the long-run achievements
@@ -989,6 +991,28 @@
     ui.startHistory.innerHTML = historyHtml(loadRuns(), role, level);
   }
 
+  // ---------- how it plays ----------
+  // Seven rules and the goal, one card at a time. On screen together they were most of the start screen,
+  // and everything you actually came back for — the role, the ladder, today's morning — began below the
+  // fold. Someone who has read them through once lands on the goal, with the rules a click away.
+  const tour = { steps: [], at: 0 };
+
+  function renderTour() {
+    tour.steps.forEach((el, i) => { el.hidden = i !== tour.at; });
+    const last = tour.at === tour.steps.length - 1;
+    ui.tourCount.textContent = `${tour.at + 1} of ${tour.steps.length}`;
+    ui.tourBack.hidden = tour.at === 0;
+    ui.tourNext.textContent = last ? '↺ Read it again' : 'Next';
+    if (last) store(STORE.tour, 'done');
+  }
+
+  // Next on the last card wraps back to the first, which is what "read it again" means.
+  function stepTour(by) {
+    const last = tour.steps.length - 1;
+    tour.at = tour.at === last && by > 0 ? 0 : Math.min(last, Math.max(0, tour.at + by));
+    renderTour();
+  }
+
   function setLevel(id) {
     if (!LEVELS[id]) return;
     if (!unlockedLevels().includes(id)) { applyLevelText(id); return; }
@@ -997,6 +1021,9 @@
     applyLevelText();
     renderStartCards();
   }
+
+  ui.tourNext.addEventListener('click', () => stepTour(1));
+  ui.tourBack.addEventListener('click', () => stepTour(-1));
 
   ui.levelPicker.addEventListener('click', (e) => {
     const card = e.target.closest('.level-card');
@@ -1465,7 +1492,7 @@
     const items = Awards.AWARDS.map((a) => {
       const got = have.indexOf(a.id) !== -1;
       return `<div class="award-item${got ? ' got' : ''}"><span class="award-emoji" aria-hidden="true">${got ? a.emoji : '🔒'}</span>` +
-        `<div><b>${escapeHtml(a.name)}</b><span>${escapeHtml(got ? a.unlocks : a.hint)}</span></div></div>`;
+        `<b>${escapeHtml(a.name)}</b><span class="award-hint">${escapeHtml(got ? a.unlocks : a.hint)}</span></div>`;
     }).join('');
     ui.awards.innerHTML = `<p class="award-count">${have.length} of ${Awards.AWARDS.length} unlocked · each one adds something to your office</p>` + items;
   }
@@ -1941,7 +1968,7 @@
       // round. It works even with a role or level card focused (clicking a card focuses it). Buttons
       // that do something else — Change role, sharing, links — keep their own Enter.
       const el = document.activeElement;
-      if (el && el.closest && el.closest('#changeRoleBtn, [data-share]')) return;
+      if (el && el.closest && el.closest('#changeRoleBtn, .tour-btn, [data-share]')) return;
       e.preventDefault();
       // From the start screen Enter plays what the screen is offering, topmost first: an unanswered
       // challenge, then today's morning, then a practice round.
@@ -1985,6 +2012,9 @@
   if (savedLevel && LEVELS[savedLevel] && unlockedLevels().includes(savedLevel)) level = savedLevel;
   ui.statsNote.hidden = !STATS_ON;
   renderRolePicker();
+  tour.steps = [].slice.call(ui.tourSteps.children).concat(ui.startGoal);
+  tour.at = read(STORE.tour) === 'done' ? tour.steps.length - 1 : 0;
+  renderTour();
   renderLevelPicker();
   applyRoleText();
   // A challenge link, if the page was opened with one. The hash stays in the address bar so the link
