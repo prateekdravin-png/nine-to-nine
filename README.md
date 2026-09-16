@@ -659,8 +659,16 @@ The work panel opens on a little office scene (`scene.js`) that reacts to how yo
 The scene is a band whose height the layout decides, and the art is drawn to **cover** it, so something is
 cropped whenever the band is wider than 10:3. It crops **from the middle**: the first version anchored the
 art to the bottom, which kept the floor and cut your head off on a short phone at level 11, where five
-goal chips and an event bar left the band 53px tall. `.scene` also has a floor under it (92px on phones),
-and the panel's own toolbar and flow meter give up the room rather than the inbox.
+goal chips and an event bar left the band 53px tall. `.scene` also has a floor under it, `min(76px, 11dvh)`
+— a share of the screen rather than a fixed block, because the first attempt at this was 22 fixed pixels
+the screen did not have and it pushed the hold-to-work button off the bottom. The room it does take comes
+from the panel's own toolbar and flow meter, which were given a shallower padding, never from the inbox.
+
+**The layout is exactly one screen**, with nothing to scroll, so it is sized in `dvh`. Browsers without
+`dvh` measure `100vh` against the taller viewport — the one you only see once the address bar has slid
+away — which leaves the controls behind the address bar on a page that has no scrolling to reveal them.
+An `@supports not (height: 100dvh)` block falls back to a height game.js measures from the visual
+viewport. Where `dvh` works, nothing is overridden.
 
 It's all inline SVG and CSS: no image files, sharp on any screen, works offline. It only reads the game
 state, so the rules and balance are untouched. Animations switch off for players whose device asks to

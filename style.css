@@ -56,6 +56,14 @@ kbd {
   margin: 0 auto;
 }
 
+/* A browser without dvh (older Android) measures 100vh against the TALLER viewport, the one you only
+   see once the address bar has slid away — so the bottom of the page, which is the hold-to-work button,
+   sits behind the address bar until you scroll a page that does not scroll. Where dvh is supported it is
+   already right and this is left alone; where it is not, game.js measures the visible height instead. */
+@supports not (height: 100dvh) {
+  .app { height: var(--app-h, 100vh); }
+}
+
 /* ---- HUD ---- */
 .hud { display: grid; grid-template-columns: auto auto 1fr 1fr auto; align-items: center; gap: 14px; }
 .brand { display: flex; align-items: baseline; gap: 8px; }
@@ -565,7 +573,7 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
 /* On a phone the office takes the code text's place, so the inbox keeps its room for three messages */
 @media (max-width: 760px) {
   .code { display: none; }
-  .scene { flex: 1 1 auto; height: auto; min-height: 92px; }
+  .scene { flex: 1 1 auto; height: auto; min-height: min(76px, 11dvh); }
   .avatar, .avatar-tile { width: 22px; height: 22px; flex-basis: 22px; }
   .avatar-tile { font-size: 13px; }
 }
@@ -585,7 +593,7 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
   #pauseBtn { grid-area: pause; }
   #progressMeter { grid-area: feat; }
   #repMeter { grid-area: rep; }
-  .stage { grid-template-columns: 1fr; grid-template-rows: minmax(172px, 38%) minmax(0, 1fr); gap: 8px; }
+  .stage { grid-template-columns: 1fr; grid-template-rows: minmax(150px, 36%) minmax(0, 1fr); gap: 8px; }
   .ide-bar { padding: 6px 10px; }
   .flow { padding: 7px 12px 8px; }
   .flow-label { margin-bottom: 4px; }

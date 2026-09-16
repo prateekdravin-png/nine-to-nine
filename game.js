@@ -2014,6 +2014,21 @@
     document.querySelectorAll('.daily-next').forEach((el) => { el.textContent = text; });
   }, 20000);
 
+  // ---------- the screen it actually has ----------
+  // The game is one screen with nothing to scroll, so the layout's height has to be the height you can
+  // see. 100dvh is meant to be exactly that, but on some phone browsers it stays at the taller viewport
+  // while the address bar is still on screen, and the bottom of the page — the hold-to-work button, the
+  // only control the game needs — ends up below the fold. The visual viewport knows the real number.
+  function fitToScreen() {
+    const vv = window.visualViewport;
+    const h = Math.round(vv ? vv.height : window.innerHeight);
+    if (h > 0) document.documentElement.style.setProperty('--app-h', h + 'px');
+  }
+  fitToScreen();
+  window.addEventListener('resize', fitToScreen);
+  window.addEventListener('orientationchange', fitToScreen);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fitToScreen);
+
   // ---------- boot ----------
   setMuted(read(STORE.muted) === '1');
   ui.variantToggle.checked = read(STORE.variant) === 'B';
