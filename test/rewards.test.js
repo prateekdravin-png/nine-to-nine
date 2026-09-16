@@ -103,6 +103,10 @@ test('the words on a perk match what it does', () => {
   assert.ok(phones.includes(`${P.headphones.cooldown} seconds`), 'and how long it has to wait');
   assert.strictEqual(P.cover.traps, 1);
   assert.ok(Rewards.byId.cover.blurb.includes('first trap'), 'the cover says it is only the first trap');
+  assert.ok(Rewards.byId.politeexit.blurb.includes(`first ${P.politeexit.declines} polite noes`), 'the polite exit says how many noes are free');
+  assert.strictEqual(P.secondchance.urgents, 1);
+  assert.ok(Rewards.byId.secondchance.blurb.includes('first emergency'), 'the second chance says it is only the first one');
+  assert.ok(Rewards.byId.secondchance.blurb.includes('comes back'), 'and that the message still returns');
 });
 
 test('a perk is only taken where it is allowed, and only once it is earned', () => {
@@ -146,6 +150,41 @@ test('each perk is used the number of times it says, and no more', () => {
   assert.strictEqual(reader.stats.perkUsed, 0, 'a player who takes no traps never spends the cover');
 });
 
+test('the polite exit makes the first two noes free, and the third cost what it always did', () => {
+  const s = Core.createGame({ seed: 4, day: 'normal', perk: 'politeexit' });
+  const cost = [];
+  for (let i = 0; i < 3; i++) {
+    const before = s.rep;
+    Core.act(s, Core.spawnCard(s, 'trivial', 0, 30).id, 'decline');
+    cost.push(s.rep - before);
+    // Writing the no takes half a second, and nothing else can be done while it is being written.
+    while (Core.isBusy(s)) Core.step(s, 0.05, { holding: false });
+  }
+  assert.deepStrictEqual(cost, [0, 0, Core.TUNING.DECLINE.rep], 'two free, then the usual price');
+  assert.strictEqual(s.stats.perkUsed, Core.TUNING.PERKS.politeexit.declines);
+  // Saying no still takes the time it takes, perk or not, so a morning of them still delivers nothing.
+  assert.ok(s.stats.declined === 3 && s.busyUntil > 0);
+  const plain = Core.createGame({ seed: 4, day: 'normal' });
+  const was = plain.rep;
+  Core.act(plain, Core.spawnCard(plain, 'trivial', 0, 30).id, 'decline');
+  assert.strictEqual(plain.rep - was, Core.TUNING.DECLINE.rep, 'without the perk the first no costs as it always did');
+});
+
+test('the second chance waives the first missed emergency, and only the first', () => {
+  const s = Core.createGame({ seed: 4, day: 'normal', perk: 'secondchance' });
+  const miss = () => { const before = s.rep; Core.act(s, Core.spawnCard(s, 'urgent', 0, 30).id, 'ignore'); return s.rep - before; };
+  assert.strictEqual(miss(), 0, 'the first one costs nothing');
+  assert.strictEqual(miss(), s.rules.ignore.urgent, 'the second costs what missing one costs');
+  assert.strictEqual(s.stats.perkUsed, 1);
+  assert.strictEqual(s.stats.urgentMissed, 2, 'it is still a miss, and still counted as one');
+  // The escalation is what makes it a second chance rather than forgiveness: the message comes back.
+  assert.ok(s.pending.some((p) => p.type === 'urgent'), 'the emergency still follows itself up');
+  // A trap ignored is not an emergency missed, so the perk is still in hand.
+  const t = Core.createGame({ seed: 4, day: 'normal', perk: 'secondchance' });
+  Core.act(t, Core.spawnCard(t, 'trap', 0, 30).id, 'ignore');
+  assert.strictEqual(t.stats.perkUsed, 0);
+});
+
 test('the spare headphones are shorter, and cannot go straight on after the first pair', () => {
   const P = Core.TUNING.PERKS.headphones;
   const s = Core.createGame({ seed: 3, day: 'normal', perk: 'headphones' });
@@ -169,7 +208,7 @@ const CAREER = ['junior', 'senior', 'lead'];
 const MAX_GAP_NARROWING = 12;
 // Headphone timings to try. Only the spare pair cares, so only it is held against every pattern; the
 // others use one ordinary pattern for everyone's single pair.
-const PATTERNS = { headphones: [[15, 35], [25, 50], [40, 55]], coffee: [[30]], cover: [[30]] };
+const PATTERNS = { headphones: [[15, 35], [25, 50], [40, 55]], coffee: [[30]], cover: [[30]], politeexit: [[30]], secondchance: [[30]] };
 
 const goldRate = (strategy, level, perk, headphonesAt) =>
   evaluate(strategy, SEEDS, { day: 'normal', level, perk, headphonesAt }).goldRate * 100;
@@ -188,12 +227,20 @@ test('no perk closes the gap between reading the messages and not reading them',
   }
 });
 
-test('every perk is worth taking for a player who reads, but not perfectly', () => {
+// Who each perk exists for. Every one has to be worth picking to a real, imperfect player, but not to the
+// same one: the polite exit softens the cost of hedging, so a reader who never says no will never notice
+// it — the same way a player who takes no traps never spends the manager's cover. Measuring all of them
+// against a single bot would only ever prove which mistake that bot happens to make.
+const WORTH_FOR = { politeexit: 'Coin flip on urgent-vs-trap, says no' };
+const IMPERFECT_READER = '80% accurate reader';
+
+test('every perk is worth taking for the player who makes the mistake it softens', () => {
   const hp = [20, 45];
-  const without = evaluate('80% accurate reader', SEEDS, { day: 'normal', headphonesAt: hp }).avgScore;
   for (const perk of Object.keys(Core.TUNING.PERKS)) {
-    const withIt = evaluate('80% accurate reader', SEEDS, { day: 'normal', perk, headphonesAt: hp }).avgScore;
-    assert.ok(withIt - without >= 20, `${perk} is not worth picking: ${Math.round(withIt - without)} points on average`);
+    const strategy = WORTH_FOR[perk] || IMPERFECT_READER;
+    const without = evaluate(strategy, SEEDS, { day: 'normal', headphonesAt: hp }).avgScore;
+    const withIt = evaluate(strategy, SEEDS, { day: 'normal', perk, headphonesAt: hp }).avgScore;
+    assert.ok(withIt - without >= 20, `${perk} is not worth picking for a "${strategy}": ${Math.round(withIt - without)} points on average`);
   }
 });
 
@@ -203,7 +250,9 @@ test('no campaign level falls to the player who has not learned it, whatever per
     read: 'Ignore everything', 'never-quick': 'Respond to everything', 'deep-end': 'Respond to everything',
     headphones: 'Respond to everything', colleague: 'Perfect reader', 'cannot-tell': 'Coin flip on urgent-vs-trap, guesses',
     appraisal: 'Perfect reader', backlog: 'Respond to everything', release: 'Respond to everything',
-    'on-a-roll': '80% accurate reader', lead: 'Keyword reader: alarm words mean urgent'
+    'on-a-roll': '80% accurate reader', lead: 'Keyword reader: alarm words mean urgent',
+    'quiet-house': 'Respond to everything', micromanager: 'Say no to everything',
+    'all-polite': 'Respond to everything', noon: 'Ignore everything'
   };
   // Every sensible way to time two pairs of headphones, including both back to back over the finish.
   const pairs = [undefined, [15], [30], [45]];

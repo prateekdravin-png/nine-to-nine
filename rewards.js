@@ -99,6 +99,18 @@
     {
       id: 'cover', emoji: '🛡️', title: 'Manager’s cover', unlockedBy: 'cannot-tell',
       blurb: 'The first trap you fall for is over sooner, and your focus survives it.'
+    },
+    {
+      // Appraisal week is where silence is shown to cost more than anything you build, and a polite no
+      // is the alternative to silence. Two of them, not a morning of them.
+      id: 'politeexit', emoji: '🙅', title: 'Polite exit', unlockedBy: 'appraisal',
+      blurb: 'Your first 2 polite noes cost no reputation.'
+    },
+    {
+      // Release day is where there is no slack on anything urgent, so this is the level that earns one
+      // missed emergency back — and only the reputation for it, since the escalation still arrives.
+      id: 'secondchance', emoji: '📌', title: 'Second chance', unlockedBy: 'release',
+      blurb: 'The first emergency you miss costs no reputation, and still comes back once.'
     }
   ];
   const byId = {};

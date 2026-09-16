@@ -262,7 +262,7 @@ level (a test holds that), a 90% reader usually stops at two, and an 80% reader 
 all. On levels 8 and 12 a gold is already part of clearing, so the second star comes with the first. A
 level cleared before stars existed counts as one.
 
-**Perks change the rules, which is why there are three of them, and you carry one.** Clearing a level
+**Perks change the rules, which is why there are five of them, and you carry one.** Clearing a level
 unlocks the perk that softens the thing that level taught. Before any campaign morning you pick one, or
 none. Perks never apply to the daily morning or a challenge, which have to be the same game for everyone,
 or to the week, which is five mornings taken as they come.
@@ -272,6 +272,14 @@ or to the week, which is five mornings taken as they come.
 | ☕ Strong coffee | Level 2, Read the room | Your first 2 emergencies don't drain your focus while you are on them |
 | 🎧 Spare headphones | Level 5, Headphones on | A second go: a 6-second pair, once 15 seconds have passed since the first came off |
 | 🛡️ Manager's cover | Level 7, When you can't tell | The first trap you take costs 3s instead of 4.5s, and your focus survives it |
+| 🙅 Polite exit | Level 8, Appraisal week | Your first 2 polite noes cost no reputation. Writing them still takes the time it takes |
+| 📌 Second chance | Level 10, Release day | The first emergency you miss costs no reputation, and the escalation still comes back |
+
+Each is held to three things in `test/rewards.test.js`: it may not narrow the gap between reading the
+messages and not reading them by more than 12 points at any career level, no campaign level may fall to
+a player who has not learned it just because they carry one, and every perk has to be worth at least 20
+points to **the player whose mistake it softens** — the polite exit is worth 104 points to a reader who
+hedges when they cannot tell, and nothing at all to one who never says no.
 
 **The first idea was more headphones as the levels went on, and the simulated players ruled it out.**
 Headphones block exactly the traps a player who doesn't read would fall into, so every extra pair protects

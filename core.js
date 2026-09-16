@@ -177,7 +177,14 @@
     PERKS: {
       coffee: { urgentCalls: 2 },
       headphones: { extraCharges: 1, spareDuration: 6, cooldown: 15 },
-      cover: { traps: 1, busy: 3 }
+      cover: { traps: 1, busy: 3 },
+      // Softens the two ways of being wrong that the levels before each of them teach. Polite exit
+      // makes the hedge cheap twice, not free: a morning of noes still wrecks the focus it costs and
+      // still delivers nothing. Second chance waives the reputation for the first emergency you miss,
+      // and the escalation still arrives, so what it buys is another look rather than forgiveness for
+      // losing it: miss the same one twice and the second hit lands in full.
+      politeexit: { declines: 2 },
+      secondchance: { urgents: 1 }
     },
     // Colleague favours. Answering small talk from a colleague (a person, not a bot, a group chat or
     // family) banks a favour from them; passing a message on spends the oldest one. On something
@@ -518,7 +525,11 @@
       followUpsSent: { trap: 0, urgent: 0 },
       headphones: { charges: TUNING.HEADPHONES.charges + (perk === 'headphones' ? TUNING.PERKS.headphones.extraCharges : 0), activeUntil: 0 },
       perk,
-      perkLeft: perk === 'coffee' ? TUNING.PERKS.coffee.urgentCalls : perk === 'cover' ? TUNING.PERKS.cover.traps : 0,
+      perkLeft: perk === 'coffee' ? TUNING.PERKS.coffee.urgentCalls
+        : perk === 'cover' ? TUNING.PERKS.cover.traps
+        : perk === 'politeexit' ? TUNING.PERKS.politeexit.declines
+        : perk === 'secondchance' ? TUNING.PERKS.secondchance.urgents
+        : 0,
       flowHeldUntil: 0, // a perk can keep your focus from draining while you are on one particular call
       favours: [], // names of colleagues who owe you one, oldest first
       shipped: false,
@@ -654,6 +665,13 @@
 
   function applyIgnore(s, card, events, expired) {
     const eff = { rep: s.rules.ignore[card.type] };
+    let perkUsed = null;
+    if (card.type === 'urgent' && s.perk === 'secondchance' && s.perkLeft > 0) {
+      s.perkLeft--;
+      s.stats.perkUsed++;
+      perkUsed = s.perk;
+      eff.rep = 0;
+    }
     s.rep += eff.rep;
     clampRep(s);
     if (card.type === 'urgent') s.stats.urgentMissed++;
@@ -664,7 +682,7 @@
     }
     decide(s, card, 'ignore', events, expired);
     queueFollowUp(s, card, expired);
-    events.push({ type: expired ? 'expire' : 'ignore', card, rep: eff.rep });
+    events.push({ type: expired ? 'expire' : 'ignore', card, rep: eff.rep, perk: perkUsed });
     checkPip(s, events);
   }
 
@@ -817,7 +835,14 @@
   // may not be able to afford and a silence that may cost you fifteen points of reputation.
   function decline(s, card, events) {
     removeCard(s, card.id);
-    const rep = TUNING.DECLINE.rep;
+    let rep = TUNING.DECLINE.rep;
+    let perkUsed = null;
+    if (s.perk === 'politeexit' && s.perkLeft > 0) {
+      s.perkLeft--;
+      s.stats.perkUsed++;
+      perkUsed = s.perk;
+      rep = 0; // the pause to write it still costs you, so a morning of noes still fails on its own
+    }
     s.rep += rep;
     clampRep(s);
     // The same wording whatever it was: a busy line per type would hand back the answer to the very
@@ -829,7 +854,7 @@
     s.stats.declined++;
     if (card.type === 'trap') s.stats.trapsDodged++; // you didn't take the call, which is the whole trap
     decide(s, card, 'decline', events);
-    events.push({ type: 'decline', card, rep, busy: TUNING.DECLINE.busy });
+    events.push({ type: 'decline', card, rep, busy: TUNING.DECLINE.busy, perk: perkUsed });
     checkPip(s, events);
     return events;
   }
