@@ -90,7 +90,12 @@ function playBot(seed, strategyName, opts) {
   const reaction = o.reaction != null ? o.reaction : 0.8;
   const dt = 0.05;
   const s = Core.createGame({ seed, role: o.role, level: o.level, day: o.day, carry: o.carry, perk: o.perk });
-  const rng = lcg(seed + 7919);
+  // rollSeed separates the player's own randomness from the morning's. By default they share a seed, so
+  // a pinned campaign morning plays out identically every time — right for the campaign test, which
+  // needs one repeatable answer, but it means a pinned level can only ever be sampled ONCE: an 80%
+  // reader makes the same three mistakes on every run. curve.js varies this to measure how hard a level
+  // actually is. Omitting it leaves every existing result unchanged.
+  const rng = lcg((o.rollSeed != null ? o.rollSeed : seed) + 7919);
   const rolls = new Map(); // card id -> the bot's private random roll for that message
   const usesFavours = FAVOUR_STRATEGIES.has(strategyName);
   const hpTimes = o.headphonesAt == null ? [] : [].concat(o.headphonesAt);
@@ -176,7 +181,11 @@ function playHuman(seed, profileName, opts) {
   // costs you, they answer everything they don't take for a trap.
   const sociable = o.style === 'sociable';
   const s = Core.createGame({ seed, role: o.role, level: o.level, day: o.day });
-  const rng = lcg(seed + 104729);
+  // rollSeed: as in playBot, lets a pinned morning be sampled more than once. speed scales the whole time
+  // this player spends on one message (1 = the profile as written, 1.5 = half as fast again), which is how
+  // curve.js finds the slowest reader each level still lets through. Both default to today's behaviour.
+  const rng = lcg((o.rollSeed != null ? o.rollSeed : seed) + 104729);
+  const speed = o.speed != null ? o.speed : 1;
   const seen = PHASES.map(() => 0);
   const lost = PHASES.map(() => 0);
   const ticks = PHASES.map(() => 0);
@@ -214,7 +223,7 @@ function playHuman(seed, profileName, opts) {
         sure,
         looksUrgent: sure ? card.type === 'urgent' : card.type !== 'urgent',
         looksTrap: sure ? card.type === 'trap' : card.type !== 'trap',
-        doneAt: s.t + prof.notice + words * prof.perWord + prof.decide
+        doneAt: s.t + (prof.notice + words * prof.perWord + prof.decide) * speed
       };
     }
     for (const ev of Core.step(s, 0.05, { holding: true })) {
