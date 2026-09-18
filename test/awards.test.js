@@ -65,6 +65,36 @@ test('unlocked awards map to the objects the office draws', () => {
   assert.deepEqual(Awards.propsFor(['nonsense']), []);
 });
 
+test('every object an award unlocks is drawn in the office', () => {
+  const scene = require('fs').readFileSync(require('path').join(__dirname, '..', 'scene.js'), 'utf8');
+  for (const a of Awards.AWARDS) assert.ok(scene.includes(`prop prop-${a.prop}"`), `scene.js has no ${a.prop} for ${a.id}`);
+});
+
+test('star milestones count campaign stars, climb in order, and end at every star there is', () => {
+  const Campaign = require('../campaign');
+  const Rewards = require('../rewards');
+  const max = Campaign.LEVELS.length * Rewards.MAX_STARS;
+  const needs = Awards.MILESTONES.map((a) => (a.stars === 'all' ? max : a.stars));
+  assert.deepEqual(needs.slice().sort((x, y) => x - y), needs, 'listed in the order they are reached');
+  assert.equal(new Set(needs).size, needs.length);
+  assert.ok(needs[needs.length - 2] < max, 'every numbered milestone is reachable before the last one');
+  assert.equal(Awards.MILESTONES[Awards.MILESTONES.length - 1].stars, 'all');
+
+  assert.deepEqual(Awards.earnedByStars(19, max), []);
+  assert.deepEqual(Awards.earnedByStars(20, max), ['stars20']);
+  assert.deepEqual(Awards.earnedByStars(max, max), ['stars20', 'stars40', 'allstars']);
+  assert.deepEqual(Awards.earnedByStars(max, max, ['stars20']), ['stars40', 'allstars'], 'never twice');
+  assert.deepEqual(Awards.earnedByStars(max - 1, max), ['stars20', 'stars40'], 'one short of every star is not every star');
+  // A finished round sees them too, so a morning that tips the count over hands the object out then.
+  assert.ok(earns({ rounds: 3, stars: 40, maxStars: max }).includes('stars40'));
+  assert.ok(!earns({ rounds: 3 }).some((id) => id.startsWith('stars')), 'no stars known, no milestone');
+
+  assert.deepEqual([Awards.nextMilestone(0, max).award.id, Awards.nextMilestone(0, max).need], ['stars20', 20]);
+  assert.deepEqual([Awards.nextMilestone(25, max).award.id, Awards.nextMilestone(25, max).need], ['stars40', 40]);
+  assert.equal(Awards.nextMilestone(41, max).need, max);
+  assert.equal(Awards.nextMilestone(max, max), null);
+});
+
 test('rescuing an emergency mid-call is counted by the rules', () => {
   const s = Core.createGame({ seed: 1 });
   s.schedule = [];

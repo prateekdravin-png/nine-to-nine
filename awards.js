@@ -11,7 +11,16 @@
   // player has done across rounds (see context below), never anything live, so it can be checked once at
   // the end of a round.
   //
-  // context: { finished, rating, mode, role, events, stats, rounds, rolesFinished, streak }
+  // context: { finished, rating, mode, role, events, stats, rounds, rolesFinished, streak, stars, maxStars }
+  //
+  // Star milestones count the player's best campaign stars (rewards.js), which nothing else spends. They
+  // give the upper levels, where a third star is hard, a reason to be played again. 'all' means every star
+  // there is, so a level added later raises the bar for anyone who has not yet reached it.
+  const ALL = 'all';
+  const starsNeeded = (a, maxStars) => (a.stars === ALL ? maxStars : a.stars);
+  const reached = (a) => (c) => !!c.maxStars && (c.stars || 0) >= starsNeeded(a, c.maxStars);
+  const milestone = (a) => Object.assign(a, { earned: reached(a) });
+
   const AWARDS = [
     {
       id: 'first', emoji: '🗒️', name: 'First morning', prop: 'notes',
@@ -72,8 +81,24 @@
       unlocks: 'A fire extinguisher',
       hint: 'Live through a fire drill and an outage in the same morning',
       earned: (c) => c.events.indexOf('drill') !== -1 && c.events.indexOf('outage') !== -1
-    }
+    },
+    milestone({
+      id: 'stars20', emoji: '💡', name: 'Twenty stars', prop: 'lamp', stars: 20,
+      unlocks: 'A lamp by the window',
+      hint: 'Earn 20 campaign stars'
+    }),
+    milestone({
+      id: 'stars40', emoji: '🏷️', name: 'Forty stars', prop: 'nameplate', stars: 40,
+      unlocks: 'A nameplate on your desk',
+      hint: 'Earn 40 campaign stars'
+    }),
+    milestone({
+      id: 'allstars', emoji: '🌟', name: 'Every star', prop: 'framedstar', stars: ALL,
+      unlocks: 'A framed gold star on the wall',
+      hint: 'Earn all three stars on every campaign level'
+    })
   ];
+  const MILESTONES = AWARDS.filter((a) => a.stars != null);
 
   const byId = {};
   for (const a of AWARDS) byId[a.id] = a;
@@ -84,8 +109,23 @@
     return AWARDS.filter((a) => !have.has(a.id) && a.earned(context)).map((a) => a.id);
   }
 
+  // Star milestones reached, for the moments stars change outside a finished round (the end of a week).
+  function earnedByStars(stars, maxStars, already) {
+    const have = new Set(already || []);
+    return MILESTONES.filter((a) => !have.has(a.id) && a.earned({ stars, maxStars })).map((a) => a.id);
+  }
+
+  // The next milestone still to reach and how many stars it needs, or null once they are all yours.
+  function nextMilestone(stars, maxStars, already) {
+    const have = new Set(already || []);
+    const left = MILESTONES.filter((a) => !have.has(a.id) && !a.earned({ stars, maxStars }))
+      .map((a) => ({ award: a, need: starsNeeded(a, maxStars) }))
+      .sort((x, y) => x.need - y.need);
+    return left[0] || null;
+  }
+
   // The desk objects to draw, for a set of unlocked award ids.
   const propsFor = (ids) => AWARDS.filter((a) => (ids || []).indexOf(a.id) !== -1).map((a) => a.prop);
 
-  return { AWARDS, byId, earnedBy, propsFor };
+  return { AWARDS, MILESTONES, byId, earnedBy, earnedByStars, nextMilestone, propsFor };
 });

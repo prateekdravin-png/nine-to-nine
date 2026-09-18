@@ -499,6 +499,18 @@
     return Rewards.totalStars(done.reduce((mine, id) => { if (all[id]) mine[id] = all[id]; return mine; }, {}));
   }
 
+  // The player's best stars across the whole campaign, whatever role earned them: what the star
+  // milestones (awards.js) count.
+  const starTotals = () => ({ stars: Rewards.totalStars(loadStars()), maxStars: Campaign.LEVELS.length * Rewards.MAX_STARS });
+
+  // The next desk object the stars are working toward, so a third star has something to be for.
+  function milestoneHtml() {
+    const t = starTotals();
+    const next = Awards.nextMilestone(t.stars, t.maxStars, loadAwards());
+    if (!next) return '';
+    return `<p class="campaign-teaches">★ ${t.stars} of ${t.maxStars} stars in all · ${next.award.emoji} ${escapeHtml(next.award.unlocks.toLowerCase())} at ${next.need}</p>`;
+  }
+
   // Which level the card is showing: one you picked from the ladder, or the next one to clear.
   const shownLevel = () => pickedLevel || Campaign.nextFor(myCleared());
 
@@ -509,6 +521,7 @@
       ui.campaignCard.innerHTML =
         `<div class="daily-head"><b>🏅 Campaign complete</b><span class="daily-next">${done.length} of ${Campaign.LEVELS.length} · ★ ${starsOn(done)}/${Campaign.LEVELS.length * Rewards.MAX_STARS}</span></div>` +
         ladderHtml(done) +
+        milestoneHtml() +
         '<p class="daily-sub">Every level cleared, and every role, level and kind of morning is open. Pick any level above to play it again; the daily morning and the work week are where it goes from here.</p>';
       return;
     }
@@ -525,7 +538,8 @@
       '<p class="campaign-teaches">Your ' + escapeHtml(ROLES[role].label.toLowerCase()) + ' ladder · stars and perks carry across roles</p>' +
       `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
       goalList(Campaign.check(next, weekResult(loadWeek()))) +
-      bestStarsHtml(next);
+      bestStarsHtml(next) +
+      milestoneHtml();
     // The week level is a whole week, so the card becomes the week: the same strip, meters and button
     // the standalone card uses, rather than a second place that describes a week.
     if (Campaign.isWeek(next)) {
@@ -688,6 +702,8 @@
       const level = Campaign.nextFor(myCleared());
       if (Campaign.isWeek(level)) {
         renderCampaignResult(weekResult(week), level);
+        const t = starTotals();
+        unlockAwards(Awards.earnedByStars(t.stars, t.maxStars, loadAwards()));
         renderCampaignCard();
       }
     }
@@ -1504,6 +1520,21 @@
     } catch (e) { return { rounds: 0, roles: [] }; }
   }
 
+  // Keeps and shows what was just earned. Adds to whatever the end screen already announced, since a week's
+  // stars are only counted once the week is over, after the last morning's own awards were shown.
+  function unlockAwards(won) {
+    if (won.length) {
+      store(STORE.awards, JSON.stringify(loadAwards().concat(won)));
+      const all = (ui.endAward.hidden ? [] : (ui.endAward.dataset.ids || '').split(',').filter(Boolean)).concat(won);
+      ui.endAward.dataset.ids = all.join(',');
+      ui.endAward.innerHTML = '🎁 Unlocked: ' + all.map((id) => `<b>${Awards.byId[id].emoji} ${escapeHtml(Awards.byId[id].unlocks)}</b>`).join(' · ') + ' — on your desk from now on.';
+      ui.endAward.hidden = false;
+      office.setProps(Awards.propsFor(loadAwards()));
+      announce('Unlocked ' + won.map((id) => Awards.byId[id].unlocks).join(', '));
+    }
+    renderAwards();
+  }
+
   function renderAwards() {
     const have = loadAwards();
     const items = Awards.AWARDS.map((a) => {
@@ -1659,7 +1690,7 @@
     if (result.shipped && result.endReason !== 'pip' && progress.roles.indexOf(result.role) === -1) progress.roles.push(result.role);
     store(STORE.progress, JSON.stringify(progress));
     const unlocked = loadAwards();
-    const won = Awards.earnedBy({
+    const won = Awards.earnedBy(Object.assign({
       finished: result.shipped && result.endReason !== 'pip',
       rating: result.rating.key,
       mode,
@@ -1669,15 +1700,9 @@
       rounds: progress.rounds,
       rolesFinished: progress.roles,
       streak: Daily.streak(playedMornings(), today())
-    }, unlocked);
-    if (won.length) store(STORE.awards, JSON.stringify(unlocked.concat(won)));
-    ui.endAward.hidden = !won.length;
-    if (won.length) {
-      ui.endAward.innerHTML = '🎁 Unlocked: ' + won.map((id) => `<b>${Awards.byId[id].emoji} ${escapeHtml(Awards.byId[id].unlocks)}</b>`).join(' · ') + ' — on your desk from now on.';
-      office.setProps(Awards.propsFor(loadAwards()));
-      announce('Unlocked ' + won.map((id) => Awards.byId[id].unlocks).join(', '));
-    }
-    renderAwards();
+    }, starTotals()), unlocked);
+    ui.endAward.hidden = true;
+    unlockAwards(won);
 
     saveRun({
       score: result.score, title: result.rating.title, emoji: result.rating.emoji, role: result.role, level: result.level,
@@ -2122,6 +2147,10 @@
   // opened, never which one.
   invite = Challenge.decode(Challenge.codeFromUrl(location.href));
   if (invite) report({ kind: 'accept', day: today() });
+  // Stars earned before the milestones existed count toward them from the first visit after, quietly:
+  // the desk simply has them, and the list says so.
+  const dueNow = Awards.earnedByStars(starTotals().stars, starTotals().maxStars, loadAwards());
+  if (dueNow.length) store(STORE.awards, JSON.stringify(loadAwards().concat(dueNow)));
   renderChallengeCard();
   renderCampaignCard();
   renderWeekCard();
