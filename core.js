@@ -184,7 +184,15 @@
       // and the escalation still arrives, so what it buys is another look rather than forgiveness for
       // losing it: miss the same one twice and the second hit lands in full.
       politeexit: { declines: 2 },
-      secondchance: { urgents: 1 }
+      secondchance: { urgents: 1 },
+      // The two lead-tier perks. Snooze lets the first two traps you leave to run out stay gone, which is
+      // the one mistake level 18 is about; a trap you take is still taken. One trap was worth only +17
+      // points to an 80% reader who lets traps run out, below the bar every perk is held to; two is +27,
+      // and a perfect reader who lets them all run out still fails level 18. On-call rota starts the
+      // morning with one favour already owed, so an outage that lands early is not lost for want of a
+      // quiet spell to bank one in; it does nothing for anyone who never passes an emergency on.
+      snooze: { traps: 2 },
+      oncall: { favours: 1, helper: 'Alex' }
     },
     // Colleague favours. Answering small talk from a colleague (a person, not a bot, a group chat or
     // family) banks a favour from them; passing a message on spends the oldest one. On something
@@ -529,9 +537,12 @@
         : perk === 'cover' ? TUNING.PERKS.cover.traps
         : perk === 'politeexit' ? TUNING.PERKS.politeexit.declines
         : perk === 'secondchance' ? TUNING.PERKS.secondchance.urgents
+        : perk === 'snooze' ? TUNING.PERKS.snooze.traps
+        : perk === 'oncall' ? TUNING.PERKS.oncall.favours
         : 0,
       flowHeldUntil: 0, // a perk can keep your focus from draining while you are on one particular call
-      favours: [], // names of colleagues who owe you one, oldest first
+      // names of colleagues who owe you one, oldest first
+      favours: perk === 'oncall' ? Array(TUNING.PERKS.oncall.favours).fill(TUNING.PERKS.oncall.helper) : [],
       shipped: false,
       tierName: rules.tiers[0].name,
       stats: {
@@ -655,6 +666,12 @@
     if (card.type === 'trap' && !expired && !TUNING.FOLLOW_UP.trapOnIgnore) return;
     const at = s.t + TUNING.FOLLOW_UP.delay;
     if (at >= s.duration) return;
+    // Spent only on a follow-up that would really have arrived, so one due after the finish costs nothing.
+    if (card.type === 'trap' && s.perk === 'snooze' && s.perkLeft > 0) {
+      s.perkLeft--;
+      s.stats.perkUsed++;
+      return 'snooze';
+    }
     const lines = Content.FOLLOW_UPS[s.level][card.type];
     const line = lines[s.followUpsSent[card.type]++ % lines.length];
     const sender = card.type === 'trap'
@@ -681,7 +698,7 @@
       if (card.personal) s.stats.personalIgnored++; // nobody notices once; a week notices
     }
     decide(s, card, 'ignore', events, expired);
-    queueFollowUp(s, card, expired);
+    if (queueFollowUp(s, card, expired) === 'snooze') perkUsed = 'snooze';
     events.push({ type: expired ? 'expire' : 'ignore', card, rep: eff.rep, perk: perkUsed });
     checkPip(s, events);
   }
@@ -813,6 +830,11 @@
     const helper = s.favours.shift();
     removeCard(s, card.id);
     s.stats.favoursUsed++;
+    // The rota's favour is the oldest in the queue, so it is always the first one spent.
+    if (s.perk === 'oncall' && s.perkLeft > 0) {
+      s.perkLeft--;
+      s.stats.perkUsed++;
+    }
     let rep = 0;
     if (card.type === 'urgent') {
       rep = TUNING.FAVOURS.urgentRep;

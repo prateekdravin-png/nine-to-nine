@@ -108,6 +108,9 @@ test('the words on a perk match what it does', () => {
   assert.strictEqual(P.secondchance.urgents, 1);
   assert.ok(Rewards.byId.secondchance.blurb.includes('first emergency'), 'the second chance says it is only the first one');
   assert.ok(Rewards.byId.secondchance.blurb.includes('comes back'), 'and that the message still returns');
+  assert.ok(Rewards.byId.snooze.blurb.includes(`first ${P.snooze.traps} traps`), 'snooze says how many traps it keeps away');
+  assert.strictEqual(P.oncall.favours, 1);
+  assert.ok(Rewards.byId.oncall.blurb.includes(`${P.oncall.helper} already owing you a favour`), 'the rota names who owes you one');
 });
 
 test('a perk is only taken where it is allowed, and only once it is earned', () => {
@@ -186,6 +189,34 @@ test('the second chance waives the first missed emergency, and only the first', 
   assert.strictEqual(t.stats.perkUsed, 0);
 });
 
+test('snooze keeps the first two traps you let run out from coming back, and only those', () => {
+  const s = Core.createGame({ seed: 4, day: 'normal', perk: 'snooze' });
+  // Expiry is what brings a trap back, so drive it through the real clock rather than a dismissal.
+  const expireOne = () => {
+    const card = Core.spawnCard(s, 'trap', 0, 30);
+    card.expiresAt = s.t + 0.1;
+    const before = s.pending.length;
+    while (s.cards.some((c) => c.id === card.id)) Core.step(s, 0.05, { holding: false });
+    return s.pending.length - before;
+  };
+  assert.deepStrictEqual([expireOne(), expireOne(), expireOne()], [0, 0, 1], 'two stay gone, the third asks again');
+  assert.strictEqual(s.stats.perkUsed, Core.TUNING.PERKS.snooze.traps);
+  // A trap turned down never comes back anyway, so it never spends the snooze.
+  const t = Core.createGame({ seed: 4, day: 'normal', perk: 'snooze' });
+  Core.act(t, Core.spawnCard(t, 'trap', 0, 30).id, 'ignore');
+  assert.strictEqual(t.stats.perkUsed, 0);
+});
+
+test('the on-call rota starts you one favour up, and is spent with it', () => {
+  const s = Core.createGame({ seed: 4, day: 'normal', perk: 'oncall' });
+  assert.deepStrictEqual(s.favours, [Core.TUNING.PERKS.oncall.helper]);
+  assert.deepStrictEqual(Core.createGame({ seed: 4, day: 'normal' }).favours, [], 'without it you start owed nothing');
+  Core.act(s, Core.spawnCard(s, 'urgent', 0, 30).id, 'delegate');
+  assert.strictEqual(s.stats.urgentDelegated, 1);
+  assert.strictEqual(s.stats.perkUsed, 1);
+  assert.strictEqual(s.perkLeft, 0);
+});
+
 test('the spare headphones are shorter, and cannot go straight on after the first pair', () => {
   const P = Core.TUNING.PERKS.headphones;
   const s = Core.createGame({ seed: 3, day: 'normal', perk: 'headphones' });
@@ -209,7 +240,7 @@ const CAREER = ['junior', 'senior', 'lead'];
 const MAX_GAP_NARROWING = 12;
 // Headphone timings to try. Only the spare pair cares, so only it is held against every pattern; the
 // others use one ordinary pattern for everyone's single pair.
-const PATTERNS = { headphones: [[15, 35], [25, 50], [40, 55]], coffee: [[30]], cover: [[30]], politeexit: [[30]], secondchance: [[30]] };
+const PATTERNS = { headphones: [[15, 35], [25, 50], [40, 55]], coffee: [[30]], cover: [[30]], politeexit: [[30]], secondchance: [[30]], snooze: [[30]], oncall: [[30]] };
 
 const goldRate = (strategy, level, perk, headphonesAt) =>
   evaluate(strategy, SEEDS, { day: 'normal', level, perk, headphonesAt }).goldRate * 100;
@@ -232,7 +263,11 @@ test('no perk closes the gap between reading the messages and not reading them',
 // same one: the polite exit softens the cost of hedging, so a reader who never says no will never notice
 // it — the same way a player who takes no traps never spends the manager's cover. Measuring all of them
 // against a single bot would only ever prove which mistake that bot happens to make.
-const WORTH_FOR = { politeexit: 'Coin flip on urgent-vs-trap, says no' };
+const WORTH_FOR = {
+  politeexit: 'Coin flip on urgent-vs-trap, says no',
+  snooze: '80% reader, lets traps run out',
+  oncall: '90% accurate + favours'
+};
 const IMPERFECT_READER = '80% accurate reader';
 
 test('every perk is worth taking for the player who makes the mistake it softens', () => {
@@ -253,7 +288,8 @@ test('no campaign level falls to the player who has not learned it, whatever per
     appraisal: 'Perfect reader', backlog: 'Respond to everything', release: 'Respond to everything',
     'on-a-roll': '80% accurate reader', lead: 'Keyword reader: alarm words mean urgent',
     'quiet-house': 'Respond to everything', micromanager: 'Say no to everything',
-    'all-polite': 'Respond to everything', noon: 'Ignore everything'
+    'all-polite': 'Respond to everything', noon: 'Ignore everything',
+    'come-back': 'Perfect reader, lets traps run out', 'everything-down': 'Perfect reader'
   };
   // Every sensible way to time two pairs of headphones, including both back to back over the finish.
   const pairs = [undefined, [15], [30], [45]];

@@ -1228,6 +1228,7 @@
           popup('🎧 blocked a ping', 'info', ui.inboxHead);
           break;
         case 'expire':
+          if (ev.perk === 'snooze') popup('🔕 Snoozed: that one won’t be back', 'info', ui.clock);
           if (ev.rep < 0) {
             popup(`Missed something urgent ${ev.rep} rep`, 'bad', ui.repMeter);
             flash('bad');

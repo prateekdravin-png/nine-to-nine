@@ -111,6 +111,18 @@
       // missed emergency back — and only the reputation for it, since the escalation still arrives.
       id: 'secondchance', emoji: '📌', title: 'Second chance', unlockedBy: 'release',
       blurb: 'The first emergency you miss costs no reputation, and still comes back once.'
+    },
+    {
+      // The level that shows a trap left to run out asking again, louder. Snooze keeps two of them gone;
+      // a trap you take is still taken, so it is no help to a player who answers everything.
+      id: 'snooze', emoji: '🔕', title: 'Snooze', unlockedBy: 'come-back',
+      blurb: 'The first 2 traps you leave to run out don’t come back.'
+    },
+    {
+      // The outage level, where favours are the plan. One already owed is a plan that does not need a
+      // quiet spell first, and it is worth nothing to a player who never passes an emergency on.
+      id: 'oncall', emoji: '📟', title: 'On-call rota', unlockedBy: 'everything-down',
+      blurb: 'You start the morning with Alex already owing you a favour.'
     }
   ];
   const byId = {};
