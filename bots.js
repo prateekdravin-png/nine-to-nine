@@ -77,7 +77,11 @@ const STRATEGIES = {
   'Sociable reader: answers all but traps': (s, card) => (card.type === 'trap' ? 'ignore' : 'respond'),
   // Keeps a life as well as a job: answers the people outside work, ignores everything else that isn't
   // on fire. Costs a little focus every morning and only pays back across a week (week.js).
-  'Perfect reader + answers home': (s, card) => (card.type === 'urgent' || card.personal ? 'respond' : 'ignore')
+  'Perfect reader + answers home': (s, card) => (card.type === 'urgent' || card.personal ? 'respond' : 'ignore'),
+  // Reads every message right and never takes a trap, but never gets round to turning one down either —
+  // it just lets it run out. A dismissed trap stays gone; an expired one comes back pushier (core.js
+  // queueFollowUp), so this is the player level 18 is for.
+  'Perfect reader, lets traps run out': (s, card) => (card.type === 'urgent' ? 'respond' : card.type === 'trap' ? null : 'ignore')
 };
 const DECIDE_STRATEGIES = new Set(['Coin flip on urgent-vs-trap, guesses', 'Coin flip on urgent-vs-trap, says no', 'Say no to everything', 'Sociable reader: answers all but traps', 'Perfect reader + answers home']);
 const FAVOUR_STRATEGIES = new Set(Object.keys(STRATEGIES).filter((name) => name.includes('favours')));

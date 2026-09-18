@@ -65,7 +65,8 @@ test('a perfect reader can take all three stars on every single morning', () => 
     headphones: { strategy: 'Perfect reader', headphonesAt: 30 },
     colleague: { strategy: 'Perfect reader + favours' },
     'cannot-tell': { strategy: 'Perfect reader, says no to two traps' },
-    appraisal: { strategy: 'Sociable reader: answers all but traps' }
+    appraisal: { strategy: 'Sociable reader: answers all but traps' },
+    'everything-down': { strategy: 'Perfect reader + favours' }
   };
   for (const level of Campaign.LEVELS) {
     if (Campaign.isWeek(level)) continue;

@@ -31,7 +31,10 @@ const APPROACH = {
   noon: { strategy: 'Perfect reader' },
   // The last level is a whole week, so its approach is a habit rather than a strategy for one morning:
   // pace yourself and answer the people outside work.
-  'the-week': { strategy: 'Perfect reader + answers home', pace: true }
+  'the-week': { strategy: 'Perfect reader + answers home', pace: true },
+  // After the week: single mornings again.
+  'come-back': { strategy: 'Perfect reader' },
+  'everything-down': { strategy: 'Perfect reader + favours' }
 };
 
 // And one who has not. Level 1 has none: it only asks you to hold the button.
@@ -51,7 +54,9 @@ const NAIVE = {
   micromanager: 'Say no to everything',                      // hedging works when you cannot tell; today the alarms are real
   'all-polite': 'Respond to everything',                     // nothing sounds like a trap, so this one takes them all
   noon: 'Ignore everything',                                 // survives the quiet start and drowns at noon
-  'the-week': 'Perfect reader'   // delivers every morning by emptying itself, which is the whole lesson
+  'the-week': 'Perfect reader',   // delivers every morning by emptying itself, which is the whole lesson
+  'come-back': 'Perfect reader, lets traps run out',   // never takes a trap, never turns one down either
+  'everything-down': 'Perfect reader'                 // right about everything, and alone when it all breaks at once
 };
 
 const play = (level, role, strategy, opts) =>
@@ -87,7 +92,6 @@ test('every level is described well enough to attempt', () => {
     assert.ok(level.goals.length >= 1, `level ${level.n} asks for nothing`);
     for (const g of level.goals) assert.ok(g.id && g.label && typeof g.test === 'function', `level ${level.n} has a malformed goal`);
     assert.ok(Content.DAYS[level.setup.day], `level ${level.n} wants a day type that does not exist`);
-    if (Campaign.isWeek(level)) assert.strictEqual(level.n, Campaign.LEVELS.length, 'the week belongs at the end of the ladder');
     assert.ok(Content.LEVELS[level.setup.level], `level ${level.n} wants a career level that does not exist`);
     assert.ok(Number.isInteger(level.setup.seed), `level ${level.n} needs a pinned seed`);
   });

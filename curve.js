@@ -52,7 +52,9 @@ const APPROACH = {
   micromanager: { strategy: 'Perfect reader' },
   'all-polite': { strategy: 'Perfect reader' },
   noon: { strategy: 'Perfect reader' },
-  'the-week': { strategy: 'Perfect reader + answers home', pace: true }
+  'the-week': { strategy: 'Perfect reader + answers home', pace: true },
+  'come-back': { strategy: 'Perfect reader' },
+  'everything-down': { strategy: 'Perfect reader + favours' }
 };
 
 // Misreading changes only what the strategy SEES; playBot still acts on the real card id.

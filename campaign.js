@@ -176,7 +176,8 @@
     {
       // The only level that is not one morning. Everything before it teaches a piece of a morning; this
       // asks whether you can do it five times running without emptying yourself, which is the actual
-      // question the game is about. It is the destination of the ladder rather than a mode beside it.
+      // question the game is about. It closes the first part of the ladder rather than sitting beside it
+      // as a mode; the levels after it go back to single mornings, each asking for something new.
       n: 17, id: 'the-week', title: 'A week that holds', emoji: '🗓️',
       kind: 'week',
       brief: 'Five mornings on one set of meters. Monday to Friday, and still a person on Friday.',
@@ -188,6 +189,33 @@
         goal('energy', 'Finish the week on 40 energy', (w) => w.energy >= 40),
         goal('home', 'And on 40 at home', (w) => w.home >= 40)
       ]
+    },
+    // ---- After the week ----
+    // The ladder carries on past the week rather than ending there. curve.js showed why these could not
+    // just be harder versions of what came before: judgement difficulty is already used up (level 15
+    // needs ~94% reading accuracy) and every level from 10 on sits on the same plateau. So these hold
+    // judgement near the lead tier and climb on time instead, and each is strict only about its own lesson
+    // — stacking zero-tolerance goals is what pushed early drafts of both past 94%.
+    {
+      n: 18, id: 'come-back', title: "It'll come back", emoji: '🔁',
+      brief: 'A trap you let run out is not a trap you turned down. It asks again, louder.',
+      teaches: "Turn a trap down; don't let it expire. Leaving it is not a no.",
+      hint: 'Ignore each trap as soon as you have read it. One you leave to run out comes back pushier, and at lead it comes back sounding urgent. Nothing you have dismissed ever returns.',
+      setup: { day: 'normal', level: 'lead', seed: 3 },
+      // Only a trap that EXPIRED comes back (core.js queueFollowUp); one you dismissed stays gone. That is
+      // the whole lesson, and it bites slow readers hardest, since theirs are the traps that run out.
+      goals: [SHIP, atMost('hanging', 'Leave nothing hanging', st('followUps'), 0)]
+    },
+    {
+      n: 19, id: 'everything-down', title: 'Everything is down', emoji: '🚨',
+      brief: 'Three things break at once, and you can only be on one call.',
+      teaches: 'A real outage is more than one person can carry. The favours you banked are the plan.',
+      hint: 'Answer colleagues in the quiet to bank favours. When the outage hits, pass the real emergencies on — you can hand one over even while you are on a call. Miss none, and pass on at least two.',
+      setup: { day: 'normal', level: 'lead', seed: 30 },
+      // Level 6 showed one favour can rescue you; this morning's burst needs two in hand. The tightest
+      // lead morning for time (a first-time reader's pace and no slower), which is the climb curve.js asked for.
+      goals: [SHIP, atMost('missed', 'Miss nothing urgent', st('urgentMissed'), 0),
+        atLeast('passed', 'Pass on at least two emergencies', st('urgentDelegated'), 2)]
     }
   ];
 

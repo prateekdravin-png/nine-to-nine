@@ -526,7 +526,7 @@
       `<p class="daily-sub">${escapeHtml(next.brief)}</p>` +
       goalList(Campaign.check(next, weekResult(loadWeek()))) +
       bestStarsHtml(next);
-    // The last level is a whole week, so the card becomes the week: the same strip, meters and button
+    // The week level is a whole week, so the card becomes the week: the same strip, meters and button
     // the standalone card uses, rather than a second place that describes a week.
     if (Campaign.isWeek(next)) {
       ui.campaignCard.innerHTML = head + weekBody(loadWeek(), true);
@@ -658,8 +658,8 @@
   function renderWeekCard() {
     // Only once the ladder is finished. A week already in progress is NOT a reason to show it: that was
     // the first version of this and it put the two runs of mornings back on screen side by side, which is
-    // the whole thing the week became level 13 to avoid. Nothing is lost — a half-played week is still in
-    // storage, and it is waiting on the level 13 card (with "start the week over") when you get there.
+    // the whole thing the week became a level (17) to avoid. Nothing is lost — a half-played week is still in
+    // storage, and it is waiting on the week's own card (with "start the week over") when you get there.
     const show = !Campaign.nextFor(myCleared()) && !Campaign.isWeek(shownLevel());
     ui.weekCard.hidden = !show;
     if (show) ui.weekCard.innerHTML = weekBody(loadWeek());
@@ -683,7 +683,7 @@
     ui.nightNote.textContent = last
       ? `${v.shipped} of ${v.played} delivered · ${v.golds} gold · ${v.score} points.`
       : (tired.note || 'Rested enough. Tomorrow is a fresh start.');
-    // A finished week is the moment the campaign's last level is decided.
+    // A finished week is the moment the week level is decided.
     if (last) {
       const level = Campaign.nextFor(myCleared());
       if (Campaign.isWeek(level)) {
@@ -1775,7 +1775,7 @@
     const daily = kind === 'daily';
     levelPlaying = kind === 'campaign' ? shownLevel() : null;
     if (kind === 'campaign' && !levelPlaying) { showStart(); return; } // the ladder is finished
-    if (kind === 'campaign' && Campaign.isWeek(levelPlaying)) { levelPlaying = null; kind = 'week'; } // the last level IS the week
+    if (kind === 'campaign' && Campaign.isWeek(levelPlaying)) { levelPlaying = null; kind = 'week'; } // the week level IS the week
     if (daily && loadDaily()[today()]) { showStart(); return; } // today's morning is already done
     if (kind === 'challenge' && !invite) kind = 'practice';
     if (kind === 'week') {
