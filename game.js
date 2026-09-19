@@ -1005,7 +1005,9 @@
       card.setAttribute('aria-checked', String(selected));
       card.setAttribute('aria-disabled', String(!open.includes(id)));
       card.tabIndex = selected ? 0 : -1;
-      card.querySelector('.level-name').textContent = `${LEVELS[id].emoji} ${rankOf(id, role)}`;
+      // The emoji sits on its own line, so four rungs fit a phone and all four wrap the same way.
+      card.querySelector('.level-name').innerHTML =
+        `<span class="level-emoji" aria-hidden="true">${LEVELS[id].emoji}</span>${escapeHtml(rankOf(id, role))}`;
       card.querySelector('.level-note').textContent = open.includes(id) ? '' : '🔒 locked';
     }
     const shown = LEVELS[tried || level];
@@ -1577,7 +1579,7 @@
     ui.endProgressLabel.textContent = DAYS[result.day].progressLabel || r.progressLabel;
     ui.endProgress.textContent = `${Math.floor(result.progress)}% / ${result.target}%`;
     const asked = `A ${rankOf(result.level, result.role).toLowerCase()} is asked for ${result.target}% of this morning`;
-    ui.endProgress.title = result.level === 'lead' ? `${asked}, which is the whole of it.`
+    ui.endProgress.title = Core.TUNING.LEVEL_DEMAND[result.level].share >= 1 ? `${asked}, which is the whole of it.`
       : `${asked}; a ${rankOf('lead', result.role).toLowerCase()} would be asked for ${Math.round(result.target / Core.TUNING.LEVEL_DEMAND[result.level].share)}%.`;
     ui.endRep.textContent = Math.round(result.rep);
     const rows = [

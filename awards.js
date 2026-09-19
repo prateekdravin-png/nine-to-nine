@@ -91,8 +91,8 @@
     {
       id: 'nothingback', emoji: '🔁', name: 'Nothing came back', prop: 'basket',
       unlocks: 'A wastepaper basket, for everything you turned down',
-      hint: 'On a lead morning, turn down 4 traps and let none of them come back',
-      earned: (c) => c.level === 'lead' && c.finished && c.stats.trapsDodged >= 4 && c.stats.followUps === 0
+      hint: 'On a lead or head morning, turn down 4 traps and let none of them come back',
+      earned: (c) => (c.level === 'lead' || c.level === 'head') && c.finished && c.stats.trapsDodged >= 4 && c.stats.followUps === 0
     },
     {
       id: 'commander', emoji: '🚧', name: 'Incident commander', prop: 'cone',

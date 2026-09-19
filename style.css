@@ -296,13 +296,15 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 
 /* ---- Career level picker ---- */
 .subsection-title { margin: 14px 0 6px; font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.level-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; padding: 8px 6px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; color: var(--muted); text-align: center; }
+/* Four rungs on one row even on a phone, each with its emoji above the name. */
+.levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.level-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; padding: 8px 4px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; color: var(--muted); text-align: center; }
 .level-card:hover:not([aria-disabled="true"]) { border-color: #3a4a66; color: var(--text); }
 .level-card[aria-checked="true"] { border-color: var(--gold); background: #f5b83d17; color: var(--text); box-shadow: 0 0 0 1px #f5b83d55; }
 .level-card[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
 .level-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.level-name { font-weight: 700; font-size: 13px; }
+.level-name { font-weight: 700; font-size: 13px; line-height: 1.25; }
+.level-emoji { display: block; font-size: 15px; }
 .level-note { font: 600 10.5px var(--mono); color: var(--dim); }
 .level-note:empty { display: none; }
 .promotion { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: linear-gradient(180deg, #ffc95a, #f0a31f); color: #1b1300; font-weight: 800; text-align: center; }

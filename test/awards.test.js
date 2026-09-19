@@ -54,7 +54,8 @@ test('each achievement is earned by what it says, and nothing else', () => {
 
   const clean = { rounds: 3, level: 'lead', finished: true, stats: { trapsDodged: 4, followUps: 0 } };
   assert.ok(earns(clean).includes('nothingback'));
-  assert.ok(!earns(Object.assign({}, clean, { level: 'senior' })).includes('nothingback'), 'only at lead, where it comes back urgent');
+  assert.ok(!earns(Object.assign({}, clean, { level: 'senior' })).includes('nothingback'), 'only at lead and above, where it comes back urgent');
+  assert.ok(earns(Object.assign({}, clean, { level: 'head' })).includes('nothingback'));
   assert.ok(!earns(Object.assign({}, clean, { stats: { trapsDodged: 4, followUps: 1 } })).includes('nothingback'), 'one came back');
   assert.ok(!earns(Object.assign({}, clean, { stats: { trapsDodged: 3 } })).includes('nothingback'), 'three is not four');
   assert.ok(!earns(Object.assign({}, clean, { finished: false })).includes('nothingback'), 'the work has to be finished');

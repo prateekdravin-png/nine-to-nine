@@ -58,6 +58,12 @@ test('the tell is quoted from the message, and changes with your career level', 
   const lead = Review.review(summaryWith([miss({ text: 'URGENT: need your sign-off on the deck' })], 'lead'))[0];
   assert.match(lead.tell, /“URGENT”/);
 
+  const head = Review.review(summaryWith([miss({ text: 'Error rate climbing on staging since deploy' })], 'head'))[0];
+  assert.match(head.tell, /“staging”/, 'a head trap is pointed at by the word that says it is not live');
+  assert.strictEqual(head.title, 'You took one that was not happening yet');
+  const headReal = Review.review(summaryWith([miss({ type: 'urgent', action: 'ignore', text: 'URGENT: checkout is down for everyone' })], 'head'))[0];
+  assert.match(headReal.tell, /live and happening now/);
+
   const emergency = Review.review(summaryWith([miss({ type: 'urgent', action: 'ignore', text: 'Checkout is down for everyone' })], 'senior'))[0];
   assert.match(emergency.tell, /broken/);
   assert.strictEqual(emergency.emoji, '🚨');

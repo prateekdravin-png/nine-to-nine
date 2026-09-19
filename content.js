@@ -663,7 +663,7 @@
       trapPop: 'The only emergency was their deadline.'
     },
     head: {
-      id: 'head', label: 'Head', emoji: '🧭',
+      id: 'head', label: 'Head', emoji: '🏔️',
       summary: 'Everything sounds real. Is it live, and is it now?',
       unlockText: 'Clear campaign level 20, Head of, as a {role} to unlock.',
       tell: 'Traps at this level sound exactly like emergencies, calm or loud. What gives them away is <i>when</i> and <i>where</i>: next week, staging, a draft. A real one is live, and happening now.',

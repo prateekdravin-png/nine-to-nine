@@ -41,11 +41,17 @@
   const TITLE = {
     missed: { expired: 'It ran out while you were elsewhere', ignore: 'You left a real emergency' },
     declined: 'You said no to a real emergency',
-    trap: { junior: 'You took a "quick" one', senior: 'You took a polite one', lead: 'You took one that shouted' }
+    trap: { junior: 'You took a "quick" one', senior: 'You took a polite one', lead: 'You took one that shouted', head: 'You took one that was not happening yet' }
   };
 
   function tellFor(kind, miss, levelId) {
     if (kind === 'trap') {
+      if (levelId === 'head') {
+        const word = quoted(miss.text, Content.TELLS.notNow);
+        return word
+          ? `It was about “${word}”. At head everything sounds real; the trap is the one that is not live, or not now.`
+          : 'At head everything sounds real; the trap is the one that is not live, or not now.';
+      }
       if (levelId === 'lead') {
         const word = quoted(miss.text, Content.TELLS.alarm);
         return word
@@ -61,6 +67,7 @@
         : 'Anything quick, small or just 2 mins never is.';
     }
     // A real emergency, whether it was ignored, left to run out, or politely declined.
+    if (levelId === 'head') return 'It was live and happening now. At head that is what makes it real, however it sounds.';
     if (levelId === 'lead') return 'It was calm and said what was broken. At lead that is what a real one sounds like.';
     const word = quoted(miss.text, Content.TELLS.alarm);
     return word
