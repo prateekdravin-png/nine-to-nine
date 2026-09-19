@@ -66,7 +66,9 @@ test('a perfect reader can take all three stars on every single morning', () => 
     colleague: { strategy: 'Perfect reader + favours' },
     'cannot-tell': { strategy: 'Perfect reader, says no to two traps' },
     appraisal: { strategy: 'Sociable reader: answers all but traps' },
-    'everything-down': { strategy: 'Perfect reader + favours' }
+    'everything-down': { strategy: 'Perfect reader + favours' },
+    'still-a-person': { strategy: 'Perfect reader + answers home' },
+    'pass-it-on': { strategy: 'Perfect reader + favours' }
   };
   for (const level of Campaign.LEVELS) {
     if (Campaign.isWeek(level)) continue;
@@ -290,7 +292,10 @@ test('no campaign level falls to the player who has not learned it, whatever per
     'quiet-house': 'Respond to everything', micromanager: 'Say no to everything',
     'all-polite': 'Respond to everything', noon: 'Ignore everything',
     'come-back': 'Perfect reader, lets traps run out', 'everything-down': 'Perfect reader',
-    'head-of': 'Keyword reader: calm means urgent'
+    'head-of': 'Keyword reader: calm means urgent',
+    'still-a-person': 'Perfect reader', 'loud-and-real': 'Head reader, distrusts shouting',
+    'release-top': 'Keyword reader: calm means urgent', 'long-day-top': 'Keyword reader: calm means urgent',
+    'pass-it-on': 'Perfect reader'
   };
   // Every sensible way to time two pairs of headphones, including both back to back over the finish.
   const pairs = [undefined, [15], [30], [45]];

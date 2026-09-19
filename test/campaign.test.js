@@ -35,7 +35,12 @@ const APPROACH = {
   // After the week: single mornings again.
   'come-back': { strategy: 'Perfect reader' },
   'everything-down': { strategy: 'Perfect reader + favours' },
-  'head-of': { strategy: 'Perfect reader' }
+  'head-of': { strategy: 'Perfect reader' },
+  'still-a-person': { strategy: 'Perfect reader + answers home' },
+  'loud-and-real': { strategy: 'Perfect reader' },
+  'release-top': { strategy: 'Perfect reader' },
+  'long-day-top': { strategy: 'Perfect reader' },
+  'pass-it-on': { strategy: 'Perfect reader + favours' }
 };
 
 // And one who has not. Level 1 has none: it only asks you to hold the button.
@@ -58,7 +63,12 @@ const NAIVE = {
   'the-week': 'Perfect reader',   // delivers every morning by emptying itself, which is the whole lesson
   'come-back': 'Perfect reader, lets traps run out',   // never takes a trap, never turns one down either
   'everything-down': 'Perfect reader',                // right about everything, and alone when it all breaks at once
-  'head-of': 'Keyword reader: calm means urgent'       // learned lead as a rule, so every calm trap looks real
+  'head-of': 'Keyword reader: calm means urgent',      // learned lead as a rule, so every calm trap looks real
+  'still-a-person': 'Perfect reader',                  // right about work, and silent at home
+  'loud-and-real': 'Head reader, distrusts shouting',  // has the head tell, and still takes loud for a trap
+  'release-top': 'Keyword reader: calm means urgent',  // takes "next release" for today's
+  'long-day-top': 'Keyword reader: calm means urgent', // picks up every calm "not now"
+  'pass-it-on': 'Perfect reader'                       // right about everything, and alone in the outage
 };
 
 const play = (level, role, strategy, opts) =>

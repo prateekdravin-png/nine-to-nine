@@ -55,7 +55,12 @@ const APPROACH = {
   'the-week': { strategy: 'Perfect reader + answers home', pace: true },
   'come-back': { strategy: 'Perfect reader' },
   'everything-down': { strategy: 'Perfect reader + favours' },
-  'head-of': { strategy: 'Perfect reader' }
+  'head-of': { strategy: 'Perfect reader' },
+  'still-a-person': { strategy: 'Perfect reader + answers home' },
+  'loud-and-real': { strategy: 'Perfect reader' },
+  'release-top': { strategy: 'Perfect reader' },
+  'long-day-top': { strategy: 'Perfect reader' },
+  'pass-it-on': { strategy: 'Perfect reader + favours' }
 };
 
 // Misreading changes only what the strategy SEES; playBot still acts on the real card id.
@@ -107,6 +112,7 @@ function humanOpts(level, a) {
   if (a.strategy === 'Perfect reader') return {};
   if (a.strategy === 'Perfect reader + favours') return { favours: true };
   if (a.strategy === 'Sociable reader: answers all but traps') return { style: 'sociable' };
+  if (a.strategy === 'Perfect reader + answers home') return { home: 1 }; // level 21 asks for one reply
   return null;
 }
 

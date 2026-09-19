@@ -71,6 +71,10 @@ const STRATEGIES = {
   'Keyword reader: calm means urgent': (s, card) => byKeyword(card, !TELLS.alarm.test(card.text)),
   // The head-of tell as a keyword: next week, staging, a draft means a trap.
   'Keyword reader: "not now" means trap': (s, card) => byKeyword(card, !TELLS.notNow.test(card.text)),
+  // Learned the head tell but kept the lead habit: anything that shouts is still taken for a trap, so the
+  // real emergencies that shout at head go unanswered.
+  'Head reader, distrusts shouting': (s, card) =>
+    byKeyword(card, !TELLS.notNow.test(card.text) && !TELLS.alarm.test(card.text)),
   'Coin flip on urgent-vs-trap, guesses': (s, card, roll) => unsure(card, 'guess', roll),
   'Coin flip on urgent-vs-trap, says no': (s, card) => unsure(card, 'decline'),
   'Say no to everything': () => 'decline',
@@ -217,6 +221,9 @@ function playHuman(seed, profileName, opts) {
         const hedge = hedging && !reading.sure && card.type !== 'trivial';
         const decision = hedge ? 'decline'
           : o.favours ? withFavours(s, card, reading.looksUrgent, false)
+          // home: also answers the people outside work, the way a week asks you to. A number is how many
+          // replies, so a player told to answer one of them (level 21) does not spend the morning on it.
+          : o.home && card.personal && s.stats.personalAnswered < (o.home === true ? Infinity : o.home) ? 'respond'
           : sociable ? (reading.looksTrap ? 'ignore' : 'respond')
           : (reading.looksUrgent ? 'respond' : 'ignore');
         // Reading carries on while stuck on a call or outside for a fire drill; only the click has to

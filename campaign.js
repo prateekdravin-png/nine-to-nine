@@ -163,7 +163,7 @@
       teaches: 'Politeness is not safety. Read what is being asked, not how nicely it is asked.',
       hint: 'Nobody shouts today, so loudness tells you nothing. Ask what is broken behind the request: if the answer is nothing, it is a trap however kindly it is put. Take none at all.',
       setup: { day: 'normal', level: 'lead', seed: 1305 },
-      goals: [SHIP, atMost('traps', 'Take no traps at all', st('trapsTaken'), 0)]
+      goals: [SHIP]
     },
     {
       n: 16, id: 'noon', title: 'It all lands at noon', emoji: '⌛',
@@ -229,6 +229,59 @@
       setup: { day: 'normal', level: 'head', seed: 13 },
       goals: [SHIP, goal('gold', 'Finish on a gold', (r) => r.rating.key === 'gold')],
       unlocks: 'head'
+    },
+    // ---- The head's own mornings ----
+    // Two new lessons, then the head tell on three kinds of day the ladder has already shown, the way 13
+    // to 16 did for lead. Measured with curve.js: judgement stays at 90-93% while the time a first-time
+    // reader can take per message falls from 3.3s to 2.6s, so the tier climbs on pace, not on strictness.
+    {
+      // The week's lesson in a single morning: being at the top is not a reason to go quiet at home. Seed 3
+      // was the first that held, but its one early message from home ran out before a first-time reader got
+      // to it (1.7s a message); 47 leaves time to answer, at 91% and 3.3s.
+      n: 21, id: 'still-a-person', title: 'Still a person', emoji: '📱',
+      brief: 'Head of something now. Home still texts, and still notices when you never answer.',
+      teaches: 'The top job is not a reason to go quiet at home. One reply costs seconds.',
+      hint: 'Read everything as a head: live and now is real, next week and staging are not. When someone from home writes, answer one of them; it takes a moment, and ignoring home is the one habit this level will not let through.',
+      setup: { day: 'normal', level: 'head', seed: 47 },
+      goals: [SHIP, atLeast('home', 'Answer someone at home', st('personalAnswered'), 1)]
+    },
+    {
+      // Lead taught that loud means trap. At head some real emergencies shout, and a player still carrying
+      // that habit lets every one of them go.
+      n: 22, id: 'loud-and-real', title: 'Loud and real', emoji: '🔊',
+      brief: 'Some of the loud ones are real now. Shouting is not a tell any more, in either direction.',
+      teaches: 'Loud is not a trap at the top. Loud and live is an emergency.',
+      hint: 'Do not dismiss a message for shouting. At head the question is only whether it is live and happening now: "URGENT: checkout is down for everyone" is real, "URGENT: review the draft" is not. Miss nothing urgent.',
+      setup: { day: 'normal', level: 'head', seed: 18 },
+      goals: [SHIP, atMost('missed', 'Miss nothing urgent', st('urgentMissed'), 0)]
+    },
+    {
+      // Seed 5 measured well but fell to the spare headphones: a player who takes calm for real could wear
+      // them through the traps. Seed 90 holds against every perk and headphone timing at 92% and 3.3s.
+      n: 23, id: 'long-day-top', title: 'The long day at the top', emoji: '📚',
+      brief: "A backlog day with a head's inbox. Every \"not now\" you pick up is time taken from today.",
+      teaches: 'On a long day, a trap costs the one thing you are shortest of: time.',
+      hint: 'There is more work than usual and the traps sound real. Take none of them: anything about next week, a draft or a sandbox waits. Keep holding in between; a backlog day is won on time.',
+      setup: { day: 'backlog', level: 'head', seed: 90 },
+      goals: [SHIP, atMost('traps', 'Take no traps at all', st('trapsTaken'), 0)]
+    },
+    {
+      n: 24, id: 'release-top', title: 'Release at the top', emoji: '🚢',
+      brief: "Release day, and everyone has an opinion about the next one. Only today's is yours.",
+      teaches: "On release day, the next release is a trap. Today's is the job.",
+      hint: 'Release day leaves no slack on anything real. "Next release", "rehearsal" and "staging" can all wait; a live problem cannot, calm or loud. Miss nothing urgent.',
+      setup: { day: 'release', level: 'head', seed: 8 },
+      goals: [SHIP, atMost('missed', 'Miss nothing urgent', st('urgentMissed'), 0)]
+    },
+    {
+      // The finale: level 19's outage with the head tell on top, and the tightest time on the ladder.
+      n: 25, id: 'pass-it-on', title: 'Pass it on at the top', emoji: '🌋',
+      brief: 'An outage at the top. The real emergencies shout and whisper, and there are too many for one person.',
+      teaches: 'At the top, the plan for a bad morning is the people who owe you one.',
+      hint: 'Answer colleagues early to bank favours. When the outage lands, pass the live emergencies on, even mid-call, and leave anything about next week or staging alone. Miss nothing, and pass on at least two.',
+      setup: { day: 'normal', level: 'head', seed: 7 },
+      goals: [SHIP, atMost('missed', 'Miss nothing urgent', st('urgentMissed'), 0),
+        atLeast('passed', 'Pass on at least two emergencies', st('urgentDelegated'), 2)]
     }
   ];
 
