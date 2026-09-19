@@ -12,8 +12,8 @@ const DAY = 'normal';
 
 const words = (text) => text.split(/\s+/).filter(Boolean).length;
 
-test('levels run junior → senior → lead, and each explains itself', () => {
-  assert.deepEqual(LEVEL_ORDER, ['junior', 'senior', 'lead']);
+test('levels run junior → senior → lead → head, and each explains itself', () => {
+  assert.deepEqual(LEVEL_ORDER, ['junior', 'senior', 'lead', 'head']);
   assert.deepEqual(Object.keys(LEVELS).sort(), LEVEL_ORDER.slice().sort());
   for (const [i, id] of LEVEL_ORDER.entries()) {
     const l = LEVELS[id];
@@ -52,6 +52,8 @@ test('every role has its own name for each rung, and a promotion really renames 
   assert.equal(titleFor('support', 'lead').title, 'Support Lead');
   assert.equal(titleFor('tester', 'lead').title, 'QA Lead');
   assert.equal(titleFor('developer', 'senior').title, 'Senior Developer');
+  assert.equal(titleFor('developer', 'head').title, 'Head of Engineering');
+  assert.equal(titleFor('manager', 'head').title, 'Head of Delivery', 'a director is not promoted to "head director"');
   // Anything unknown — a run saved before roles or levels existed — reads as where everyone starts.
   assert.equal(titleFor('intern', 'principal').title, 'Junior Developer');
 });
@@ -79,7 +81,7 @@ test('every role has a complete, readable message set at every level', () => {
 });
 
 test('each level holds to its own tell', () => {
-  const { minimising, alarm } = TELLS;
+  const { minimising, alarm, notNow } = TELLS;
   for (const role of ROLE_ORDER) {
     const junior = ROLES[role].byLevel.junior;
     const senior = ROLES[role].byLevel.senior;
@@ -101,6 +103,22 @@ test('each level holds to its own tell', () => {
       assert.doesNotMatch(m.text, alarm, `lead emergencies stay calm: "${m.text}"`);
       assert.doesNotMatch(m.text, minimising, `lead emergencies never minimise: "${m.text}"`);
     }
+
+    // Head of: when and where is the tell, and tone is not. Every trap is not live or not now, no real
+    // emergency is, and each side has both calm and loud messages so neither tone gives anything away.
+    const head = ROLES[role].byLevel.head;
+    for (const m of head.trap) {
+      assert.match(m.text, notNow, `head traps are not live or not now: "${m.text}"`);
+      assert.doesNotMatch(m.text, minimising, `head traps never say "quick": "${m.text}"`);
+    }
+    for (const m of head.urgent) {
+      assert.doesNotMatch(m.text, notNow, `head emergencies are live and now: "${m.text}"`);
+      assert.doesNotMatch(m.text, minimising, `head emergencies never minimise: "${m.text}"`);
+    }
+    const loud = (list) => list.filter((m) => alarm.test(m.text)).length;
+    assert.ok(loud(head.urgent) >= 4, `${role}: some real emergencies shout at head`);
+    assert.ok(head.trap.length - loud(head.trap) >= 6, `${role}: some head traps are calm`);
+    assert.ok(loud(head.trap) >= 6, `${role}: and some shout`);
   }
 });
 
@@ -109,12 +127,15 @@ test("a role's own urgent and trap messages are unique across every role and lev
   // The pools that reach everybody are identical in every role by design, so they are excluded: the
   // thing this guards is a role's OWN work turning up in someone else's inbox.
   const shared = new Set([...Content.SHARED_URGENT, ...Content.SHARED_LEAD_URGENT,
-    ...Content.SHARED_TRAP.junior, ...Content.SHARED_TRAP.senior, ...Content.SHARED_TRAP.lead].map((m) => m.text));
+    ...Content.SHARED_TRAP.junior, ...Content.SHARED_TRAP.senior, ...Content.SHARED_TRAP.lead,
+    ...Content.SHARED_TRAP.head].map((m) => m.text));
   const seen = new Map();
   for (const role of ROLE_ORDER) {
     for (const level of LEVEL_ORDER) {
       const { urgent, trap } = ROLES[role].byLevel[level];
-      const all = level === 'senior' ? trap : [...urgent, ...trap]; // senior reuses junior urgent messages
+      // Senior reuses the junior emergencies, and head the lead ones plus its own.
+      const lead = new Set(ROLES[role].byLevel.lead.urgent.map((m) => m.text));
+      const all = level === 'senior' ? trap : level === 'head' ? [...urgent.filter((m) => !lead.has(m.text)), ...trap] : [...urgent, ...trap];
       const own = all.filter((m) => !shared.has(m.text));
       for (const m of own) {
         const where = `${role}/${level}`;
@@ -142,6 +163,7 @@ test("a game only sends its level's messages, on the same rhythm as every other 
   const rhythm = (level) => Core.createGame({ seed: 99, level }).schedule.map((a) => [a.at, a.type, a.life]);
   assert.deepEqual(rhythm('senior'), rhythm('junior'));
   assert.deepEqual(rhythm('lead'), rhythm('junior'));
+  assert.deepEqual(rhythm('head'), rhythm('junior'));
 });
 
 test('responding to a senior trap uses its own busy text and aftermath', () => {
@@ -167,11 +189,20 @@ test('design: each promotion breaks the shortcut that worked before', () => {
   assert.ok(gold(QUICK, 'lead') <= 0.1, 'and it stays broken at lead');
 
   assert.ok(evaluate(ALARM, seeds, { level: 'lead', day: DAY }).pipRate >= 0.6, 'at lead, trusting alarm words gets you put on a PIP');
+  assert.ok(evaluate(ALARM, seeds, { level: 'head', day: DAY }).pipRate >= 0.6, 'and still at head');
+
+  // Head of breaks the lead lesson taken as a rule, and its own tell is what works instead.
+  const CALM = 'Keyword reader: calm means urgent';
+  const NOT_NOW = 'Keyword reader: "not now" means trap';
+  assert.ok(gold(CALM, 'lead') >= 0.9, 'at lead, "calm means real" is all you need');
+  assert.ok(gold(CALM, 'head') <= 0.1, 'at head, "calm means real" falls for the calm traps');
+  assert.ok(gold(NOT_NOW, 'head') >= 0.9, 'at head, asking whether it is live and now is what works');
+  assert.ok(gold(NOT_NOW, 'lead') <= 0.1, 'and that question means nothing at lead');
 });
 
 test('design: at every level and in every role, a first-time player still has time to read', () => {
   const seeds = Array.from({ length: 150 }, (_, i) => i + 1);
-  for (const level of ['senior', 'lead']) { // junior is covered in core.test.js
+  for (const level of ['senior', 'lead', 'head']) { // junior is covered in core.test.js
     for (const role of ROLE_ORDER) {
       const r = evaluateHuman('First-time player', seeds, { role, level, day: DAY });
       assert.ok(r.lostPct <= 0.03, `${role}/${level}: lost ${(r.lostPct * 100).toFixed(1)}% of messages before reading them`);

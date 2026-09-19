@@ -233,10 +233,12 @@ test('follow-ups and escalations follow every level\'s tell', () => {
         assert.match(m.text, alarm, `lead follow-ups shout: "${m.text}"`);
         assert.doesNotMatch(m.text, minimising, `lead follow-ups never say quick: "${m.text}"`);
       }
+      if (level === 'head') assert.match(m.text, TELLS.notNow, `head follow-ups are still not live or not now: "${m.text}"`);
     }
     for (const m of urgent) {
       assert.doesNotMatch(m.text, minimising, `escalations never minimise: "${m.text}"`);
       assert.doesNotMatch(m.text, alarm, `escalations stay calm, so they read as urgent at lead too: "${m.text}"`);
+      assert.doesNotMatch(m.text, TELLS.notNow, `escalations are live and now, so they read as urgent at head: "${m.text}"`);
     }
   }
 });

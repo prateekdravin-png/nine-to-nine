@@ -67,6 +67,10 @@ const STRATEGIES = {
   '90% accurate + favours': (s, card, roll) => withFavours(s, card, roll < 0.9 ? card.type === 'urgent' : card.type !== 'urgent', false),
   'Keyword reader: "quick" means trap': (s, card) => byKeyword(card, !TELLS.minimising.test(card.text)),
   'Keyword reader: alarm words mean urgent': (s, card) => byKeyword(card, TELLS.alarm.test(card.text)),
+  // The lead lesson learned as a rule: loud is a trap, calm is real. Head of is built to break it.
+  'Keyword reader: calm means urgent': (s, card) => byKeyword(card, !TELLS.alarm.test(card.text)),
+  // The head-of tell as a keyword: next week, staging, a draft means a trap.
+  'Keyword reader: "not now" means trap': (s, card) => byKeyword(card, !TELLS.notNow.test(card.text)),
   'Coin flip on urgent-vs-trap, guesses': (s, card, roll) => unsure(card, 'guess', roll),
   'Coin flip on urgent-vs-trap, says no': (s, card) => unsure(card, 'decline'),
   'Say no to everything': () => 'decline',

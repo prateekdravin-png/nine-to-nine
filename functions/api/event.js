@@ -21,7 +21,7 @@
 // fails if the two ever disagree, so the copy cannot drift without someone noticing.
 
 const ROLES = ['developer', 'tester', 'analyst', 'support', 'manager'];
-const LEVELS = ['junior', 'senior', 'lead'];
+const LEVELS = ['junior', 'senior', 'lead', 'head'];
 const RATINGS = ['pip', 'missed', 'dropped', 'gold', 'silver', 'bronze'];
 const DURATION = 60;                                   // TUNING.DURATION
 const DAY_MS = 24 * 60 * 60 * 1000;

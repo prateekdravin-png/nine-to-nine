@@ -93,7 +93,9 @@
     LEVEL_DEMAND: {
       junior: { share: 0.85, also: { trapsTaken: 3 } },
       senior: { share: 0.9,  also: { trapsTaken: 2, urgentMissed: 2 } },
-      lead:   { share: 1.0,  also: { trapsTaken: 1, urgentMissed: 0 } }
+      lead:   { share: 1.0,  also: { trapsTaken: 1, urgentMissed: 0 } },
+      // Held to exactly what a lead is. What makes the top rung harder is the tell, not the bar.
+      head:   { share: 1.0,  also: { trapsTaken: 1, urgentMissed: 0 } }
     },
     // Day types. The rules never change; what changes is what the morning is FOR, and that turns out
     // to be enough to change how you play it. A normal morning rewards protecting your focus. On an

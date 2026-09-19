@@ -234,7 +234,7 @@ test('the spare headphones are shorter, and cannot go straight on after the firs
 // ---- perks: the guardrail ----
 
 const SEEDS = Array.from({ length: 80 }, (_, i) => i + 1);
-const CAREER = ['junior', 'senior', 'lead'];
+const CAREER = ['junior', 'senior', 'lead', 'head'];
 // How far a perk may narrow the gap, in points of gold rate, between a 90% reader and a player who
 // answers every message without reading it.
 const MAX_GAP_NARROWING = 12;

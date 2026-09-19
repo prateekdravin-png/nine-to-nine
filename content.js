@@ -115,6 +115,18 @@
     { from: 'Legal', avatar: '⚖️', text: 'Top priority: initial every policy page', busyText: 'Initialling pages…', aftermath: 'Twenty-two pages. All initialled.' },
     { from: 'Culture Club', avatar: '🎉', text: 'URGENT: vote on the party venue', busyText: 'Voting on a venue…', aftermath: 'The party is in March.' },
     { from: 'Intern · Rohit', avatar: '🧑‍🎓', text: 'URGENT: my build is broken again', busyText: 'Fixing their build…', aftermath: 'Rohit had not saved the file.' }
+    ],
+    // At head a shared trap may be calm or loud; what it always is, is not live or not now.
+    head: [
+    { from: 'HR', avatar: '🗂️', text: 'URGENT: next year\'s holiday calendar draft', busyText: 'Reviewing holiday dates…', aftermath: 'The holidays did not move.' },
+    { from: 'Facilities', avatar: '🏢', text: 'Floor loses power next month for works', busyText: 'Planning for next month…', aftermath: 'Facilities sent the same notice twice more.' },
+    { from: 'IT Helpdesk', avatar: '🛠️', text: 'Your laptop is replaced next quarter', busyText: 'Backing up for next quarter…', aftermath: 'Procurement moved it to the quarter after.' },
+    { from: 'Finance', avatar: '💰', text: 'Critical: expense policy draft for review', busyText: 'Reading the policy draft…', aftermath: 'The draft was replaced by version two.' },
+    { from: 'Legal', avatar: '⚖️', text: 'Contract template changes take effect next year', busyText: 'Reading next year\'s template…', aftermath: 'Legal will send a summary. It will be long.' },
+    { from: 'Culture Club', avatar: '🎉', text: 'ASAP!! Venue for next month\'s party', busyText: 'Comparing venues…', aftermath: 'The venue was booked in the first hour.' },
+    { from: 'Intern · Rohit', avatar: '🧑‍🎓', text: 'My test server build is broken', busyText: 'Fixing Rohit\'s test server…', aftermath: 'Rohit had not saved the file. Again.' },
+    { from: 'Travel Desk', avatar: '✈️', text: 'Important: book flights for next quarter', busyText: 'Booking far-off flights…', aftermath: 'The trip became a video call.' },
+    { from: 'Admin', avatar: '🏢', text: 'Emergency drill scheduled for tomorrow', busyText: 'Reading the drill plan…', aftermath: 'The drill is a fire alarm. You leave the building.' }
     ]
   };
 
@@ -612,16 +624,23 @@
   //   lead    Traps borrow alarm words (URGENT, ASAP, "important!!") while real emergencies are calm and
   //           concrete ("Checkout errors climbing since your deploy"). Now alarm words mislead too: ask
   //           what is actually broken, and who is waiting.
+  //   head    Traps sound exactly like emergencies, calm and concrete or loud, and so do real ones: tone
+  //           says nothing either way. What gives a trap away is WHEN and WHERE: it is about next week,
+  //           a staging server, a draft ("Error rate climbing on staging since deploy"). A real one is
+  //           live, and happening now. Real emergencies here are the lead ones plus some that shout.
   //
   // TELLS are the keyword patterns involved. test/career.test.js holds every level to them, and checks
   // with keyword-only bots (bots.js) that each promotion breaks the shortcut from the level before.
   // All career wording is plain English with no local references, so it works for any audience.
   const TELLS = {
     minimising: /\b(quick|quickly|just|small|tiny|only|sec|minor)\b/i,
-    alarm: /\b(urgent|urgently|asap|now|immediate|immediately|critical|important|emergency|priority)\b|!/i
+    alarm: /\b(urgent|urgently|asap|now|immediate|immediately|critical|important|emergency|priority)\b|!/i,
+    // Not live, or not now: the head-of tell. Only time and place words, never "plan" or "forecast",
+    // which real emergencies use too ("Budget freezes unless your plan lands today").
+    notNow: /\b(tomorrow|later|someday|eventually|next (week|month|quarter|year|sprint|release|cycle|thursday)|staging|sandbox|test (server|site|environment|account|data|branch)|dry run|draft|mock-?up|prototype|rehearsal)\b/i
   };
 
-  const LEVEL_ORDER = ['junior', 'senior', 'lead'];
+  const LEVEL_ORDER = ['junior', 'senior', 'lead', 'head'];
   const LEVELS = {
     junior: {
       id: 'junior', label: 'Junior', emoji: '🌱',
@@ -642,6 +661,13 @@
       unlockText: 'Clear campaign level 12, Lead, as a {role} to unlock.',
       tell: 'Traps at this level shout <i>URGENT</i> and <i>ASAP</i>, while real emergencies are often calm. Ask what is actually broken, and who is waiting.',
       trapPop: 'The only emergency was their deadline.'
+    },
+    head: {
+      id: 'head', label: 'Head', emoji: '🧭',
+      summary: 'Everything sounds real. Is it live, and is it now?',
+      unlockText: 'Clear campaign level 20, Head of, as a {role} to unlock.',
+      tell: 'Traps at this level sound exactly like emergencies, calm or loud. What gives them away is <i>when</i> and <i>where</i>: next week, staging, a draft. A real one is live, and happening now.',
+      trapPop: 'It was real. Just not today.'
     }
   };
 
@@ -655,27 +681,32 @@
     developer: {
       junior: { rank: 'Junior', title: 'Junior Developer' },
       senior: { rank: 'Senior', title: 'Senior Developer' },
-      lead: { rank: 'Lead', title: 'Lead Developer' }
+      lead: { rank: 'Lead', title: 'Lead Developer' },
+      head: { rank: 'Head', title: 'Head of Engineering' }
     },
     tester: {
       junior: { rank: 'Junior', title: 'Junior Tester' },
       senior: { rank: 'Senior', title: 'Senior Tester' },
-      lead: { rank: 'Lead', title: 'QA Lead' }
+      lead: { rank: 'Lead', title: 'QA Lead' },
+      head: { rank: 'Head', title: 'Head of QA' }
     },
     analyst: {
       junior: { rank: 'Junior', title: 'Junior Analyst' },
       senior: { rank: 'Senior', title: 'Senior Analyst' },
-      lead: { rank: 'Lead', title: 'Lead Analyst' }
+      lead: { rank: 'Lead', title: 'Lead Analyst' },
+      head: { rank: 'Head', title: 'Head of Analytics' }
     },
     support: {
       junior: { rank: 'Junior', title: 'Junior Support Engineer' },
       senior: { rank: 'Senior', title: 'Senior Support Engineer' },
-      lead: { rank: 'Lead', title: 'Support Lead' }
+      lead: { rank: 'Lead', title: 'Support Lead' },
+      head: { rank: 'Head', title: 'Head of Support' }
     },
     manager: {
       junior: { rank: 'Manager', title: 'Manager' },
       senior: { rank: 'Senior', title: 'Senior Manager' },
-      lead: { rank: 'Director', title: 'Director' }
+      lead: { rank: 'Director', title: 'Director' },
+      head: { rank: 'Head', title: 'Head of Delivery' }
     }
   };
 
@@ -1009,6 +1040,121 @@
     }
   };
 
+  // Head of: per role, real emergencies that shout (added to the calm lead ones) and traps that are not
+  // live or not now. Calm or loud, the tone of a message no longer says which it is.
+  const HEAD = {
+    developer: {
+      urgent: [
+        { from: 'Ops Bot', avatar: '📈', text: 'URGENT: checkout is down for everyone', busyText: 'Bringing checkout back…' },
+        { from: 'Security Team', avatar: '🛡️', text: 'Critical: live customer data exposed right now', busyText: 'Closing the exposure…' },
+        { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Production deploy failing; roll back immediately', busyText: 'Rolling back production…' },
+        { from: 'Database Bot', avatar: '🗄️', text: 'ASAP!! Orders database is refusing writes', busyText: 'Unblocking the orders database…' }
+      ],
+      trap: [
+        { from: 'Ops Bot', avatar: '📈', text: 'Error rate climbing on staging since deploy', busyText: 'Chasing staging errors…', aftermath: 'Staging was running last month\'s config.' },
+        { from: 'Database Bot', avatar: '🗄️', text: 'Disk at 97% on the test server', busyText: 'Freeing test disk space…', aftermath: 'The test server was being deleted on Friday.' },
+        { from: 'Security Team', avatar: '🛡️', text: 'PEN TEST FINDINGS due next quarter!!', busyText: 'Reading pen test findings…', aftermath: 'The findings were from the last pen test. Fixed.' },
+        { from: 'Onsite Client', avatar: '🌎', text: 'Demo next Thursday; the sandbox build fails', busyText: 'Fixing the sandbox build…', aftermath: 'The sandbox was rebuilt from scratch on Wednesday.' },
+        { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'URGENT: review the draft architecture doc', busyText: 'Reviewing a draft…', aftermath: 'Draft four replaced it an hour later.' },
+        { from: 'Release Manager', avatar: '📦', text: 'Next release is waiting on your approval', busyText: 'Approving the next release early…', aftermath: 'The next release was replanned before lunch.' },
+        { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Customers could be charged twice next month', busyText: 'Modelling next month…', aftermath: 'The pricing change was cancelled.' },
+        { from: 'Vikram · PM', avatar: '📋', text: 'ASAP: prototype for next sprint\'s feature', busyText: 'Prototyping…', aftermath: 'Next sprint\'s feature was dropped in planning.' },
+        { from: 'Arjun · Architect', avatar: '🏛️', text: 'Critical: migration dry run fails on sandbox', busyText: 'Debugging the dry run…', aftermath: 'The dry run was for a migration nobody has scheduled.' },
+        { from: 'Director · Anita', avatar: '👩‍💼', text: 'Important: board mock-up needs numbers tomorrow', busyText: 'Filling in a mock-up…', aftermath: 'The board meeting is in three weeks.' },
+        { from: 'Ops Bot', avatar: '📈', text: 'Login latency tripled on the test site', busyText: 'Profiling the test site…', aftermath: 'The test site runs on one laptop.' },
+        { from: 'Release Manager', avatar: '📦', text: 'Emergency: rehearsal build is red again', busyText: 'Fixing the rehearsal build…', aftermath: 'The rehearsal is for a launch in May.' }
+      ]
+    },
+    tester: {
+      urgent: [
+        { from: 'Release Manager', avatar: '📦', text: 'URGENT: release is live and payments fail', busyText: 'Testing the payment fix…' },
+        { from: 'Support Lead', avatar: '🛟', text: 'Customers locked out right now; reproduce ASAP', busyText: 'Reproducing the lockout…' },
+        { from: 'Ops Bot', avatar: '📈', text: 'Critical: live orders vanishing after checkout', busyText: 'Tracing the lost orders…' },
+        { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Hotfix ships in ten minutes; test it!', busyText: 'Testing the hotfix…' }
+      ],
+      trap: [
+        { from: 'Jenkins', avatar: '🤖', text: 'Login tests failing on the sandbox branch', busyText: 'Rerunning sandbox tests…', aftermath: 'The sandbox branch was three months old.' },
+        { from: 'Release Manager', avatar: '📦', text: 'Next release goes out without sign-off', busyText: 'Signing off early…', aftermath: 'The next release moved twice before it shipped.' },
+        { from: 'Support Lead', avatar: '🛟', text: 'URGENT: test plan for next quarter\'s launch', busyText: 'Writing the test plan…', aftermath: 'Next quarter\'s launch has no scope yet.' },
+        { from: 'Automation Bot', avatar: '🤖', text: 'Critical!! 40 tests red on staging', busyText: 'Triaging staging failures…', aftermath: 'Staging had the wrong database attached.' },
+        { from: 'Onsite Client', avatar: '🌎', text: 'Our test account shows the wrong totals', busyText: 'Checking their test account…', aftermath: 'They had typed the totals in by hand.' },
+        { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Rollback rehearsal needs your results tomorrow', busyText: 'Preparing rehearsal results…', aftermath: 'The rehearsal moved to next month.' },
+        { from: 'Vikram · PM', avatar: '📋', text: 'ASAP: test the prototype before the offsite', busyText: 'Testing a prototype…', aftermath: 'The prototype was a slide with buttons.' },
+        { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Important: sign-off meeting next week, prepare now', busyText: 'Preparing for next week…', aftermath: 'The meeting was cancelled on Monday.' },
+        { from: 'Ops Bot', avatar: '📈', text: 'Payments declining on the test environment', busyText: 'Reproducing test declines…', aftermath: 'Test cards expire every month. They had.' },
+        { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Regression suite fails on my draft branch', busyText: 'Debugging a draft branch…', aftermath: 'Arjun had not pushed the fix.' },
+        { from: 'Security Team', avatar: '🛡️', text: 'Emergency: pen test scheduled for next month', busyText: 'Preparing for the pen test…', aftermath: 'The pen testers bring their own plan.' },
+        { from: 'Jenkins', avatar: '🤖', text: 'Nightly run might fail later this week', busyText: 'Fixing a failure in advance…', aftermath: 'It passed.' }
+      ]
+    },
+    analyst: {
+      urgent: [
+        { from: 'CFO Office', avatar: '💼', text: 'URGENT: live board call, numbers are wrong', busyText: 'Correcting the numbers live…' },
+        { from: 'Data Pipeline', avatar: '🤖', text: 'Critical!! Payroll feed failed, payday is today', busyText: 'Rerunning the payroll feed…' },
+        { from: 'Compliance Team', avatar: '⚖️', text: 'The regulator is on the phone now', busyText: 'Talking to the regulator…' },
+        { from: 'Ops Bot', avatar: '📈', text: 'ASAP: your job is locking production tables', busyText: 'Killing the job…' }
+      ],
+      trap: [
+        { from: 'CFO Office', avatar: '💼', text: 'Board deck draft disagrees with finance', busyText: 'Reconciling a draft…', aftermath: 'Finance sent new numbers an hour later.' },
+        { from: 'Data Pipeline', avatar: '🤖', text: 'Staging load stopped; test dashboards are stale', busyText: 'Restarting the staging load…', aftermath: 'Nobody has opened the test dashboards since June.' },
+        { from: 'Compliance Team', avatar: '⚖️', text: 'URGENT: next year\'s filing template changed', busyText: 'Reading next year\'s template…', aftermath: 'It will change twice more before then.' },
+        { from: 'Sales Head', avatar: '📈', text: 'Critical!! Forecast for next quarter looks low', busyText: 'Reworking the forecast…', aftermath: 'Next quarter always looks low in March.' },
+        { from: 'Neha · Marketing', avatar: '📣', text: 'ASAP: numbers for the campaign mock-up', busyText: 'Filling in a mock-up…', aftermath: 'The mock-up used placeholder numbers anyway.' },
+        { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'Your sandbox query is slow again', busyText: 'Tuning a sandbox query…', aftermath: 'The sandbox has one CPU. It always will.' },
+        { from: 'Director · Anita', avatar: '👩‍💼', text: 'Important: investor rehearsal numbers by tomorrow', busyText: 'Preparing rehearsal numbers…', aftermath: 'The numbers were rounded on the day.' },
+        { from: 'Vikram · PM', avatar: '📋', text: 'Metrics definitions for next sprint, ASAP', busyText: 'Defining next sprint\'s metrics…', aftermath: 'Someone else defined them in planning.' },
+        { from: 'Data Pipeline', avatar: '🔄', text: 'Test data job has failed three nights', busyText: 'Fixing the test data job…', aftermath: 'The test data job was being retired.' },
+        { from: 'Onsite Client', avatar: '🌎', text: 'Our prototype dashboard shows odd totals', busyText: 'Checking their prototype…', aftermath: 'The prototype was fed with sample data.' },
+        { from: 'CFO Office', avatar: '🏦', text: 'Emergency: budget model for next year', busyText: 'Building next year\'s model…', aftermath: 'Next year\'s budget starts from a new template.' },
+        { from: 'Compliance Team', avatar: '⚖️', text: 'Audit dry run found gaps in staging', busyText: 'Closing gaps in staging…', aftermath: 'The real audit does not look at staging.' }
+      ]
+    },
+    support: {
+      urgent: [
+        { from: 'Phone Queue', avatar: '☎️', text: 'URGENT: 40 callers waiting, queue is full', busyText: 'Clearing the queue…' },
+        { from: 'SLA Bot', avatar: '⏱️', text: 'Critical: top ticket breaches its SLA now', busyText: 'Saving the ticket…' },
+        { from: 'Social Monitor', avatar: '📡', text: 'ASAP!! Outage post trending, customers furious', busyText: 'Posting an update…' },
+        { from: 'Security Team', avatar: '🛡️', text: 'Emergency: an agent account is hijacked', busyText: 'Locking the account…' }
+      ],
+      trap: [
+        { from: 'SLA Bot', avatar: '⏱️', text: 'Tickets will breach their SLA next month', busyText: 'Rearranging next month…', aftermath: 'Next month\'s rota fixed it without you.' },
+        { from: 'Ops Bot', avatar: '📈', text: 'Login failures rising on the staging site', busyText: 'Chasing staging logins…', aftermath: 'Staging used last year\'s certificate.' },
+        { from: 'Social Monitor', avatar: '📡', text: 'URGENT: approve a draft reply to reviewers', busyText: 'Editing a draft reply…', aftermath: 'Marketing rewrote it anyway.' },
+        { from: 'Phone Queue', avatar: '☎️', text: 'Critical: phone tree changes next week', busyText: 'Rewriting the phone tree…', aftermath: 'The phone tree kept its old options.' },
+        { from: 'Onsite Client', avatar: '🌎', text: 'Our test account cannot log in', busyText: 'Unlocking a test account…', aftermath: 'They had the wrong password. On a test account.' },
+        { from: 'Ramesh · Manager', avatar: '👨‍💼', text: 'ASAP: rota for next quarter', busyText: 'Planning next quarter\'s rota…', aftermath: 'Half the team changed shifts the week after.' },
+        { from: 'Priya · Tech Lead', avatar: '👩‍💻', text: 'Important!! Knowledge base draft needs review', busyText: 'Reviewing the draft…', aftermath: 'The draft went to a committee.' },
+        { from: 'Sales Head', avatar: '📈', text: 'Biggest prospect starts a trial next month', busyText: 'Preparing the trial…', aftermath: 'Sales ran the trial. You were cc-ed.' },
+        { from: 'Vikram · PM', avatar: '📋', text: 'Emergency: chatbot prototype gives wrong answers', busyText: 'Testing the chatbot prototype…', aftermath: 'The prototype was switched off at noon.' },
+        { from: 'Security Team', avatar: '🛡️', text: 'Password leak rehearsal scheduled for tomorrow', busyText: 'Rehearsing the rehearsal…', aftermath: 'The rehearsal was a slide deck.' },
+        { from: 'Arjun · Dev', avatar: '🧑‍💻', text: 'Sandbox checkout errors since this morning', busyText: 'Chasing sandbox errors…', aftermath: 'Arjun was deploying to the sandbox all morning.' },
+        { from: 'SLA Bot', avatar: '⏱️', text: 'Critical!! SLA report due later this week', busyText: 'Writing the SLA report…', aftermath: 'Nobody reads the SLA report.' }
+      ]
+    },
+    manager: {
+      urgent: [
+        { from: 'Director · Anita', avatar: '👩‍💼', text: 'URGENT: client escalation call starting now', busyText: 'Joining the escalation…' },
+        { from: 'Security Team', avatar: '🛡️', text: 'Critical: team locked out of production', busyText: 'Restoring access…' },
+        { from: 'Release Manager', avatar: '📦', text: 'ASAP!! Go-live broke checkout; rollback is yours', busyText: 'Making the rollback call…' },
+        { from: 'Onsite Client', avatar: '🌎', text: 'Emergency: our launch is failing live', busyText: 'Getting the team on it…' }
+      ],
+      trap: [
+        { from: 'HR', avatar: '🗂️', text: 'An engineer might resign next year', busyText: 'Planning a retention talk…', aftermath: 'They were happy. Now they are confused.' },
+        { from: 'Director · Anita', avatar: '👩‍💼', text: 'Important: next year\'s headcount draft', busyText: 'Drafting headcount…', aftermath: 'Headcount was frozen the next week anyway.' },
+        { from: 'Release Manager', avatar: '📦', text: 'Go-live rehearsal paused until you decide', busyText: 'Deciding about a rehearsal…', aftermath: 'The rehearsal went ahead without the decision.' },
+        { from: 'Finance', avatar: '🧾', text: 'URGENT: budget draft for next quarter', busyText: 'Drafting next quarter\'s budget…', aftermath: 'Finance replaced it with a template.' },
+        { from: 'Onsite Client', avatar: '🌎', text: 'Renewal talks start next month; prepare now', busyText: 'Preparing for next month…', aftermath: 'Sales handled the renewal.' },
+        { from: 'Director · Anita', avatar: '👩‍💼', text: 'Critical!! Sign off next month\'s offsite agenda', busyText: 'Editing the offsite agenda…', aftermath: 'The offsite became a video call.' },
+        { from: 'Vikram · PM', avatar: '📋', text: 'ASAP: roadmap mock-up for the board', busyText: 'Building a roadmap mock-up…', aftermath: 'The board saw a different roadmap.' },
+        { from: 'Ramesh · Peer Manager', avatar: '👨‍💼', text: 'Reorg proposal draft needs your view', busyText: 'Reading a reorg draft…', aftermath: 'The reorg was announced before you finished.' },
+        { from: 'Security Team', avatar: '🛡️', text: 'Emergency: access review due next quarter', busyText: 'Starting the access review…', aftermath: 'The access review has its own team.' },
+        { from: 'Arjun · Architect', avatar: '🏛️', text: 'Platform migration dry run slipped again', busyText: 'Replanning the dry run…', aftermath: 'It slipped again the next week.' },
+        { from: 'HR', avatar: '🗂️', text: 'Performance calibration for next cycle, ASAP', busyText: 'Calibrating the next cycle…', aftermath: 'The template changed on Friday.' },
+        { from: 'Finance', avatar: '💰', text: 'Vendor may stop work later this year', busyText: 'Calling the vendor…', aftermath: 'The vendor was surprised you called.' }
+      ]
+    }
+  };
+
   // Each role's full message set at each level. `messages` above stays the junior set.
   for (const id of ROLE_ORDER) {
     const junior = ROLES[id].messages;
@@ -1019,7 +1165,13 @@
     ROLES[id].byLevel = {
       junior,
       senior: { urgent: junior.urgent, trivial: junior.trivial, trap: career.senior.trap },
-      lead: { urgent: career.lead.urgent, trivial: junior.trivial, trap: career.lead.trap }
+      lead: { urgent: career.lead.urgent, trivial: junior.trivial, trap: career.lead.trap },
+      // The calm lead emergencies, the role's loud ones, and the loud shared ones everybody gets at junior.
+      head: {
+        urgent: career.lead.urgent.concat(HEAD[id].urgent, SHARED_URGENT),
+        trivial: junior.trivial,
+        trap: HEAD[id].trap.concat(SHARED_TRAP.head)
+      }
     };
   }
 
@@ -1103,6 +1255,14 @@
         { text: 'URGENT follow-up: still waiting on you!', busyText: 'Answering the loud follow-up…', aftermath: 'The follow-up was louder. It was not more important.' },
         { text: 'ASAP please, this is important!!', busyText: 'Doing the "important" thing…', aftermath: 'It was important to exactly one person.' },
         { text: 'Top priority!! Why no reply yet?', busyText: 'Replying to the top priority…', aftermath: 'Top priority, for about ten minutes.' }
+      ],
+      urgent: ESCALATIONS
+    },
+    head: {
+      trap: [
+        { text: 'Following up on the staging issue', busyText: 'Looking at staging after all…', aftermath: 'It came back, and it was still only staging.' },
+        { text: 'URGENT: still need you for next week', busyText: 'Planning next week after all…', aftermath: 'Next week still had not happened.' },
+        { text: 'Bumping the draft back to you', busyText: 'Reading the draft after all…', aftermath: 'The draft came back as draft five.' }
       ],
       urgent: ESCALATIONS
     }
