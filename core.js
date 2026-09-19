@@ -194,7 +194,12 @@
       // morning with one favour already owed, so an outage that lands early is not lost for want of a
       // quiet spell to bank one in; it does nothing for anyone who never passes an emergency on.
       snooze: { traps: 2 },
-      oncall: { favours: 1, helper: 'Alex' }
+      oncall: { favours: 1, helper: 'Alex' },
+      // The head tier's perk, from the long day. It starts the time bank with a second in it, and the bank
+      // never pays for a trap, so a player who answers without reading gets nothing from it. Measured: at 1s
+      // it is worth +54 to an 80% reader (the other perks sit between +25 and +104) and widens the reading
+      // gap at head; at 2s and above it outgrew every other perk and would have been the only pick.
+      cleardiary: { seconds: 1 }
     },
     // Colleague favours. Answering small talk from a colleague (a person, not a bot, a group chat or
     // family) banks a favour from them; passing a message on spends the oldest one. On something
@@ -516,7 +521,7 @@
       t: 0,
       duration: TUNING.DURATION,
       run: 0,       // right calls in a row, toward the next few seconds banked
-      timeBank: 0,  // seconds in hand, spent automatically on the next interruption
+      timeBank: perk === 'cleardiary' ? TUNING.PERKS.cleardiary.seconds : 0, // seconds in hand, spent on the next interruption
       over: false,
       endReason: null,
       progress: 0,
@@ -541,6 +546,7 @@
         : perk === 'secondchance' ? TUNING.PERKS.secondchance.urgents
         : perk === 'snooze' ? TUNING.PERKS.snooze.traps
         : perk === 'oncall' ? TUNING.PERKS.oncall.favours
+        : perk === 'cleardiary' ? 1
         : 0,
       flowHeldUntil: 0, // a perk can keep your focus from draining while you are on one particular call
       // names of colleagues who owe you one, oldest first
@@ -943,6 +949,12 @@
     s.timeBank -= saved;
     s.stats.timeSaved += saved;
     let busy = wanted - saved;
+    // The diary's second is the first thing in the bank, so the first spend is the perk being used.
+    const diary = saved > 0 && s.perk === 'cleardiary' && s.perkLeft > 0;
+    if (diary) {
+      s.perkLeft--;
+      s.stats.perkUsed++;
+    }
     // A perk, if one was taken into this morning and has uses left. See TUNING.PERKS.
     let perkUsed = null;
     if (s.perkLeft > 0 && ((s.perk === 'coffee' && card.type === 'urgent') || (s.perk === 'cover' && card.type === 'trap'))) {
@@ -975,7 +987,7 @@
       }
     }
     decide(s, card, 'respond', events);
-    events.push({ type: 'respond', card, rep: eff.rep, busy, saved, favour, favourFull, perk: perkUsed });
+    events.push({ type: 'respond', card, rep: eff.rep, busy, saved, favour, favourFull, perk: perkUsed || (diary ? 'cleardiary' : null) });
     return events;
   }
 

@@ -113,6 +113,7 @@ test('the words on a perk match what it does', () => {
   assert.ok(Rewards.byId.snooze.blurb.includes(`first ${P.snooze.traps} traps`), 'snooze says how many traps it keeps away');
   assert.strictEqual(P.oncall.favours, 1);
   assert.ok(Rewards.byId.oncall.blurb.includes(`${P.oncall.helper} already owing you a favour`), 'the rota names who owes you one');
+  assert.ok(Rewards.byId.cleardiary.blurb.includes(`${P.cleardiary.seconds} second in hand`), 'the diary says how much time it gives');
 });
 
 test('a perk is only taken where it is allowed, and only once it is earned', () => {
@@ -219,6 +220,25 @@ test('the on-call rota starts you one favour up, and is spent with it', () => {
   assert.strictEqual(s.perkLeft, 0);
 });
 
+test('the clear diary starts the bank with a second, never spends it on a trap, and is used once', () => {
+  const P = Core.TUNING.PERKS.cleardiary;
+  const s = Core.createGame({ seed: 4, day: 'normal', perk: 'cleardiary' });
+  assert.strictEqual(s.timeBank, P.seconds);
+  assert.strictEqual(Core.createGame({ seed: 4, day: 'normal' }).timeBank, 0, 'without it the bank starts empty');
+  const answer = (type) => {
+    const ev = Core.act(s, Core.spawnCard(s, type, 0, 30).id, 'respond').find((e) => e.type === 'respond');
+    while (Core.isBusy(s)) Core.step(s, 0.05, { holding: false });
+    return ev;
+  };
+  const trap = answer('trap');
+  assert.strictEqual(trap.saved, 0, 'a trap never gets the second');
+  assert.strictEqual(s.timeBank, P.seconds);
+  const real = answer('urgent');
+  assert.ok(real.saved > 0 && real.perk === 'cleardiary', 'the first real interruption does');
+  assert.strictEqual(s.stats.perkUsed, 1);
+  assert.strictEqual(answer('urgent').perk, null, 'and only once');
+});
+
 test('the spare headphones are shorter, and cannot go straight on after the first pair', () => {
   const P = Core.TUNING.PERKS.headphones;
   const s = Core.createGame({ seed: 3, day: 'normal', perk: 'headphones' });
@@ -242,7 +262,7 @@ const CAREER = ['junior', 'senior', 'lead', 'head'];
 const MAX_GAP_NARROWING = 12;
 // Headphone timings to try. Only the spare pair cares, so only it is held against every pattern; the
 // others use one ordinary pattern for everyone's single pair.
-const PATTERNS = { headphones: [[15, 35], [25, 50], [40, 55]], coffee: [[30]], cover: [[30]], politeexit: [[30]], secondchance: [[30]], snooze: [[30]], oncall: [[30]] };
+const PATTERNS = { headphones: [[15, 35], [25, 50], [40, 55]], coffee: [[30]], cover: [[30]], politeexit: [[30]], secondchance: [[30]], snooze: [[30]], oncall: [[30]], cleardiary: [[30]] };
 
 const goldRate = (strategy, level, perk, headphonesAt) =>
   evaluate(strategy, SEEDS, { day: 'normal', level, perk, headphonesAt }).goldRate * 100;

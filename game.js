@@ -1270,7 +1270,7 @@
             ui.bank.classList.remove('spending');
             void ui.bank.offsetWidth;
             ui.bank.classList.add('spending');
-            popup(`⏳ −${ev.saved.toFixed(1)}s off this one`, 'flow', ui.clock);
+            popup(`${ev.perk === 'cleardiary' ? '📆' : '⏳'} −${ev.saved.toFixed(1)}s off this one`, 'flow', ui.clock);
           }
           if (ev.perk === 'coffee') popup('☕ Still focused', 'flow', ui.clock);
           else if (ev.perk === 'cover') popup('🛡️ Covered: your focus survived it', 'good', ui.clock);

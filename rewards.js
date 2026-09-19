@@ -123,6 +123,12 @@
       // quiet spell first, and it is worth nothing to a player who never passes an emergency on.
       id: 'oncall', emoji: '📟', title: 'On-call rota', unlockedBy: 'everything-down',
       blurb: 'You start the morning with Alex already owing you a favour.'
+    },
+    {
+      // The long day at the top, where time is what you are shortest of. The second comes off the first
+      // thing you answer that is not a trap, the same rule every banked second follows.
+      id: 'cleardiary', emoji: '📆', title: 'Clear diary', unlockedBy: 'long-day-top',
+      blurb: 'You start the morning with 1 second in hand, off the first real thing you answer.'
     }
   ];
   const byId = {};
