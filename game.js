@@ -1695,11 +1695,14 @@
       rating: result.rating.key,
       mode,
       role: result.role,
+      level: result.level,
       events: result.events,
       stats: st,
       rounds: progress.rounds,
       rolesFinished: progress.roles,
-      streak: Daily.streak(playedMornings(), today())
+      streak: Daily.streak(playedMornings(), today()),
+      // The week has already taken this morning in (above), so on its last morning it is over here.
+      week: mode === 'week' ? weekResult(week) : null
     }, starTotals()), unlocked);
     ui.endAward.hidden = true;
     unlockAwards(won);

@@ -51,6 +51,21 @@ test('each achievement is earned by what it says, and nothing else', () => {
   assert.ok(!earns({ rounds: 3, mode: 'practice', rating: 'gold' }).includes('goldendaily'), 'practice rounds do not count');
   assert.ok(earns({ rounds: 3, events: ['drill', 'outage'] }).includes('survivor'));
   assert.ok(!earns({ rounds: 3, events: ['drill'] }).includes('survivor'));
+
+  const clean = { rounds: 3, level: 'lead', finished: true, stats: { trapsDodged: 4, followUps: 0 } };
+  assert.ok(earns(clean).includes('nothingback'));
+  assert.ok(!earns(Object.assign({}, clean, { level: 'senior' })).includes('nothingback'), 'only at lead, where it comes back urgent');
+  assert.ok(!earns(Object.assign({}, clean, { stats: { trapsDodged: 4, followUps: 1 } })).includes('nothingback'), 'one came back');
+  assert.ok(!earns(Object.assign({}, clean, { stats: { trapsDodged: 3 } })).includes('nothingback'), 'three is not four');
+  assert.ok(!earns(Object.assign({}, clean, { finished: false })).includes('nothingback'), 'the work has to be finished');
+  assert.ok(earns({ rounds: 3, events: ['outage'], stats: { urgentDelegated: 3 } }).includes('commander'));
+  assert.ok(!earns({ rounds: 3, events: ['outage'], stats: { urgentDelegated: 2 } }).includes('commander'));
+  assert.ok(!earns({ rounds: 3, events: ['drill'], stats: { urgentDelegated: 3 } }).includes('commander'), 'it takes an outage');
+  const week = { shipped: 5, played: 5, energy: 60, home: 60, golds: 2 };
+  assert.ok(earns({ rounds: 3, week }).includes('heldweek'));
+  assert.ok(!earns({ rounds: 3, week: Object.assign({}, week, { home: 59 }) }).includes('heldweek'), 'home counts as much as energy');
+  assert.ok(!earns({ rounds: 3, week: Object.assign({}, week, { shipped: 4 }) }).includes('heldweek'));
+  assert.ok(!earns({ rounds: 3, week: null }).includes('heldweek'), 'only on the morning that finishes a week');
 });
 
 test('an award is only handed out once', () => {

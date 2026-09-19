@@ -11,7 +11,8 @@
   // player has done across rounds (see context below), never anything live, so it can be checked once at
   // the end of a round.
   //
-  // context: { finished, rating, mode, role, events, stats, rounds, rolesFinished, streak, stars, maxStars }
+  // context: { finished, rating, mode, role, level, events, stats, rounds, rolesFinished, streak, stars,
+  //            maxStars, week } — week is the finished week's result, only on the morning that ends one.
   //
   // Star milestones count the player's best campaign stars (rewards.js), which nothing else spends. They
   // give the upper levels, where a third star is hard, a reason to be played again. 'all' means every star
@@ -81,6 +82,29 @@
       unlocks: 'A fire extinguisher',
       hint: 'Live through a fire drill and an outage in the same morning',
       earned: (c) => c.events.indexOf('drill') !== -1 && c.events.indexOf('outage') !== -1
+    },
+    // Three for the upper levels, each the lesson of one of them done properly. Measured with the
+    // simulated players: a perfect reader turns down four traps with nothing coming back on 80% of lead
+    // mornings and a 90% reader on a third; a strong favour player passes on three emergencies on about a
+    // quarter of outage mornings; a paced week that answers home holds both meters on about 60% of weeks,
+    // and one that ignores home never does, which is what keeps it apart from the week's third star.
+    {
+      id: 'nothingback', emoji: '🔁', name: 'Nothing came back', prop: 'basket',
+      unlocks: 'A wastepaper basket, for everything you turned down',
+      hint: 'On a lead morning, turn down 4 traps and let none of them come back',
+      earned: (c) => c.level === 'lead' && c.finished && c.stats.trapsDodged >= 4 && c.stats.followUps === 0
+    },
+    {
+      id: 'commander', emoji: '🚧', name: 'Incident commander', prop: 'cone',
+      unlocks: 'A traffic cone, from the day everything was down',
+      hint: 'Pass on 3 emergencies in a morning with an outage',
+      earned: (c) => c.events.indexOf('outage') !== -1 && c.stats.urgentDelegated >= 3
+    },
+    {
+      id: 'heldweek', emoji: '🏡', name: 'Held the week', prop: 'shoes',
+      unlocks: 'Running shoes under the desk',
+      hint: 'Deliver all 5 mornings of a week and end it with energy and home both at 60 or more',
+      earned: (c) => !!c.week && c.week.shipped >= 5 && c.week.energy >= 60 && c.week.home >= 60
     },
     milestone({
       id: 'stars20', emoji: '💡', name: 'Twenty stars', prop: 'lamp', stars: 20,
