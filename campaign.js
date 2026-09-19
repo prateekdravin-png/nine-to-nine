@@ -216,6 +216,19 @@
       // lead morning for time (a first-time reader's pace and no slower), which is the climb curve.js asked for.
       goals: [SHIP, atMost('missed', 'Miss nothing urgent', st('urgentMissed'), 0),
         atLeast('passed', 'Pass on at least two emergencies', st('urgentDelegated'), 2)]
+    },
+    {
+      // The promotion to the top rung, built like level 12: the new tell on an ordinary morning, and a
+      // gold to clear it. At head a player who learned lead as a rule ("calm means real") takes every calm
+      // trap and never clears it; a perfect reader golds it in every role. Seed 13 measured 92% on the
+      // judgement curve and 2.9s per message on time, level 19's pace, with nothing but lunch going on.
+      n: 20, id: 'head-of', title: 'Head of', emoji: '🏔️',
+      brief: 'Everything sounds real now, calm or loud. Only some of it is happening today.',
+      teaches: 'Calm or loud says nothing at the top. Ask whether it is live, and whether it is now.',
+      hint: 'At head, traps sound exactly like emergencies. Look for when and where: next week, staging, a draft or a rehearsal is a trap. A real one is live and happening now, whether it shouts or not. Gold needs the work finished and your reputation intact.',
+      setup: { day: 'normal', level: 'head', seed: 13 },
+      goals: [SHIP, goal('gold', 'Finish on a gold', (r) => r.rating.key === 'gold')],
+      unlocks: 'head'
     }
   ];
 

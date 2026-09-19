@@ -54,7 +54,8 @@ const APPROACH = {
   noon: { strategy: 'Perfect reader' },
   'the-week': { strategy: 'Perfect reader + answers home', pace: true },
   'come-back': { strategy: 'Perfect reader' },
-  'everything-down': { strategy: 'Perfect reader + favours' }
+  'everything-down': { strategy: 'Perfect reader + favours' },
+  'head-of': { strategy: 'Perfect reader' }
 };
 
 // Misreading changes only what the strategy SEES; playBot still acts on the real card id.

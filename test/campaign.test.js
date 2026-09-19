@@ -34,7 +34,8 @@ const APPROACH = {
   'the-week': { strategy: 'Perfect reader + answers home', pace: true },
   // After the week: single mornings again.
   'come-back': { strategy: 'Perfect reader' },
-  'everything-down': { strategy: 'Perfect reader + favours' }
+  'everything-down': { strategy: 'Perfect reader + favours' },
+  'head-of': { strategy: 'Perfect reader' }
 };
 
 // And one who has not. Level 1 has none: it only asks you to hold the button.
@@ -56,7 +57,8 @@ const NAIVE = {
   noon: 'Ignore everything',                                 // survives the quiet start and drowns at noon
   'the-week': 'Perfect reader',   // delivers every morning by emptying itself, which is the whole lesson
   'come-back': 'Perfect reader, lets traps run out',   // never takes a trap, never turns one down either
-  'everything-down': 'Perfect reader'                 // right about everything, and alone when it all breaks at once
+  'everything-down': 'Perfect reader',                // right about everything, and alone when it all breaks at once
+  'head-of': 'Keyword reader: calm means urgent'       // learned lead as a rule, so every calm trap looks real
 };
 
 const play = (level, role, strategy, opts) =>
@@ -154,8 +156,13 @@ test('the next level is the first one not yet done', () => {
 test('career levels are campaign rewards, and arrive in order', () => {
   assert.strictEqual(Campaign.careerFrom([]), 'junior');
   const unlockers = Campaign.LEVELS.filter((l) => l.unlocks);
-  assert.deepStrictEqual(unlockers.map((l) => l.unlocks), ['senior', 'lead'],
-    'the ladder should hand out senior before lead');
+  assert.deepStrictEqual(unlockers.map((l) => l.unlocks), ['senior', 'lead', 'head'],
+    'the ladder should hand out senior, then lead, then head');
+  // The lock on each rung names the level that opens it, so the two cannot drift apart.
+  for (const level of unlockers) {
+    const text = Content.LEVELS[level.unlocks].unlockText;
+    assert.ok(text.includes(`level ${level.n}, ${level.title},`), `${level.unlocks} says "${text}", but level ${level.n} (${level.title}) unlocks it`);
+  }
   for (const level of unlockers) {
     const upTo = Campaign.LEVELS.filter((l) => l.n <= level.n).map((l) => l.id);
     assert.strictEqual(Campaign.careerFrom(upTo), level.unlocks, `clearing level ${level.n} should promote you`);
@@ -189,10 +196,10 @@ test('each role walks its own ladder', () => {
 
 test('a promotion belongs to the role that earned it', () => {
   const unlockers = Campaign.LEVELS.filter((l) => l.unlocks);
-  // Cleared by a developer all the way down the ladder: the developer is a lead, everyone else a junior.
+  // Cleared by a developer all the way down the ladder: the developer is a head, everyone else a junior.
   const asDeveloper = {};
   for (const l of Campaign.LEVELS) asDeveloper[l.id] = ['developer'];
-  assert.strictEqual(Campaign.careerForRole(asDeveloper, 'developer'), 'lead');
+  assert.strictEqual(Campaign.careerForRole(asDeveloper, 'developer'), 'head');
   for (const role of Content.ROLE_ORDER.filter((r) => r !== 'developer')) {
     assert.strictEqual(Campaign.careerForRole(asDeveloper, role), 'junior',
       `a ${role} should not inherit the developer's promotions`);
@@ -201,7 +208,7 @@ test('a promotion belongs to the role that earned it', () => {
   const both = {};
   for (const l of Campaign.LEVELS) both[l.id] = l.n <= unlockers[0].n ? ['developer', 'tester'] : ['developer'];
   assert.strictEqual(Campaign.careerForRole(both, 'tester'), 'senior', 'the tester has cleared as far as senior');
-  assert.strictEqual(Campaign.careerForRole(both, 'developer'), 'lead');
+  assert.strictEqual(Campaign.careerForRole(both, 'developer'), 'head');
   // Nothing cleared, or cleared before roles were recorded, still starts at junior.
   assert.strictEqual(Campaign.careerForRole({}, 'developer'), 'junior');
   assert.strictEqual(Campaign.careerForRole({ [Campaign.LAST.id]: [] }, 'developer'), 'junior');

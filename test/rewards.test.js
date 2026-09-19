@@ -289,7 +289,8 @@ test('no campaign level falls to the player who has not learned it, whatever per
     'on-a-roll': '80% accurate reader', lead: 'Keyword reader: alarm words mean urgent',
     'quiet-house': 'Respond to everything', micromanager: 'Say no to everything',
     'all-polite': 'Respond to everything', noon: 'Ignore everything',
-    'come-back': 'Perfect reader, lets traps run out', 'everything-down': 'Perfect reader'
+    'come-back': 'Perfect reader, lets traps run out', 'everything-down': 'Perfect reader',
+    'head-of': 'Keyword reader: calm means urgent'
   };
   // Every sensible way to time two pairs of headphones, including both back to back over the finish.
   const pairs = [undefined, [15], [30], [45]];
