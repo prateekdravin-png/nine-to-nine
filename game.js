@@ -308,6 +308,16 @@
 
   const chip = (state, text) => `<span class="goal-chip ${state}"><span>${escapeHtml(text)}</span></span>`;
 
+  // Which morning this is, in a couple of words, at the front of the goal bar: playing a campaign level
+  // without being told which one is the kind of thing you only notice when it is missing.
+  function whereLabel() {
+    if (mode === 'campaign' && levelPlaying) return `${levelPlaying.emoji} Level ${levelPlaying.n}`;
+    if (mode === 'week' && week) return `🗓️ ${WEEKDAYS[Math.max(0, week.index - 1)]}`;
+    if (mode === 'daily') return '☀️ Daily';
+    if (mode === 'challenge') return '⚔️ Challenge';
+    return '🎲 Practice';
+  }
+
   function renderGoalBar() {
     const s = game;
     const live = liveResult();
@@ -348,7 +358,7 @@
       const left = s.perk === 'headphones' ? s.headphones.charges : s.perkLeft;
       parts.push(chip('', `${p.emoji} ${left ? left + ' left' : 'used'}`));
     }
-    const html = '<span class="goal-lead">Goal</span>' + parts.join('');
+    const html = `<span class="goal-lead">${escapeHtml(whereLabel())}</span>` + parts.join('');
     if (ui.goalBar.dataset.html !== html) {
       ui.goalBar.dataset.html = html;
       ui.goalBar.innerHTML = html;

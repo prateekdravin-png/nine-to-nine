@@ -108,10 +108,14 @@ kbd {
 .ide[data-tier="1"] { border-color: #2f5fb8; }
 .ide[data-tier="2"] { border-color: #7250c9; box-shadow: 0 0 0 1px #7250c955, 0 0 24px #7250c933; }
 .ide[data-tier="3"] { border-color: var(--gold); box-shadow: 0 0 0 1px #f5b83d88, 0 0 38px #f5b83d44; }
-.ide-bar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--line); background: #0f1726; font: 12px var(--mono); color: var(--muted); }
+/* The chips here are written by the day and the boss, so their length is not ours to control: they wrap
+   to a second line and, failing that, cut off with an ellipsis rather than off the edge of the screen. */
+.ide-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; padding: 9px 12px; border-bottom: 1px solid var(--line); background: #0f1726; font: 12px var(--mono); color: var(--muted); }
 .dots { display: flex; gap: 5px; }
 .dots i { width: 9px; height: 9px; border-radius: 50%; background: #2a3446; }
-.file { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* flex-basis 0 with min-width 0: the file name shrinks to nothing rather than pushing the chips
+   onto lines of their own when the bar is allowed to wrap. */
+.file { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tier { font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-size: 11px; padding: 2px 8px; border-radius: 99px; background: #ffffff0d; white-space: nowrap; }
 .ide[data-tier="3"] .tier { color: #1b1300; background: var(--gold); animation: pulse 1.2s ease-in-out infinite; }
 
@@ -310,7 +314,7 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 .promotion { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: linear-gradient(180deg, #ffc95a, #f0a31f); color: #1b1300; font-weight: 800; text-align: center; }
 
 /* ---- Boss of the day and office events ---- */
-.boss-chip { font: 600 11px var(--mono); color: #ffd9a0; background: #f5b83d1f; border: 1px solid #f5b83d55; border-radius: 99px; padding: 1px 8px; white-space: nowrap; cursor: help; }
+.boss-chip { font: 600 11px var(--mono); color: #ffd9a0; background: #f5b83d1f; border: 1px solid #f5b83d55; border-radius: 99px; padding: 1px 8px; white-space: nowrap; cursor: help; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 /* One compact line, so an event never hides the office scene behind it */
 .event-bar { position: absolute; top: 42px; left: 8px; right: 8px; z-index: 4; display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 10px; background: #1b1330f2; border: 1px solid #6b4cc8; box-shadow: 0 8px 24px #0008; animation: drop 0.35s ease-out; }
 .event-bar b { font-size: 13.5px; white-space: nowrap; }
@@ -351,7 +355,7 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
 .award { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: #35c98a1f; border: 1px solid #35c98a66; color: #d9f7e8; font-size: 13.5px; text-align: center; }
 
 /* The kind of morning, in the window bar next to the boss. */
-.day-chip { font: 700 11px var(--mono); padding: 2px 8px; border-radius: 99px; white-space: nowrap; color: #cfe0ff; background: #4d8dff1f; border: 1px solid #4d8dff55; }
+.day-chip { font: 700 11px var(--mono); padding: 2px 8px; border-radius: 99px; white-space: nowrap; color: #cfe0ff; background: #4d8dff1f; border: 1px solid #4d8dff55; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .day-chip.odd { color: #ffd8a8; background: #ffb4541f; border-color: #ffb45466; }
 .flat-flow .flow { opacity: 0.45; }
 .flat-flow .flow-track i { background: var(--dim); }
@@ -376,7 +380,8 @@ body.flash-trap::after { box-shadow: inset 0 0 0 4px var(--violet), inset 0 0 90
   /* The ladder is also the level picker, so its rungs need to be tappable, not just readable. */
   .rung { width: 34px; height: 40px; }
   .goal-chip { font-size: 11px; padding: 2px 6px; }
-  .goal-bar .goal-lead { display: none; }
+  /* The lead says which level you are on, which is worth more than the word "Goal" it replaced. */
+  .goal-bar .goal-lead { max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 /* ---- The campaign ---- */
@@ -618,6 +623,8 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
   #repMeter { grid-area: rep; }
   .stage { grid-template-columns: 1fr; grid-template-rows: minmax(150px, 36%) minmax(0, 1fr); gap: 8px; }
   .ide-bar { padding: 6px 10px; }
+  /* The file name is decoration; on a phone the day and the boss need that room. */
+  .ide-bar .file { display: none; }
   .flow { padding: 7px 12px 8px; }
   .flow-label { margin-bottom: 4px; }
   .code { font-size: 11.5px; padding: 8px 10px; }
