@@ -622,9 +622,13 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
   #progressMeter { grid-area: feat; }
   #repMeter { grid-area: rep; }
   .stage { grid-template-columns: 1fr; grid-template-rows: minmax(150px, 36%) minmax(0, 1fr); gap: 8px; }
-  .ide-bar { padding: 6px 10px; }
-  /* The file name is decoration; on a phone the day and the boss need that room. */
-  .ide-bar .file { display: none; }
+  /* One line only: the panel here has a fixed share of the screen, and a second line of chips pushed
+     the flow meter out of the bottom of it. The chips shorten with an ellipsis instead. */
+  .ide-bar { padding: 6px 10px; flex-wrap: nowrap; }
+  /* The file name and the window dots are decoration, and the tier is already shown by the flow
+     meter (x1, x2, x3) and the panel glow: on a phone that room goes to the day and the boss, which
+     say what kind of morning this is. */
+  .ide-bar .file, .ide-bar .dots, .ide-bar .tier { display: none; }
   .flow { padding: 7px 12px 8px; }
   .flow-label { margin-bottom: 4px; }
   .code { font-size: 11.5px; padding: 8px 10px; }
