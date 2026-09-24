@@ -654,3 +654,10 @@ a.secondary { display: flex; align-items: center; justify-content: center; text-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition: none !important; }
 }
+
+/* ---- The two start pages: Home (who you are, one Play button) and Play (what to play) ---- */
+.play-go { flex-wrap: wrap; margin: 16px 0 4px; padding: 16px 14px 13px; font-size: 19px; letter-spacing: 0.02em; }
+.play-go small { flex-basis: 100%; margin-top: 3px; font: 600 12.5px var(--mono); opacity: 0.85; letter-spacing: 0; }
+.page-head { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px; }
+.back-btn { flex: none; padding: 9px 14px; border-radius: 12px; font-weight: 700; }
+.page-who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font: 600 12.5px var(--mono); }

@@ -45,6 +45,8 @@
     startGoal: $('startGoal'), awards: $('awards'), statsNote: $('statsNote'), startHistory: $('startHistory'),
     tourSteps: $('tourSteps'), tourCount: $('tourCount'), tourBack: $('tourBack'), tourNext: $('tourNext'),
     awardsSummary: $('awardsSummary'), startScene: $('startScene'),
+    homePage: $('homePage'), playPage: $('playPage'), toPlayBtn: $('toPlayBtn'), toPlaySub: $('toPlaySub'),
+    backHomeBtn: $('backHomeBtn'), playWho: $('playWho'),
     endScreen: $('endScreen'), endEmoji: $('endEmoji'), endRole: $('endRole'), endTitle: $('endTitle'), endBlurb: $('endBlurb'),
     endScore: $('endScore'), endProgressLabel: $('endProgressLabel'), endProgress: $('endProgress'), endRep: $('endRep'),
     endPromotion: $('endPromotion'), endAward: $('endAward'), endPersona: $('endPersona'), endDaily: $('endDaily'), endChallenge: $('endChallenge'), endStats: $('endStats'), endReview: $('endReview'), endQuote: $('endQuote'),
@@ -524,7 +526,20 @@
   // Which level the card is showing: one you picked from the ladder, or the next one to clear.
   const shownLevel = () => pickedLevel || Campaign.nextFor(myCleared());
 
+  // The card, and the two labels that name the same next level from elsewhere: under Home's Play
+  // button, and at the top of the Play page.
   function renderCampaignCard() {
+    renderCampaignCardBody();
+    renderPlayLabels();
+  }
+
+  function renderPlayLabels() {
+    const next = shownLevel();
+    ui.toPlaySub.textContent = next ? `Level ${next.n} · ${next.title}` : 'Campaign complete · pick any morning';
+    ui.playWho.textContent = `${ROLES[role].emoji} ${ROLES[role].label} · ${LEVELS[level].emoji} ${rankOf(level, role)}`;
+  }
+
+  function renderCampaignCardBody() {
     const done = myCleared();
     const next = shownLevel();
     if (!next) {
@@ -1815,9 +1830,9 @@
   function startGame(kind) {
     const daily = kind === 'daily';
     levelPlaying = kind === 'campaign' ? shownLevel() : null;
-    if (kind === 'campaign' && !levelPlaying) { showStart(); return; } // the ladder is finished
+    if (kind === 'campaign' && !levelPlaying) { showStart('play'); return; } // the ladder is finished
     if (kind === 'campaign' && Campaign.isWeek(levelPlaying)) { levelPlaying = null; kind = 'week'; } // the week level IS the week
-    if (daily && loadDaily()[today()]) { showStart(); return; } // today's morning is already done
+    if (daily && loadDaily()[today()]) { showStart('play'); return; } // today's morning is already done
     if (kind === 'challenge' && !invite) kind = 'practice';
     if (kind === 'week') {
       week = loadWeek();
@@ -1904,8 +1919,36 @@
     render();
   }
 
-  // The start screen, from the results, keeping the last role and level selected.
-  function showStart() {
+  // ---------- the two start pages ----------
+  // Home (who you are, and one Play button) and Play (what to play). Opening Play adds a history entry,
+  // so a phone's Back button returns to Home instead of leaving the game.
+  function showStartPage(page) {
+    const play = page === 'play';
+    ui.homePage.hidden = play;
+    ui.playPage.hidden = !play;
+    renderPlayLabels();
+    ui.startScreen.querySelector('.panel').scrollTop = 0;
+  }
+
+  function openPlayPage() {
+    if (!(history.state && history.state.page === 'play')) {
+      try { history.pushState({ page: 'play' }, ''); } catch (e) { /* file:// copies may refuse; the page still switches */ }
+    }
+    showStartPage('play');
+  }
+
+  function backToHome() {
+    if (history.state && history.state.page === 'play') { history.back(); return; } // popstate shows Home
+    showStartPage('home');
+  }
+
+  window.addEventListener('popstate', () => {
+    if (!ui.startScreen.hidden && !(history.state && history.state.page === 'play')) showStartPage('home');
+  });
+
+  // The start screen, from the results, keeping the last role and level selected. `page` is 'home'
+  // unless the player was on their way to a morning (a finished ladder, today's morning already done).
+  function showStart(page) {
     ui.pauseScreen.hidden = true;
     paused = false;
     ui.endScreen.hidden = true;
@@ -1918,7 +1961,7 @@
     renderAwards();
     // Focus leaves the hidden button so Enter starts the morning; Tab still reaches the pickers.
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-    ui.startScreen.querySelector('.panel').scrollTop = 0;
+    showStartPage(page === 'play' ? 'play' : 'home');
   }
 
   // Fixed-timestep loop. Real elapsed time is accumulated and consumed in small, equal steps, so the
@@ -2053,7 +2096,9 @@
   ui.muteBtn.addEventListener('click', () => setMuted(!muted));
   ui.practiceBtn.addEventListener('click', () => startGame('practice'));
   ui.againBtn.addEventListener('click', () => startGame('practice'));
-  ui.homeBtn.addEventListener('click', showStart);
+  ui.homeBtn.addEventListener('click', () => showStart('home'));
+  ui.toPlayBtn.addEventListener('click', openPlayPage);
+  ui.backHomeBtn.addEventListener('click', backToHome);
   ui.nextMorningBtn.addEventListener('click', () => {
     ui.nightScreen.hidden = true;
     if (week && week.over) { ui.endScreen.hidden = false; return; } // the week is done: the result screen waits
@@ -2091,7 +2136,9 @@
       // round. It works even with a role or level card focused (clicking a card focuses it). Buttons
       // that do something else — Change role, sharing, links — keep their own Enter.
       const el = document.activeElement;
-      if (el && el.closest && el.closest('#homeBtn, .tour-btn, summary, [data-share]')) return;
+      if (el && el.closest && el.closest('#homeBtn, #backHomeBtn, .tour-btn, summary, [data-share]')) return;
+      // On Home, Enter is the Play button: it opens the Play page, where Enter plays.
+      if (!ui.startScreen.hidden && !ui.homePage.hidden) { e.preventDefault(); openPlayPage(); return; }
       // A held morning is still your morning: Enter goes back to it rather than starting another round.
       if (paused) { e.preventDefault(); if (!ui.helpScreen.hidden) setHelp(false); else setPaused(false); return; }
       e.preventDefault();
@@ -2171,6 +2218,7 @@
   renderWeekCard();
   renderDailyCard();
   renderAwards();
+  if (invite) openPlayPage(); else showStartPage('home');
   if (read(STORE.visit) !== String(today())) {
     report({ kind: 'visit', day: today() });
     store(STORE.visit, String(today()));

@@ -84,6 +84,10 @@
 
 <div class="overlay" id="startScreen">
   <div class="panel">
+    <!-- Two pages, like any phone game: Home is who you are (role, level, the rules, your desk) and one
+         Play button; Play is what to play (the ladder, today's morning, the week, practice). The ladder
+         grows with every level, and on one long page it pushed everything else out of reach. -->
+    <div class="start-page" id="homePage">
     <div class="panel-logo">9<i>to</i>9</div>
     <h1>Deep Work</h1>
     <p class="lede" id="startLede">It's 10:00 AM. Ship the feature by lunch. Everyone else has other plans for your morning.</p>
@@ -93,7 +97,7 @@
          listed. Presentation only — scene.js never touches the rules. -->
     <div class="scene panel-scene" id="startScene"></div>
 
-    <h2 class="section-title" id="roleTitle">1 · Choose your role</h2>
+    <h2 class="section-title" id="roleTitle">Choose your role</h2>
     <div class="roles" id="rolePicker" role="radiogroup" aria-labelledby="roleTitle"></div>
     <p class="role-desc" id="roleDesc"></p>
 
@@ -101,7 +105,9 @@
     <div class="levels" id="levelPicker" role="radiogroup" aria-labelledby="levelTitle"></div>
     <p class="role-desc" id="levelDesc"></p>
 
-    <h2 class="section-title">2 · How it plays</h2>
+    <button type="button" class="primary wide play-go" id="toPlayBtn">▶ Play <kbd>Enter</kbd><small id="toPlaySub"></small></button>
+
+    <h2 class="section-title">How it plays</h2>
     <!-- One rule at a time. All seven at once, plus the goal, were most of the start screen: the role
          picker, the ladder and today's morning all started below the fold. -->
     <div class="tour" id="tour" role="group" aria-label="How it plays">
@@ -130,18 +136,9 @@
       </div>
     </div>
 
-    <h2 class="section-title">3 · Play</h2>
-    <section class="daily campaign" id="campaignCard"></section>
-    <section class="daily challenge" id="challengeCard" hidden></section>
-    <section class="daily week" id="weekCard"></section>
-    <section class="daily" id="dailyCard"></section>
-    <div class="practice">
-      <button class="secondary wide" id="practiceBtn">🎲 Practice on a random morning <kbd id="practiceKbd" hidden>Enter</kbd></button>
-      <label class="variant"><input type="checkbox" id="variantToggle"> <span><b>Variant B</b> (practice only): messages arrive collapsed, and peeking at one costs focus</span></label>
-    </div>
-    <h2 class="section-title">4 · Your desk</h2>
-    <!-- Folded: ten things you have or have not unlocked is a page of scrolling between you and the
-         button that starts a morning. The summary says how many, and which ones, at a glance. -->
+    <h2 class="section-title">Your desk</h2>
+    <!-- Folded: ten things you have or have not unlocked is a page of scrolling. The summary says how
+         many, and which ones, at a glance. -->
     <details class="fold" id="awardsFold">
       <summary id="awardsSummary">Your desk</summary>
       <div class="fold-body"><div class="awards" id="awards"></div></div>
@@ -155,6 +152,23 @@
       </div>
     </details>
     <div class="history" id="startHistory"></div>
+    </div>
+
+    <div class="start-page" id="playPage" hidden>
+    <div class="page-head">
+      <button type="button" class="secondary back-btn" id="backHomeBtn">← Home</button>
+      <span class="page-who" id="playWho"></span>
+    </div>
+    <h2 class="section-title">Choose a morning</h2>
+    <section class="daily campaign" id="campaignCard"></section>
+    <section class="daily challenge" id="challengeCard" hidden></section>
+    <section class="daily week" id="weekCard"></section>
+    <section class="daily" id="dailyCard"></section>
+    <div class="practice">
+      <button class="secondary wide" id="practiceBtn">🎲 Practice on a random morning <kbd id="practiceKbd" hidden>Enter</kbd></button>
+      <label class="variant"><input type="checkbox" id="variantToggle"> <span><b>Variant B</b> (practice only): messages arrive collapsed, and peeking at one costs focus</span></label>
+    </div>
+    </div>
   </div>
 </div>
 
